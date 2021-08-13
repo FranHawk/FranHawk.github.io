@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>物联网项目设计 （五） paho mqtt 库在stm32+esp8266 硬件平台上的移植和使用第一部分，连接阿里云iot平台 | 张竞豪的小岛</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  <meta name="keywords" content="STM32物联网" />
+  
+  
+  
+  
+  <meta name="description" content="概述本文代码链接 https:&#x2F;&#x2F;github.com&#x2F;FranHawk&#x2F;ConnectTOAliIOTServer.git之前一直准备使用百度云天工作为物联网云平台，但是百度云天工平台的文档写的确实不是很好，相关API的接口也和其他方案有不一样，安全性不够好，故准备使用阿里云IOT平台。后期估计还要涉及到前后端的实现，自己搭建云服务器，才能完成数据存储和小程序开发。阿里云也提供了相关的接口，使用">
+<meta property="og:type" content="article">
+<meta property="og:title" content="物联网项目设计 （五） Paho mqtt 库在STM32+esp8266 硬件平台上的移植和使用第一部分，连接阿里云IOT平台">
+<meta property="og:url" content="http://example.com/2020/03/02/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%20%EF%BC%88%E4%BA%94%EF%BC%89%20Paho%20mqtt%20%E5%BA%93%E5%9C%A8STM32+esp8266%20%E7%A1%AC%E4%BB%B6%E5%B9%B3%E5%8F%B0%E4%B8%8A%E7%9A%84%E7%A7%BB%E6%A4%8D%E5%92%8C%E4%BD%BF%E7%94%A8%E7%AC%AC%E4%B8%80%E9%83%A8%E5%88%86%EF%BC%8C%E8%BF%9E%E6%8E%A5%E9%98%BF%E9%87%8C%E4%BA%91IOT%E5%B9%B3%E5%8F%B0/index.html">
+<meta property="og:site_name" content="张竞豪的小岛">
+<meta property="og:description" content="概述本文代码链接 https:&#x2F;&#x2F;github.com&#x2F;FranHawk&#x2F;ConnectTOAliIOTServer.git之前一直准备使用百度云天工作为物联网云平台，但是百度云天工平台的文档写的确实不是很好，相关API的接口也和其他方案有不一样，安全性不够好，故准备使用阿里云IOT平台。后期估计还要涉及到前后端的实现，自己搭建云服务器，才能完成数据存储和小程序开发。阿里云也提供了相关的接口，使用">
+<meta property="og:locale">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200302133049752.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200227202513947.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200227202523681.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200227202910686.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200227202919966.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200227215325572.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200227222730240.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200227223635333.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2020030213262457.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200228102652418.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200228103624301.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200228105224445.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200302134044223.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200302134052863.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200302140656538.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="article:published_time" content="2020-03-02T11:50:43.000Z">
+<meta property="article:modified_time" content="2021-08-13T02:01:01.871Z">
+<meta property="article:author" content="Fran Hawk">
+<meta property="article:tag" content="STM32">
+<meta property="article:tag" content="物联网">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20200302133049752.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+  
+    <link rel="alternate" href="/atom.xml" title="张竞豪的小岛" type="application/atom+xml">
+  
+
+  
+
+  <link rel="icon" href="/css/images/mylogo.jpg">
+  <link rel="apple-touch-icon" href="/css/images/mylogo.jpg">
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Montserrat:700" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic" rel="stylesheet" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+  <style type="text/css">
+    @font-face{font-family:futura-pt; src:url("/css/fonts/FuturaPTBold.otf") format("woff");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt-light; src:url("/css/fonts/FuturaPTBook.otf") format("woff");font-weight:lighter;font-style:normal;}
+    @font-face{font-family:futura-pt-italic; src:url("/css/fonts/FuturaPTBookOblique.otf") format("woff");font-weight:400;font-style:italic;}
+}
+
+  </style>
+  
+<link rel="stylesheet" href="/css/style.css">
+
+
+  
+<script src="/js/jquery-3.1.1.min.js"></script>
+
+  
+<script src="/js/bootstrap.js"></script>
+
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.css" >
+
+  
+    
+<link rel="stylesheet" href="/css/dialog.css">
+
+  
+
+  
+
+  
+    <link rel="stylesheet" href="/css/header-post.css" >
+  
+
+  
+  
+  
+    <link rel="stylesheet" href="/css/vdonate.css" >
+  
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+
+
+  <body data-spy="scroll" data-target="#toc" data-offset="50">
+
+
+  
+  <div id="container">
+    <div id="wrap">
+      
+        <header>
+
+    <div id="allheader" class="navbar navbar-default navbar-static-top" role="navigation">
+        <div class="navbar-inner">
+          
+          <div class="container"> 
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+
+            
+              <a class="brand" style="
+                 margin-top: 0px;"  
+                href="#" data-toggle="modal" data-target="#myModal" >
+                  <img width="124px" height="124px" alt="Hike News" src="/css/images/mylogo.jpg">
+              </a>
+            
+            
+            <div class="navbar-collapse collapse">
+              <ul class="hnav navbar-nav">
+                
+                  <li> <a class="main-nav-link" href="/">Home</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/archives">Archives</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/categories">Categories</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/tags">Tags</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/about">About</a> </li>
+                
+                  <li><div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="" />
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="Type something..." />
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+</div></li>
+            </div>
+          </div>
+                
+      </div>
+    </div>
+
+</header>
+
+
+
+      
+            
+      <div id="content" class="outer">
+        
+          <section id="main" style="float:none;"><article id="post-物联网项目设计 （五） Paho mqtt 库在STM32+esp8266 硬件平台上的移植和使用第一部分，连接阿里云IOT平台" style="width: 75%; float:left;" class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" class="article-title" itemprop="name">
+      物联网项目设计 （五） Paho mqtt 库在STM32+esp8266 硬件平台上的移植和使用第一部分，连接阿里云IOT平台
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2020/03/02/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%20%EF%BC%88%E4%BA%94%EF%BC%89%20Paho%20mqtt%20%E5%BA%93%E5%9C%A8STM32+esp8266%20%E7%A1%AC%E4%BB%B6%E5%B9%B3%E5%8F%B0%E4%B8%8A%E7%9A%84%E7%A7%BB%E6%A4%8D%E5%92%8C%E4%BD%BF%E7%94%A8%E7%AC%AC%E4%B8%80%E9%83%A8%E5%88%86%EF%BC%8C%E8%BF%9E%E6%8E%A5%E9%98%BF%E9%87%8C%E4%BA%91IOT%E5%B9%B3%E5%8F%B0/" class="article-date">
+	  <time datetime="2020-03-02T11:50:43.000Z" itemprop="datePublished">2020-03-02</time>
+	</a>
+
+      
+      
+	<a class="article-views">
+	<span id="busuanzi_container_page_pv">
+		PV:<span id="busuanzi_value_page_pv"></span>
+	</span>
+	</a>
+
+      
+
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>本文代码链接 <a target="_blank" rel="noopener" href="https://github.com/FranHawk/ConnectTOAliIOTServer.git">https://github.com/FranHawk/ConnectTOAliIOTServer.git</a><br>之前一直准备使用百度云天工作为物联网云平台，但是百度云天工平台的文档写的确实不是很好，相关API的接口也和其他方案有不一样，安全性不够好，故准备使用阿里云IOT平台。后期估计还要涉及到前后端的实现，自己搭建云服务器，才能完成数据存储和小程序开发。阿里云也提供了相关的接口，使用起来比较方便。</p>
+<p>这几天查阅了很多的MQTT相关的资料，结果发现查到了太多底层的东西。根本没有太大的作用，浪费了很多时间。在掌握基本的MQTT的概念后，我发现只用掌握连接服务器，订阅话题，发布话题这些操作就足以满足最基本的需要。</p>
+<p>在物联网设计（三）中，完成了连接本地服务器的功能，通过MQTT连接云服务器的步骤有所改变。</p>
+<p>1.在使用TCP连接服务器的阶段，我们需要把连接的域名和端口改成云服务器的端口。<br>2.连接成功后进入透传模式<br>3.使用paho mqtt提供的函数连接服务器</p>
+<p>接下来就要讲述如何一步步的完成这些操作</p>
+<h1 id="硬件准备"><a href="#硬件准备" class="headerlink" title="硬件准备"></a>硬件准备</h1><p>stm32+esp8266硬件设备一套</p>
+<h1 id="软件准备"><a href="#软件准备" class="headerlink" title="软件准备"></a>软件准备</h1><p>已经注册好阿里云帐号并创建好设备，创建过程和前面百度云的创建过程类似，这里还是给出<a target="_blank" rel="noopener" href="https://help.aliyun.com/document_detail/73705.html?spm=a2c4g.11186623.6.560.626f580023CUIY">文档链接</a></p>
+<h5 id="当创建好设备后，会生成一个设备三元组，后面我们连接IOT平台使用一机一密的方式，这个设备三元组后面会经常用，记得妥善保存"><a href="#当创建好设备后，会生成一个设备三元组，后面我们连接IOT平台使用一机一密的方式，这个设备三元组后面会经常用，记得妥善保存" class="headerlink" title="当创建好设备后，会生成一个设备三元组，后面我们连接IOT平台使用一机一密的方式，这个设备三元组后面会经常用，记得妥善保存"></a>当创建好设备后，会生成一个设备三元组，后面我们连接IOT平台使用一机一密的方式，这个设备三元组后面会经常用，记得妥善保存</h5><p><img src="https://img-blog.csdnimg.cn/20200302133049752.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h1 id="移植paho-mqtt库至STM32工程中"><a href="#移植paho-mqtt库至STM32工程中" class="headerlink" title="移植paho mqtt库至STM32工程中"></a>移植paho mqtt库至STM32工程中</h1><h4 id="1-从github上下载paho-mqtt嵌入式版本开源库，代码链接。"><a href="#1-从github上下载paho-mqtt嵌入式版本开源库，代码链接。" class="headerlink" title="1.从github上下载paho mqtt嵌入式版本开源库，代码链接。"></a>1.从github上下载paho mqtt嵌入式版本开源库，<a target="_blank" rel="noopener" href="https://github.com/eclipse/paho.mqtt.embedded-c">代码链接</a>。</h4><h4 id="2-解压并打开"><a href="#2-解压并打开" class="headerlink" title="2.解压并打开"></a>2.解压并打开</h4><p>找到<code>paho.mqtt.embedded-c-master\MQTTPacket\src</code>的所有文件和<code>paho.mqtt.embedded-c-master\MQTTPacket\samples</code>里面的transport.c和transport.h两个文件<br><img src="https://img-blog.csdnimg.cn/20200227202513947.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20200227202523681.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h4 id="3-在自己的工程中新建一个文件夹存放这些文件，我用的工程是物联网（三）中创建的工程"><a href="#3-在自己的工程中新建一个文件夹存放这些文件，我用的工程是物联网（三）中创建的工程" class="headerlink" title="3.在自己的工程中新建一个文件夹存放这些文件，我用的工程是物联网（三）中创建的工程"></a>3.在自己的工程中新建一个文件夹存放这些文件，我用的工程是物联网（三）中创建的工程</h4><p><img src="https://img-blog.csdnimg.cn/20200227202910686.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20200227202919966.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h4 id="4-在工程中添加这些文件"><a href="#4-在工程中添加这些文件" class="headerlink" title="4.在工程中添加这些文件"></a>4.在工程中添加这些文件</h4><p><img src="https://img-blog.csdnimg.cn/20200227215325572.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h4 id="5-找到transport-c-对其进行更改，首先改掉上面用的include函数，改为自己的，下面的是我根据自己的软件环境更改的头文件如下"><a href="#5-找到transport-c-对其进行更改，首先改掉上面用的include函数，改为自己的，下面的是我根据自己的软件环境更改的头文件如下" class="headerlink" title="5.找到transport.c ,对其进行更改，首先改掉上面用的include函数，改为自己的，下面的是我根据自己的软件环境更改的头文件如下"></a>5.找到transport.c ,对其进行更改，首先改掉上面用的include函数，改为自己的，下面的是我根据自己的软件环境更改的头文件如下</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;stm32f1xx_hal.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;tim.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;usart.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;esp8266.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;stdio.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;stdlib.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;string.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;transport.h&quot;</span></span></span><br></pre></td></tr></table></figure>
+<p>除了上面的头文件之外。这个文件自己带的include和define都被我删了</p>
+<h4 id="6-重点：更改transport-sendPacketBuffer和transport-getdatanb函数，这两个函数就是MQTT操作单片机发送和接受数据的主要函数，在这里我们用USART来改变里面的发送数据的函数，使用中断方式发送，中断方式接收"><a href="#6-重点：更改transport-sendPacketBuffer和transport-getdatanb函数，这两个函数就是MQTT操作单片机发送和接受数据的主要函数，在这里我们用USART来改变里面的发送数据的函数，使用中断方式发送，中断方式接收" class="headerlink" title="6.重点：更改transport_sendPacketBuffer和transport_getdatanb函数，这两个函数就是MQTT操作单片机发送和接受数据的主要函数，在这里我们用USART来改变里面的发送数据的函数，使用中断方式发送，中断方式接收"></a>6.重点：更改<code>transport_sendPacketBuffer</code>和<code>transport_getdatanb</code>函数，这两个函数就是MQTT操作单片机发送和接受数据的主要函数，在这里我们用USART来改变里面的发送数据的函数，使用中断方式发送，中断方式接收</h4><p>通过这样的方式，使硬件和上层MQTT应用层代码解耦合，如果之后使用不同的硬件，其他代码不需要更改，只需要更改transport中的代码。来适应当时使用的通讯模块就可以了。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">transport_sendPacketBuffer</span><span class="params">(<span class="keyword">int</span> sock, <span class="keyword">unsigned</span> <span class="keyword">char</span>* buf, <span class="keyword">int</span> buflen)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	</span><br><span class="line">	USART3_RX_STA = <span class="number">0</span>;</span><br><span class="line">	<span class="built_in">memset</span>(USART3_RX_BUF,<span class="number">0</span>,USART3_MAX_RECV_LEN);</span><br><span class="line">	HAL_UART_Transmit(&amp;huart3, buf, buflen,<span class="number">1000</span>);</span><br><span class="line">	<span class="keyword">return</span> buflen;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">transport_getdata</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">char</span>* buf, <span class="keyword">int</span> count)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">uint8_t</span> i=<span class="number">10</span>;</span><br><span class="line">	<span class="built_in">memcpy</span>(buf, (<span class="keyword">const</span> <span class="keyword">char</span>*)USART3_RX_BUF, count);</span><br><span class="line">	</span><br><span class="line">	USART3_RX_STA = <span class="number">0</span>;</span><br><span class="line">	<span class="built_in">memset</span>(USART3_RX_BUF,<span class="number">0</span>,USART3_MAX_RECV_LEN);</span><br><span class="line">	<span class="keyword">return</span> count;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="7-剩下的三个函数让他们直接变为空"><a href="#7-剩下的三个函数让他们直接变为空" class="headerlink" title="7.剩下的三个函数让他们直接变为空"></a>7.剩下的三个函数让他们直接变为空</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">transport_getdatanb</span><span class="params">(<span class="keyword">void</span> *sck, <span class="keyword">unsigned</span> <span class="keyword">char</span>* buf, <span class="keyword">int</span> count)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">transport_open</span><span class="params">(<span class="keyword">char</span>* addr, <span class="keyword">int</span> port)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">transport_close</span><span class="params">(<span class="keyword">int</span> sock)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="8-在main函数中加入头文件，以检验移植是否成功"><a href="#8-在main函数中加入头文件，以检验移植是否成功" class="headerlink" title="8.在main函数中加入头文件，以检验移植是否成功"></a>8.在main函数中加入头文件，以检验移植是否成功</h4><p><img src="https://img-blog.csdnimg.cn/20200227222730240.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;esp8266.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;MQTTPacket.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;transport.h&quot;</span></span></span><br></pre></td></tr></table></figure>
+
+<h4 id="9-编译工程，没有错误，移植成功"><a href="#9-编译工程，没有错误，移植成功" class="headerlink" title="9.编译工程，没有错误，移植成功"></a>9.编译工程，没有错误，移植成功</h4><p><img src="https://img-blog.csdnimg.cn/20200227223635333.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h1 id="连接阿里云服务器"><a href="#连接阿里云服务器" class="headerlink" title="连接阿里云服务器"></a>连接阿里云服务器</h1><h4 id="1-根据单步调试的原则，先测试用TCP连接阿里云IOT服务器是否成功"><a href="#1-根据单步调试的原则，先测试用TCP连接阿里云IOT服务器是否成功" class="headerlink" title="1.根据单步调试的原则，先测试用TCP连接阿里云IOT服务器是否成功"></a>1.根据单步调试的原则，先测试用TCP连接阿里云IOT服务器是否成功</h4><p><img src="https://img-blog.csdnimg.cn/2020030213262457.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>根据以上的域名，更改在AT指令连接TCP服务器处的域名和端口号</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> IOT_DOMAIN_NAME <span class="meta-string">&quot;a1w0XJbXwh0.iot-as-mqtt.cn-shanghai.aliyuncs.com&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> IOT_PORTNUM 	<span class="meta-string">&quot;1883&quot;</span></span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">uint8_t</span> <span class="title">esp8266_Connect_Server</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">uint8_t</span> i=<span class="number">10</span>;</span><br><span class="line">	<span class="keyword">char</span> *p = (<span class="keyword">char</span>*)<span class="built_in">malloc</span>(<span class="number">50</span>);</span><br><span class="line">	<span class="built_in">sprintf</span>((<span class="keyword">char</span>*)p,<span class="string">&quot;AT+CIPSTART=\&quot;TCP\&quot;,\&quot;%s\&quot;,\%s&quot;</span>,IOT_DOMAIN_NAME,IOT_PORTNUM);</span><br><span class="line">	<span class="keyword">while</span>(esp8266_send_cmd(p,<span class="string">&quot;CONNECT&quot;</span>,<span class="number">1000</span>)&amp;&amp;i)</span><br><span class="line">	&#123;</span><br><span class="line">		u1_printf(<span class="string">&quot;链接服务器失败，尝试重新连接\r\n&quot;</span>);</span><br><span class="line">		i--;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">free</span>(p);</span><br><span class="line">	<span class="keyword">if</span>(i)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>下面是esp8266初始化函数的代码片段，完整代码请看物联网项目设计(三)</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">u1_printf(<span class="string">&quot;设置为关闭多路连接\r\n&quot;</span>);</span><br><span class="line">	<span class="keyword">if</span>(esp8266_send_cmd(<span class="string">&quot;AT+CIPMUX=0&quot;</span>,<span class="string">&quot;OK&quot;</span>,<span class="number">100</span>))</span><br><span class="line">	&#123;</span><br><span class="line">		u1_printf(<span class="string">&quot;关闭多路连接失败，准备重启\r\n&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">7</span>;</span><br><span class="line">	&#125;<span class="keyword">else</span> u1_printf(<span class="string">&quot;设置关闭多路连接成功\r\n&quot;</span>);</span><br><span class="line">	</span><br><span class="line">	</span><br><span class="line">	u1_printf(<span class="string">&quot;准备链接服务器\r\n&quot;</span>);</span><br><span class="line">	<span class="keyword">if</span>(esp8266_Connect_Server())</span><br><span class="line">	&#123;</span><br><span class="line">		u1_printf(<span class="string">&quot;连接服务器失败，等待重启\r\n&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">8</span>;</span><br><span class="line">	&#125;<span class="keyword">else</span> u1_printf(<span class="string">&quot;连接服务器成功\r\n&quot;</span>);</span><br><span class="line">	</span><br><span class="line">	u1_printf(<span class="string">&quot;准备退出透传模式\n&quot;</span>);</span><br><span class="line">	<span class="keyword">if</span>(esp8266_quit_trans())</span><br><span class="line">	&#123;</span><br><span class="line">		u1_printf(<span class="string">&quot;退出透传模式失败，准备重启\r\n&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">6</span>;</span><br><span class="line">	&#125;<span class="keyword">else</span> u1_printf(<span class="string">&quot;退出透传模式成功\r\n&quot;</span>);</span><br></pre></td></tr></table></figure>
+<p>通过串口助手发现成功连接<br><img src="https://img-blog.csdnimg.cn/20200228102652418.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h4 id="2-参考开源代码和文档，寻找连接方法。"><a href="#2-参考开源代码和文档，寻找连接方法。" class="headerlink" title="2.参考开源代码和文档，寻找连接方法。"></a>2.参考开源代码和文档，寻找连接方法。</h4><p>这里先使用ping的方法而不是直接的订阅或发布一个MQTT话题还是考虑到步子不要跨的太大，先测试是否能连接上。<br>paho mqtt的github代码包中有比较简单的测试代码，我们可以借鉴<br><img src="https://img-blog.csdnimg.cn/20200228103624301.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>研究了下他的步骤，先是创建一个结构体，然后对结构体中的参数进行赋值，最后使用<code>MQTTSerialize_connect</code>连接，使用<code>MQTTPacket_read(buf, buflen, transport_getdata) == CONNACK</code>检测是否连接成功，然后定时，不停地ping，但是这些初始化参数如何设定呢，准备连接好后仔细研究下阿里云的文档，少走弯路。<a target="_blank" rel="noopener" href="https://helpcdn.aliyun.com/document_detail/73742.html?spm=a2c4g.11186623.6.589.2fb76eebBvUFK3#title-gu1-dfz-qzi">文档链接</a></p>
+<p><em>以下是阿里云文档中对链接信息的描述</em><br><img src="https://img-blog.csdnimg.cn/20200228105224445.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>以下是Paho开源代码中的示例</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">MQTTPacket_connectData data = MQTTPacket_connectData_initializer;</span><br><span class="line">	data.clientID.cstring = <span class="string">&quot;me&quot;</span>;</span><br><span class="line">	data.keepAliveInterval = KEEPALIVE_INTERVAL;</span><br><span class="line">	data.cleansession = <span class="number">1</span>;</span><br><span class="line">	data.username.cstring = <span class="string">&quot;testuser&quot;</span>;</span><br><span class="line">	data.password.cstring = <span class="string">&quot;testpassword&quot;</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	len = MQTTSerialize_connect(buf, buflen, &amp;data);</span><br><span class="line">	rc = transport_sendPacketBuffer(mysock, buf, len);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;Sent MQTT connect\n&quot;</span>);</span><br><span class="line">	<span class="comment">/* wait for connack */</span></span><br><span class="line">	<span class="keyword">if</span> (MQTTPacket_read(buf, buflen, transport_getdata) == CONNACK)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">unsigned</span> <span class="keyword">char</span> sessionPresent, connack_rc;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (MQTTDeserialize_connack(&amp;sessionPresent, &amp;connack_rc, buf, buflen) != <span class="number">1</span> || connack_rc != <span class="number">0</span>)</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="built_in">printf</span>(<span class="string">&quot;Unable to connect, return code %d\n&quot;</span>, connack_rc);</span><br><span class="line">			<span class="keyword">goto</span> <span class="built_in">exit</span>;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span></span><br><span class="line">		<span class="keyword">goto</span> <span class="built_in">exit</span>;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;MQTT connected\n&quot;</span>);</span><br><span class="line">	start_ping_timer();</span><br><span class="line"></span><br><span class="line">	<span class="keyword">while</span> (!toStop)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">while</span>(!time_to_ping());</span><br><span class="line">		len = MQTTSerialize_pingreq(buf, buflen);</span><br><span class="line">		transport_sendPacketBuffer(mysock, buf, len);</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">&quot;Ping...&quot;</span>);</span><br><span class="line">		<span class="keyword">if</span> (MQTTPacket_read(buf, buflen, transport_getdata) == PINGRESP)&#123;</span><br><span class="line">			<span class="built_in">printf</span>(<span class="string">&quot;Pong\n&quot;</span>);</span><br><span class="line">			start_ping_timer();</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="built_in">printf</span>(<span class="string">&quot;OOPS\n&quot;</span>);</span><br><span class="line">			<span class="keyword">goto</span> <span class="built_in">exit</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		</span><br><span class="line">	&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="3-尝试编写MQTT协议连接阿里云IOT服务器并ping通。"><a href="#3-尝试编写MQTT协议连接阿里云IOT服务器并ping通。" class="headerlink" title="3.尝试编写MQTT协议连接阿里云IOT服务器并ping通。"></a>3.尝试编写MQTT协议连接阿里云IOT服务器并ping通。</h4><p>1.为了保证高度松耦合，连接MQTT服务器部分的代码我重新建立一个文件夹，并建立两个文件如下<img src="https://img-blog.csdnimg.cn/20200302134044223.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20200302134052863.png"></p>
+<p>因为最开始连的是百度服务器，所以名字起成上面的样子了。。。</p>
+<p>2.头文件中按照之前的设备三元组构建宏定义</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span>  PRODUCTKEY           <span class="meta-string">&quot;a1w0XJbXwh0&quot;</span>                                        </span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span>  PRODUCTKEY_LEN       strlen(PRODUCTKEY)                                   #<span class="meta-keyword">define</span>  DEVICENAME			 <span class="meta-string">&quot;SmartLED_01&quot;</span>                                              </span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span>  DEVICENAME_LEN       strlen(DEVICENAME)                                   </span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span>  DEVICESECRE          <span class="meta-string">&quot;uwMJYOGSoAPNdZBOi8hyDXXXXXXXXXXX&quot;</span>                  				 </span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span>  DEVICESECRE_LEN      strlen(DEVICESECRE)</span></span><br></pre></td></tr></table></figure>
+<p>3.按照开源例程的写法，并参照<a target="_blank" rel="noopener" href="https://help.aliyun.com/document_detail/146611.html?spm=a2c4g.11186623.2.27.7abc2cf04h8Xbs#task-2361871">阿里云的文档</a>，就能知道如何连接云服务器，编写相关代码，每三秒ping一次阿里云的服务器。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;IOT_baidu.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;utils_hmac.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">uint16_t</span> buflen=<span class="number">200</span>;</span><br><span class="line"><span class="keyword">unsigned</span> <span class="keyword">char</span> buf[<span class="number">200</span>];</span><br><span class="line"></span><br><span class="line"><span class="keyword">char</span> ClientID[<span class="number">128</span>];</span><br><span class="line"><span class="keyword">uint8_t</span> ClientID_len;</span><br><span class="line"></span><br><span class="line"><span class="keyword">char</span> Username[<span class="number">128</span>];</span><br><span class="line"><span class="keyword">uint8_t</span> Username_len;</span><br><span class="line"></span><br><span class="line"><span class="keyword">char</span> Password[<span class="number">128</span>];</span><br><span class="line"><span class="keyword">uint8_t</span> Password_len;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">uint8_t</span> <span class="title">IOT_baidu_connect</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">		<span class="keyword">uint32_t</span> len;</span><br><span class="line">		</span><br><span class="line">		<span class="keyword">char</span> temp[<span class="number">128</span>];</span><br><span class="line">		</span><br><span class="line">	</span><br><span class="line">		</span><br><span class="line">		MQTTPacket_connectData data = MQTTPacket_connectData_initializer;<span class="comment">//</span></span><br><span class="line">    </span><br><span class="line">		buflen = <span class="keyword">sizeof</span>(buf);</span><br><span class="line">		<span class="built_in">memset</span>(buf,<span class="number">0</span>,buflen);</span><br><span class="line">	</span><br><span class="line">		<span class="built_in">memset</span>(ClientID,<span class="number">128</span>,<span class="number">0</span>);                                               </span><br><span class="line">		<span class="built_in">sprintf</span>(ClientID,<span class="string">&quot;%s|securemode=3,signmethod=hmacsha1|&quot;</span>,DEVICENAME);  </span><br><span class="line">	</span><br><span class="line">		<span class="built_in">memset</span>(Username,<span class="number">128</span>,<span class="number">0</span>);                                               </span><br><span class="line">		<span class="built_in">sprintf</span>(Username,<span class="string">&quot;%s&amp;%s&quot;</span>,DEVICENAME,PRODUCTKEY);                      </span><br><span class="line">	</span><br><span class="line">		Username_len = <span class="built_in">strlen</span>(Username);</span><br><span class="line">	</span><br><span class="line">		<span class="built_in">memset</span>(temp,<span class="number">128</span>,<span class="number">0</span>);                                                                      </span><br><span class="line">		<span class="built_in">sprintf</span>(temp,<span class="string">&quot;clientId%sdeviceName%sproductKey%s&quot;</span>,DEVICENAME,DEVICENAME,PRODUCTKEY);       </span><br><span class="line">		utils_hmac_sha1(temp,<span class="built_in">strlen</span>(temp),Password,DEVICESECRE,DEVICESECRE_LEN); <span class="comment">//Password的生成我使用的是网上的开源代码，如果没有的话可以使用阿里云文档中提供的密码静态生成工具                </span></span><br><span class="line">		Password_len = <span class="built_in">strlen</span>(Password);                                                         	</span><br><span class="line">		u1_printf(<span class="string">&quot;ClientId:%s\r\n&quot;</span>,ClientID);</span><br><span class="line">		u1_printf(<span class="string">&quot;Username:%s\r\n&quot;</span>,Username);</span><br><span class="line">		u1_printf(<span class="string">&quot;Password:%s\r\n&quot;</span>,Password);</span><br><span class="line">		</span><br><span class="line">		data.MQTTVersion = <span class="number">3</span>;</span><br><span class="line">		data.clientID.cstring = ClientID;						</span><br><span class="line">		data.keepAliveInterval = <span class="number">120</span>;		<span class="comment">//保活时间，单位为秒，也就是120秒内必须和服务器通讯一次，否则判定你下线，你就要重新连接					</span></span><br><span class="line">		data.cleansession = <span class="number">1</span>;									</span><br><span class="line">		data.username.cstring = Username;						</span><br><span class="line">		data.password.cstring = Password;						</span><br><span class="line">		</span><br><span class="line">		len = MQTTSerialize_connect(buf, buflen, &amp;data); 		</span><br><span class="line">		</span><br><span class="line">		transport_sendPacketBuffer(<span class="number">3</span>,buf, len);				</span><br><span class="line">		<span class="keyword">unsigned</span> <span class="keyword">char</span> sessionPresent, connack_rc;</span><br><span class="line">        <span class="keyword">do</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">while</span>(MQTTPacket_read(buf, buflen, transport_getdata) != CONNACK)<span class="comment">//¶Ô½ÓÊÕµ½µÄ±¨ÎÄ½øÐÐ½âÎö</span></span><br><span class="line">            &#123;</span><br><span class="line">                ;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">while</span>(MQTTDeserialize_connack(&amp;sessionPresent, &amp;connack_rc, buf, buflen) != <span class="number">1</span> || connack_rc != <span class="number">0</span>);</span><br><span class="line">					<span class="keyword">if</span>(connack_rc != <span class="number">0</span>)</span><br><span class="line">					&#123;</span><br><span class="line">						u1_printf(<span class="string">&quot;connack_rc:%uc\r\n&quot;</span>,connack_rc);</span><br><span class="line">					&#125;</span><br><span class="line">					</span><br><span class="line">					u1_printf(<span class="string">&quot;Connect Success!\r\n&quot;</span>);</span><br><span class="line">					</span><br><span class="line">					<span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">					&#123;</span><br><span class="line">						HAL_Delay(<span class="number">3000</span>);</span><br><span class="line">						len = MQTTSerialize_pingreq(buf, buflen);</span><br><span class="line">						transport_sendPacketBuffer(<span class="number">3</span>, buf, len);</span><br><span class="line">						HAL_Delay(<span class="number">100</span>);</span><br><span class="line">						u1_printf(<span class="string">&quot;Ping...\r\n&quot;</span>);</span><br><span class="line">						<span class="keyword">if</span> (MQTTPacket_read(buf, buflen, transport_getdata) == PINGRESP)&#123;</span><br><span class="line">							u1_printf(<span class="string">&quot;Pong\r\n&quot;</span>);</span><br><span class="line">						</span><br><span class="line">						&#125;</span><br><span class="line">						<span class="keyword">else</span> &#123;</span><br><span class="line">							u1_printf(<span class="string">&quot;OOPS\r\n&quot;</span>);</span><br><span class="line">						</span><br><span class="line">						&#125;</span><br><span class="line">					&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">uint8_t</span> <span class="title">IOT_baidu_ping</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">		<span class="keyword">uint32_t</span> len;</span><br><span class="line">		len = MQTTSerialize_pingreq(buf, buflen);</span><br><span class="line">		transport_sendPacketBuffer(<span class="number">3</span>, buf, len);</span><br><span class="line">		u1_printf(<span class="string">&quot;Ping...\r\n&quot;</span>);</span><br><span class="line">		<span class="keyword">if</span> (MQTTPacket_read(buf, buflen, transport_getdata) == PINGRESP)&#123;</span><br><span class="line">			u1_printf(<span class="string">&quot;Pong\r\n&quot;</span>);</span><br><span class="line">			<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			u1_printf(<span class="string">&quot;OOPS\r\n&quot;</span>);</span><br><span class="line">			<span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>4.最后在main中编写测试代码，并通过串口观察现象，每三秒ping一次</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">u1_printf(<span class="string">&quot;开始配置&quot;</span>);</span><br><span class="line">	HAL_Delay(<span class="number">1000</span>);</span><br><span class="line">	HAL_Delay(<span class="number">1000</span>);</span><br><span class="line">	HAL_Delay(<span class="number">1000</span>);</span><br><span class="line">	</span><br><span class="line">  <span class="comment">/* USER CODE END 2 */</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Infinite loop */</span></span><br><span class="line">  <span class="comment">/* USER CODE BEGIN WHILE */</span></span><br><span class="line">  <span class="keyword">while</span>(esp8266_Connect_IOTServer());</span><br><span class="line">  <span class="keyword">while</span>(IOT_baidu_connect());</span><br><span class="line">  <span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="comment">/* USER CODE END WHILE */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* USER CODE BEGIN 3 */</span></span><br><span class="line">	  IOT_baidu_ping();</span><br><span class="line">	  HAL_Delay(<span class="number">3000</span>);</span><br><span class="line">	  </span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://img-blog.csdnimg.cn/20200302140656538.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>连接成功并ping通，同时在阿里云端发现设备在线，试验成功</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><h5 id="1-本次实验演示了如何使用Paho-MQTT协议栈连接阿里云IOT平台，使用开源协议如MQTT的便利之处在于资料多，且多平台适用。"><a href="#1-本次实验演示了如何使用Paho-MQTT协议栈连接阿里云IOT平台，使用开源协议如MQTT的便利之处在于资料多，且多平台适用。" class="headerlink" title="1.本次实验演示了如何使用Paho MQTT协议栈连接阿里云IOT平台，使用开源协议如MQTT的便利之处在于资料多，且多平台适用。"></a>1.本次实验演示了如何使用Paho MQTT协议栈连接阿里云IOT平台，使用开源协议如MQTT的便利之处在于资料多，且多平台适用。</h5><h5 id="2-下一部分内容，使用stm32-esp8266订阅与发布阿里云平台的话题，并控制板子上LED的亮灭"><a href="#2-下一部分内容，使用stm32-esp8266订阅与发布阿里云平台的话题，并控制板子上LED的亮灭" class="headerlink" title="2.下一部分内容，使用stm32+esp8266订阅与发布阿里云平台的话题，并控制板子上LED的亮灭"></a>2.下一部分内容，使用stm32+esp8266订阅与发布阿里云平台的话题，并控制板子上LED的亮灭</h5><h5 id="3-研究了下阿里云整套开发流程，完成小程序的开发恐怕还要完成服务器的建立，工作量怕是要提升了"><a href="#3-研究了下阿里云整套开发流程，完成小程序的开发恐怕还要完成服务器的建立，工作量怕是要提升了" class="headerlink" title="3.研究了下阿里云整套开发流程，完成小程序的开发恐怕还要完成服务器的建立，工作量怕是要提升了"></a>3.研究了下阿里云整套开发流程，完成小程序的开发恐怕还要完成服务器的建立，工作量怕是要提升了</h5>
+      
+    </div>
+    <footer class="article-footer">
+      
+        <div id="donation_div"></div>
+
+
+<script src="/js/vdonate.js"></script>
+
+<script>
+var a = new Donate({
+  title: '如果觉得我的文章对您有用，请随意打赏。您的支持将鼓励我继续创作!', // 可选参数，打赏标题
+  btnText: 'Donate', // 可选参数，打赏按钮文字
+  el: document.getElementById('donation_div'),
+  wechatImage: 'https://raw.githubusercontent.com/iTimeTraveler/iTimeTraveler.github.io/site/source/about/donate/images/WeChanQR.png',
+  alipayImage: 'https://raw.githubusercontent.com/iTimeTraveler/iTimeTraveler.github.io/site/source/about/donate/images/AliPayQR.jpg'
+});
+</script>
+      
+      
+      <div>
+        <ul class="post-copyright">
+          <li class="post-copyright-author">
+          <strong>Post author:  </strong>Fran Hawk</a>
+          </li>
+          <li class="post-copyright-link">
+          <strong>Post link:  </strong>
+          <a href="/2020/03/02/物联网项目设计 （五） Paho mqtt 库在STM32+esp8266 硬件平台上的移植和使用第一部分，连接阿里云IOT平台/" target="_blank" title="物联网项目设计 （五） Paho mqtt 库在STM32+esp8266 硬件平台上的移植和使用第一部分，连接阿里云IOT平台">http://example.com/2020/03/02/物联网项目设计 （五） Paho mqtt 库在STM32+esp8266 硬件平台上的移植和使用第一部分，连接阿里云IOT平台/</a>
+          </li>
+          <li class="post-copyright-license">
+            <strong>Copyright Notice:   </strong>
+            All articles in this blog are licensed under <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">CC BY-NC-ND 4.0</a>
+            unless stating additionally.
+          </li>
+         
+        </ul>
+<div>
+
+      
+      
+        
+	<div id="comment">
+		<!-- 来必力City版安装代码 -->
+		<div id="lv-container" data-id="city" data-uid="MTAyMC8yOTQ4MS82MDQ5">
+		<script type="text/javascript">
+		   (function(d, s) {
+		       var j, e = d.getElementsByTagName(s)[0];
+
+		       if (typeof LivereTower === 'function') { return; }
+
+		       j = d.createElement(s);
+		       j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+		       j.async = true;
+
+		       e.parentNode.insertBefore(j, e);
+		   })(document, 'script');
+		</script>
+		<noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+		</div>
+		<!-- City版安装代码已完成 -->
+	</div>
+
+
+
+      
+      
+        
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/STM32/" rel="tag">STM32</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%89%A9%E8%81%94%E7%BD%91/" rel="tag">物联网</a></li></ul>
+
+      
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2020/03/03/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%20%EF%BC%88%E5%85%AD%EF%BC%89%20stm32+mqtt%E8%BF%9E%E6%8E%A5%E9%98%BF%E9%87%8C%E4%BA%91IOT%E5%AE%8C%E6%88%90%E8%AF%9D%E9%A2%98%E5%8F%91%E5%B8%83%E4%B8%8E%E8%AE%A2%E9%98%85/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          物联网项目设计 （六） stm32+mqtt连接阿里云IOT完成话题发布与订阅
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2020/02/27/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%EF%BC%88%E5%9B%9B%EF%BC%89cJSON%20%E5%9C%A8%20STM32%20%E7%A7%BB%E6%A4%8D%E5%92%8C%E4%BD%BF%E7%94%A8/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">物联网项目设计（四）cJSON 在 STM32 移植和使用</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+<!-- Table of Contents -->
+
+  <aside id="toc-sidebar">
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">Contents</strong>
+    
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%A1%AC%E4%BB%B6%E5%87%86%E5%A4%87"><span class="nav-number">2.</span> <span class="nav-text">硬件准备</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%BD%AF%E4%BB%B6%E5%87%86%E5%A4%87"><span class="nav-number">3.</span> <span class="nav-text">软件准备</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%BD%93%E5%88%9B%E5%BB%BA%E5%A5%BD%E8%AE%BE%E5%A4%87%E5%90%8E%EF%BC%8C%E4%BC%9A%E7%94%9F%E6%88%90%E4%B8%80%E4%B8%AA%E8%AE%BE%E5%A4%87%E4%B8%89%E5%85%83%E7%BB%84%EF%BC%8C%E5%90%8E%E9%9D%A2%E6%88%91%E4%BB%AC%E8%BF%9E%E6%8E%A5IOT%E5%B9%B3%E5%8F%B0%E4%BD%BF%E7%94%A8%E4%B8%80%E6%9C%BA%E4%B8%80%E5%AF%86%E7%9A%84%E6%96%B9%E5%BC%8F%EF%BC%8C%E8%BF%99%E4%B8%AA%E8%AE%BE%E5%A4%87%E4%B8%89%E5%85%83%E7%BB%84%E5%90%8E%E9%9D%A2%E4%BC%9A%E7%BB%8F%E5%B8%B8%E7%94%A8%EF%BC%8C%E8%AE%B0%E5%BE%97%E5%A6%A5%E5%96%84%E4%BF%9D%E5%AD%98"><span class="nav-number">3.0.0.0.1.</span> <span class="nav-text">当创建好设备后，会生成一个设备三元组，后面我们连接IOT平台使用一机一密的方式，这个设备三元组后面会经常用，记得妥善保存</span></a></li></ol></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%A7%BB%E6%A4%8Dpaho-mqtt%E5%BA%93%E8%87%B3STM32%E5%B7%A5%E7%A8%8B%E4%B8%AD"><span class="nav-number">4.</span> <span class="nav-text">移植paho mqtt库至STM32工程中</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E4%BB%8Egithub%E4%B8%8A%E4%B8%8B%E8%BD%BDpaho-mqtt%E5%B5%8C%E5%85%A5%E5%BC%8F%E7%89%88%E6%9C%AC%E5%BC%80%E6%BA%90%E5%BA%93%EF%BC%8C%E4%BB%A3%E7%A0%81%E9%93%BE%E6%8E%A5%E3%80%82"><span class="nav-number">4.0.0.1.</span> <span class="nav-text">1.从github上下载paho mqtt嵌入式版本开源库，代码链接。</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E8%A7%A3%E5%8E%8B%E5%B9%B6%E6%89%93%E5%BC%80"><span class="nav-number">4.0.0.2.</span> <span class="nav-text">2.解压并打开</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E5%9C%A8%E8%87%AA%E5%B7%B1%E7%9A%84%E5%B7%A5%E7%A8%8B%E4%B8%AD%E6%96%B0%E5%BB%BA%E4%B8%80%E4%B8%AA%E6%96%87%E4%BB%B6%E5%A4%B9%E5%AD%98%E6%94%BE%E8%BF%99%E4%BA%9B%E6%96%87%E4%BB%B6%EF%BC%8C%E6%88%91%E7%94%A8%E7%9A%84%E5%B7%A5%E7%A8%8B%E6%98%AF%E7%89%A9%E8%81%94%E7%BD%91%EF%BC%88%E4%B8%89%EF%BC%89%E4%B8%AD%E5%88%9B%E5%BB%BA%E7%9A%84%E5%B7%A5%E7%A8%8B"><span class="nav-number">4.0.0.3.</span> <span class="nav-text">3.在自己的工程中新建一个文件夹存放这些文件，我用的工程是物联网（三）中创建的工程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E5%9C%A8%E5%B7%A5%E7%A8%8B%E4%B8%AD%E6%B7%BB%E5%8A%A0%E8%BF%99%E4%BA%9B%E6%96%87%E4%BB%B6"><span class="nav-number">4.0.0.4.</span> <span class="nav-text">4.在工程中添加这些文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E6%89%BE%E5%88%B0transport-c-%E5%AF%B9%E5%85%B6%E8%BF%9B%E8%A1%8C%E6%9B%B4%E6%94%B9%EF%BC%8C%E9%A6%96%E5%85%88%E6%94%B9%E6%8E%89%E4%B8%8A%E9%9D%A2%E7%94%A8%E7%9A%84include%E5%87%BD%E6%95%B0%EF%BC%8C%E6%94%B9%E4%B8%BA%E8%87%AA%E5%B7%B1%E7%9A%84%EF%BC%8C%E4%B8%8B%E9%9D%A2%E7%9A%84%E6%98%AF%E6%88%91%E6%A0%B9%E6%8D%AE%E8%87%AA%E5%B7%B1%E7%9A%84%E8%BD%AF%E4%BB%B6%E7%8E%AF%E5%A2%83%E6%9B%B4%E6%94%B9%E7%9A%84%E5%A4%B4%E6%96%87%E4%BB%B6%E5%A6%82%E4%B8%8B"><span class="nav-number">4.0.0.5.</span> <span class="nav-text">5.找到transport.c ,对其进行更改，首先改掉上面用的include函数，改为自己的，下面的是我根据自己的软件环境更改的头文件如下</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-%E9%87%8D%E7%82%B9%EF%BC%9A%E6%9B%B4%E6%94%B9transport-sendPacketBuffer%E5%92%8Ctransport-getdatanb%E5%87%BD%E6%95%B0%EF%BC%8C%E8%BF%99%E4%B8%A4%E4%B8%AA%E5%87%BD%E6%95%B0%E5%B0%B1%E6%98%AFMQTT%E6%93%8D%E4%BD%9C%E5%8D%95%E7%89%87%E6%9C%BA%E5%8F%91%E9%80%81%E5%92%8C%E6%8E%A5%E5%8F%97%E6%95%B0%E6%8D%AE%E7%9A%84%E4%B8%BB%E8%A6%81%E5%87%BD%E6%95%B0%EF%BC%8C%E5%9C%A8%E8%BF%99%E9%87%8C%E6%88%91%E4%BB%AC%E7%94%A8USART%E6%9D%A5%E6%94%B9%E5%8F%98%E9%87%8C%E9%9D%A2%E7%9A%84%E5%8F%91%E9%80%81%E6%95%B0%E6%8D%AE%E7%9A%84%E5%87%BD%E6%95%B0%EF%BC%8C%E4%BD%BF%E7%94%A8%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F%E5%8F%91%E9%80%81%EF%BC%8C%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F%E6%8E%A5%E6%94%B6"><span class="nav-number">4.0.0.6.</span> <span class="nav-text">6.重点：更改transport_sendPacketBuffer和transport_getdatanb函数，这两个函数就是MQTT操作单片机发送和接受数据的主要函数，在这里我们用USART来改变里面的发送数据的函数，使用中断方式发送，中断方式接收</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#7-%E5%89%A9%E4%B8%8B%E7%9A%84%E4%B8%89%E4%B8%AA%E5%87%BD%E6%95%B0%E8%AE%A9%E4%BB%96%E4%BB%AC%E7%9B%B4%E6%8E%A5%E5%8F%98%E4%B8%BA%E7%A9%BA"><span class="nav-number">4.0.0.7.</span> <span class="nav-text">7.剩下的三个函数让他们直接变为空</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#8-%E5%9C%A8main%E5%87%BD%E6%95%B0%E4%B8%AD%E5%8A%A0%E5%85%A5%E5%A4%B4%E6%96%87%E4%BB%B6%EF%BC%8C%E4%BB%A5%E6%A3%80%E9%AA%8C%E7%A7%BB%E6%A4%8D%E6%98%AF%E5%90%A6%E6%88%90%E5%8A%9F"><span class="nav-number">4.0.0.8.</span> <span class="nav-text">8.在main函数中加入头文件，以检验移植是否成功</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#9-%E7%BC%96%E8%AF%91%E5%B7%A5%E7%A8%8B%EF%BC%8C%E6%B2%A1%E6%9C%89%E9%94%99%E8%AF%AF%EF%BC%8C%E7%A7%BB%E6%A4%8D%E6%88%90%E5%8A%9F"><span class="nav-number">4.0.0.9.</span> <span class="nav-text">9.编译工程，没有错误，移植成功</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%BF%9E%E6%8E%A5%E9%98%BF%E9%87%8C%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="nav-number">5.</span> <span class="nav-text">连接阿里云服务器</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E6%A0%B9%E6%8D%AE%E5%8D%95%E6%AD%A5%E8%B0%83%E8%AF%95%E7%9A%84%E5%8E%9F%E5%88%99%EF%BC%8C%E5%85%88%E6%B5%8B%E8%AF%95%E7%94%A8TCP%E8%BF%9E%E6%8E%A5%E9%98%BF%E9%87%8C%E4%BA%91IOT%E6%9C%8D%E5%8A%A1%E5%99%A8%E6%98%AF%E5%90%A6%E6%88%90%E5%8A%9F"><span class="nav-number">5.0.0.1.</span> <span class="nav-text">1.根据单步调试的原则，先测试用TCP连接阿里云IOT服务器是否成功</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E5%8F%82%E8%80%83%E5%BC%80%E6%BA%90%E4%BB%A3%E7%A0%81%E5%92%8C%E6%96%87%E6%A1%A3%EF%BC%8C%E5%AF%BB%E6%89%BE%E8%BF%9E%E6%8E%A5%E6%96%B9%E6%B3%95%E3%80%82"><span class="nav-number">5.0.0.2.</span> <span class="nav-text">2.参考开源代码和文档，寻找连接方法。</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E5%B0%9D%E8%AF%95%E7%BC%96%E5%86%99MQTT%E5%8D%8F%E8%AE%AE%E8%BF%9E%E6%8E%A5%E9%98%BF%E9%87%8C%E4%BA%91IOT%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%B9%B6ping%E9%80%9A%E3%80%82"><span class="nav-number">5.0.0.3.</span> <span class="nav-text">3.尝试编写MQTT协议连接阿里云IOT服务器并ping通。</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">6.</span> <span class="nav-text">总结</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-%E6%9C%AC%E6%AC%A1%E5%AE%9E%E9%AA%8C%E6%BC%94%E7%A4%BA%E4%BA%86%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8Paho-MQTT%E5%8D%8F%E8%AE%AE%E6%A0%88%E8%BF%9E%E6%8E%A5%E9%98%BF%E9%87%8C%E4%BA%91IOT%E5%B9%B3%E5%8F%B0%EF%BC%8C%E4%BD%BF%E7%94%A8%E5%BC%80%E6%BA%90%E5%8D%8F%E8%AE%AE%E5%A6%82MQTT%E7%9A%84%E4%BE%BF%E5%88%A9%E4%B9%8B%E5%A4%84%E5%9C%A8%E4%BA%8E%E8%B5%84%E6%96%99%E5%A4%9A%EF%BC%8C%E4%B8%94%E5%A4%9A%E5%B9%B3%E5%8F%B0%E9%80%82%E7%94%A8%E3%80%82"><span class="nav-number">6.0.0.0.1.</span> <span class="nav-text">1.本次实验演示了如何使用Paho MQTT协议栈连接阿里云IOT平台，使用开源协议如MQTT的便利之处在于资料多，且多平台适用。</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-%E4%B8%8B%E4%B8%80%E9%83%A8%E5%88%86%E5%86%85%E5%AE%B9%EF%BC%8C%E4%BD%BF%E7%94%A8stm32-esp8266%E8%AE%A2%E9%98%85%E4%B8%8E%E5%8F%91%E5%B8%83%E9%98%BF%E9%87%8C%E4%BA%91%E5%B9%B3%E5%8F%B0%E7%9A%84%E8%AF%9D%E9%A2%98%EF%BC%8C%E5%B9%B6%E6%8E%A7%E5%88%B6%E6%9D%BF%E5%AD%90%E4%B8%8ALED%E7%9A%84%E4%BA%AE%E7%81%AD"><span class="nav-number">6.0.0.0.2.</span> <span class="nav-text">2.下一部分内容，使用stm32+esp8266订阅与发布阿里云平台的话题，并控制板子上LED的亮灭</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-%E7%A0%94%E7%A9%B6%E4%BA%86%E4%B8%8B%E9%98%BF%E9%87%8C%E4%BA%91%E6%95%B4%E5%A5%97%E5%BC%80%E5%8F%91%E6%B5%81%E7%A8%8B%EF%BC%8C%E5%AE%8C%E6%88%90%E5%B0%8F%E7%A8%8B%E5%BA%8F%E7%9A%84%E5%BC%80%E5%8F%91%E6%81%90%E6%80%95%E8%BF%98%E8%A6%81%E5%AE%8C%E6%88%90%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E5%BB%BA%E7%AB%8B%EF%BC%8C%E5%B7%A5%E4%BD%9C%E9%87%8F%E6%80%95%E6%98%AF%E8%A6%81%E6%8F%90%E5%8D%87%E4%BA%86"><span class="nav-number">6.0.0.0.3.</span> <span class="nav-text">3.研究了下阿里云整套开发流程，完成小程序的开发恐怕还要完成服务器的建立，工作量怕是要提升了</span></a></li></ol></li></ol></li></ol></li></ol></li></ol>
+    
+    </div>
+  </aside>
+
+</section>
+        
+      </div>
+      
+      <footer id="footer">
+  
+
+  <div class="container">
+      	<div class="row">
+	      <p> Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/iTimeTraveler/hexo-theme-hiker" target="_blank">Hexo-theme-hiker</a> </p>
+	      <p id="copyRightEn">Copyright &copy; 2013 - 2021 张竞豪的小岛 All Rights Reserved.</p>
+	      
+	      
+    		<p class="busuanzi_uv">
+				UV : <span id="busuanzi_value_site_uv"></span> |  
+				PV : <span id="busuanzi_value_site_pv"></span>
+		    </p>
+  		   
+		</div>
+
+		
+  </div>
+</footer>
+
+
+<!-- min height -->
+
+<script>
+    var wrapdiv = document.getElementById("wrap");
+    var contentdiv = document.getElementById("content");
+    var allheader = document.getElementById("allheader");
+
+    wrapdiv.style.minHeight = document.body.offsetHeight + "px";
+    if (allheader != null) {
+      contentdiv.style.minHeight = document.body.offsetHeight - allheader.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    } else {
+      contentdiv.style.minHeight = document.body.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    }
+</script>
+    </div>
+    <!-- <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/categories" class="mobile-nav-link">Categories</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tags</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+</nav> -->
+    
+
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/scripts.js"></script>
+
+
+
+
+
+  
+<script src="/js/dialog.js"></script>
+
+
+
+
+
+
+
+
+
+	<div style="display: none;">
+    <script src="https://s95.cnzz.com/z_stat.php?id=1260716016&web_id=1260716016" language="JavaScript"></script>
+  </div>
+
+
+
+	<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js">
+	</script>
+
+
+
+
+
+
+  </div>
+
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="myModalLabel">设置</h2>
+      </div>
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+
+
+      <div class="modal-body">
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" onclick="javascript:setFontSize();" aria-expanded="true" aria-controls="collapseOne">
+              正文字号大小
+            </a>
+          </div>
+          <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+          <div class="panel-body">
+            您已调整页面字体大小
+          </div>
+        </div>
+      
+
+
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" onclick="javascript:setBackground();" aria-expanded="true" aria-controls="collapseTwo">
+              夜间护眼模式
+            </a>
+        </div>
+          <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+          <div class="panel-body">
+            夜间模式已经开启，再次单击按钮即可关闭 
+          </div>
+        </div>
+
+        <div>
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="true" aria-controls="collapseThree">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关 于&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+        </div>
+         <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+          <div class="panel-body">
+            张竞豪的小岛
+          </div>
+          <div class="panel-body">
+            Copyright © 2021 Fran Hawk All Rights Reserved.
+          </div>
+        </div>
+      </div>
+
+
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <div class="modal-footer">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+  
+  <a id="rocket" href="#top" class=""></a>
+  <script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+  
+    <a id="menu-switch"><i class="fa fa-bars fa-lg"></i></a>
+  
+</body>
+</html>

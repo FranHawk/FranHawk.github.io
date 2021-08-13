@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>stm32 cubemx 安装与使用入门（三）printf重定向，uart串口配置及gpio按键中断 | 张竞豪的小岛</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  <meta name="keywords" content="嵌入式STM32" />
+  
+  
+  
+  
+  <meta name="description" content="简介这部分内容介绍如何使用CubeMx配置UART串口查询式发送，和GPIO中断式按键控制。在这部分结束后，最后会介绍如何重定向printf到串口。 硬件准备笔者使用正点原子战舰V3开发板，使用任何主控是STM32的硬件设备并且带有GPIO控制的LED和按键，就可以，硬件上没有什么限制。开发板上自带usb转串口，用开发板链接数据线到电脑。 软件准备 STM32CubeMx  Keil MDK，IA">
+<meta property="og:type" content="article">
+<meta property="og:title" content="STM32 CubeMX 安装与使用入门（三）printf重定向，UART串口配置及GPIO按键中断">
+<meta property="og:url" content="http://example.com/2020/02/22/STM32%20CubeMX%20%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8%E5%85%A5%E9%97%A8%EF%BC%88%E4%B8%89%EF%BC%89printf%E9%87%8D%E5%AE%9A%E5%90%91%EF%BC%8CUART%E4%B8%B2%E5%8F%A3%E9%85%8D%E7%BD%AE%E5%8F%8AGPIO%E6%8C%89%E9%94%AE%E4%B8%AD%E6%96%AD/index.html">
+<meta property="og:site_name" content="张竞豪的小岛">
+<meta property="og:description" content="简介这部分内容介绍如何使用CubeMx配置UART串口查询式发送，和GPIO中断式按键控制。在这部分结束后，最后会介绍如何重定向printf到串口。 硬件准备笔者使用正点原子战舰V3开发板，使用任何主控是STM32的硬件设备并且带有GPIO控制的LED和按键，就可以，硬件上没有什么限制。开发板上自带usb转串口，用开发板链接数据线到电脑。 软件准备 STM32CubeMx  Keil MDK，IA">
+<meta property="og:locale">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200222204210440.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200222095430558.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200222095928754.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200222100207281.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200222101212829.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200222101221517.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200222101732928.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200222205322483.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2020022220581928.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200222210354818.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200222211135134.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2020022210235465.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200222102733717.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200222103150332.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200222103339946.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200222221842947.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="article:published_time" content="2020-02-22T11:50:43.000Z">
+<meta property="article:modified_time" content="2021-08-13T02:01:01.786Z">
+<meta property="article:author" content="Fran Hawk">
+<meta property="article:tag" content="嵌入式">
+<meta property="article:tag" content="STM32">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20200222204210440.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+  
+    <link rel="alternate" href="/atom.xml" title="张竞豪的小岛" type="application/atom+xml">
+  
+
+  
+
+  <link rel="icon" href="/css/images/mylogo.jpg">
+  <link rel="apple-touch-icon" href="/css/images/mylogo.jpg">
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Montserrat:700" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic" rel="stylesheet" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+  <style type="text/css">
+    @font-face{font-family:futura-pt; src:url("/css/fonts/FuturaPTBold.otf") format("woff");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt-light; src:url("/css/fonts/FuturaPTBook.otf") format("woff");font-weight:lighter;font-style:normal;}
+    @font-face{font-family:futura-pt-italic; src:url("/css/fonts/FuturaPTBookOblique.otf") format("woff");font-weight:400;font-style:italic;}
+}
+
+  </style>
+  
+<link rel="stylesheet" href="/css/style.css">
+
+
+  
+<script src="/js/jquery-3.1.1.min.js"></script>
+
+  
+<script src="/js/bootstrap.js"></script>
+
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.css" >
+
+  
+    
+<link rel="stylesheet" href="/css/dialog.css">
+
+  
+
+  
+
+  
+    <link rel="stylesheet" href="/css/header-post.css" >
+  
+
+  
+  
+  
+    <link rel="stylesheet" href="/css/vdonate.css" >
+  
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+
+
+  <body data-spy="scroll" data-target="#toc" data-offset="50">
+
+
+  
+  <div id="container">
+    <div id="wrap">
+      
+        <header>
+
+    <div id="allheader" class="navbar navbar-default navbar-static-top" role="navigation">
+        <div class="navbar-inner">
+          
+          <div class="container"> 
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+
+            
+              <a class="brand" style="
+                 margin-top: 0px;"  
+                href="#" data-toggle="modal" data-target="#myModal" >
+                  <img width="124px" height="124px" alt="Hike News" src="/css/images/mylogo.jpg">
+              </a>
+            
+            
+            <div class="navbar-collapse collapse">
+              <ul class="hnav navbar-nav">
+                
+                  <li> <a class="main-nav-link" href="/">Home</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/archives">Archives</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/categories">Categories</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/tags">Tags</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/about">About</a> </li>
+                
+                  <li><div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="" />
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="Type something..." />
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+</div></li>
+            </div>
+          </div>
+                
+      </div>
+    </div>
+
+</header>
+
+
+
+      
+            
+      <div id="content" class="outer">
+        
+          <section id="main" style="float:none;"><article id="post-STM32 CubeMX 安装与使用入门（三）printf重定向，UART串口配置及GPIO按键中断" style="width: 75%; float:left;" class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" class="article-title" itemprop="name">
+      STM32 CubeMX 安装与使用入门（三）printf重定向，UART串口配置及GPIO按键中断
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2020/02/22/STM32%20CubeMX%20%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8%E5%85%A5%E9%97%A8%EF%BC%88%E4%B8%89%EF%BC%89printf%E9%87%8D%E5%AE%9A%E5%90%91%EF%BC%8CUART%E4%B8%B2%E5%8F%A3%E9%85%8D%E7%BD%AE%E5%8F%8AGPIO%E6%8C%89%E9%94%AE%E4%B8%AD%E6%96%AD/" class="article-date">
+	  <time datetime="2020-02-22T11:50:43.000Z" itemprop="datePublished">2020-02-22</time>
+	</a>
+
+      
+      
+	<a class="article-views">
+	<span id="busuanzi_container_page_pv">
+		PV:<span id="busuanzi_value_page_pv"></span>
+	</span>
+	</a>
+
+      
+
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>这部分内容介绍如何使用CubeMx配置UART串口查询式发送，和GPIO中断式按键控制。在这部分结束后，最后会介绍如何重定向printf到串口。</p>
+<h1 id="硬件准备"><a href="#硬件准备" class="headerlink" title="硬件准备"></a>硬件准备</h1><p>笔者使用<strong>正点原子战舰V3开发板</strong>，使用任何主控是STM32的硬件设备并且带有GPIO控制的LED和按键，就可以，硬件上没有什么限制。开发板上自带usb转串口，用开发板链接数据线到电脑。<br><img src="https://img-blog.csdnimg.cn/20200222204210440.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h1 id="软件准备"><a href="#软件准备" class="headerlink" title="软件准备"></a>软件准备</h1><ul>
+<li>STM32CubeMx</li>
+<li> Keil MDK，IAR或类似的编译环境</li>
+</ul>
+<h1 id="实际操作部分"><a href="#实际操作部分" class="headerlink" title="实际操作部分"></a>实际操作部分</h1><h2 id="需求分析"><a href="#需求分析" class="headerlink" title="需求分析"></a>需求分析</h2><p>使用GPIO中断的方式扫描按键来控制LED的亮灭，并通过UART1向电脑发送信息。</p>
+<h2 id="上手操作"><a href="#上手操作" class="headerlink" title="上手操作"></a>上手操作</h2><p>打开CubeMx，选择ACCESS TO SELECTOR</p>
+<p><img src="https://img-blog.csdnimg.cn/20200222095430558.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>刚安装好第一次点击会进入一个加载页面，他是链接官网更新芯片库的，如果加载时间过长，也可以关闭加载页面，也能直接进入我们下一步要操作的页面</p>
+<p><img src="https://img-blog.csdnimg.cn/20200222095928754.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>在右上方选择你的硬件装置搭载的芯片，然后在左下方选择你要用的芯片并双击进入下一个页面。<br><img src="https://img-blog.csdnimg.cn/20200222100207281.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>可以通过界面发现，CubeMx工程的配置步骤非常清晰，从左到右分别为引脚与外设配置，时钟树配置，工程相关配置。从上到下也是系统核心功能到外设的配置。最右方的区域用图形化的方式配置相关的引脚。</p>
+<p>1.第一步需要配置时钟源，我在这里选用外部晶振作为外部时钟源。左侧选择后，右侧会自动选择外部时钟源要用的引脚<br><img src="https://img-blog.csdnimg.cn/20200222101212829.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><img src="https://img-blog.csdnimg.cn/20200222101221517.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>2.根据原理图找到相应的外设所在的引脚，这里我使用UART1和LED1，KEY1，KEY2<br><img src="https://img-blog.csdnimg.cn/20200222101732928.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20200222205322483.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<p>3.在引脚页面中配置相关引脚<br><img src="https://img-blog.csdnimg.cn/2020022220581928.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>上图配置GPIO相关，注意我这里配置的是外部中断下降沿触发，不同的硬件是不一样的，要留意自己的硬件应该是什么触发方式<br><img src="https://img-blog.csdnimg.cn/20200222210354818.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>上图配置USART串口相关，波特率选择115200，8位数据1位停止。</p>
+<p>3.因为使用了中断，需要配置NVIC的中断优先级</p>
+<p>NVIC全称</p>
+<blockquote>
+<p>Nested vectored interrupt controller</p>
+</blockquote>
+<p>即嵌套向量中断控制器，用来决定中断的优先级。</p>
+<p>NVIC在 ARM Conrtex-M 内核中，用一个 8 位的寄存器来配置，总共可以配置256级中断，但是 ST 公司在生产 STM32 的时候，发现一个小小的单片机根本用不了这么多，纯属浪费，所以将该寄存器的低 4 位全部置0，只使用高 4 位来配置，这样一来 STM32 就只有16级中断啦。</p>
+<ul>
+<li>配置优先级分组<br><img src="https://img-blog.csdnimg.cn/20200222211135134.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>这里优先级分组设置为2位抢占优先级2位子优先级<br>两个外部中断引脚抢占优先级分别设置为1和2</li>
+</ul>
+<p>4.引脚配置完了，接下来配置时钟树<br><img src="https://img-blog.csdnimg.cn/2020022210235465.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>时钟频率，f103zet6最高为72Mhz，通过配置，最后使APB外设的时钟频率达到最高就可以了</p>
+<p>5.配置工程相关<br><img src="https://img-blog.csdnimg.cn/20200222102733717.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>有两个地方要注意，生成工程的路径不能有中文，生成的IDE版本要正确，我这里选择的是MDK5.<br><img src="https://img-blog.csdnimg.cn/20200222103150332.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<p>6.配置完这些步骤后就可以点击GENERATE CODE生成工程了<br><img src="https://img-blog.csdnimg.cn/20200222103339946.png"><br>7.打开工程</p>
+<ul>
+<li>串口部分代码</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* USER CODE BEGIN 2 */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">uint8_t</span> recv_buf[<span class="number">100</span>];</span><br><span class="line">  <span class="comment">/* USER CODE END 2 */</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Infinite loop */</span></span><br><span class="line">  <span class="comment">/* USER CODE BEGIN WHILE */</span></span><br><span class="line">  <span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="comment">/* USER CODE END WHILE */</span></span><br><span class="line">		<span class="comment">//接收12个字节的数据，不超时</span></span><br><span class="line">    <span class="keyword">if</span>(HAL_OK == HAL_UART_Receive(&amp;huart1, (<span class="keyword">uint8_t</span>*)recv_buf, <span class="number">12</span>, <span class="number">0xFFFF</span>))</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="comment">//将接收到的数据发送</span></span><br><span class="line">      HAL_UART_Transmit(&amp;huart1, (<span class="keyword">uint8_t</span>*)recv_buf, <span class="number">12</span>, <span class="number">0xFFFF</span>);</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="comment">/* USER CODE BEGIN 3 */</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">/* USER CODE END 3 */</span></span><br></pre></td></tr></table></figure>
+
+<p>接收什么内容再原路返回</p>
+<ul>
+<li>按键外部中断部分代码</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">EXTI3_IRQHandler</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="comment">/* USER CODE BEGIN EXTI3_IRQn 0 */</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/* USER CODE END EXTI3_IRQn 0 */</span></span><br><span class="line">  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_3);</span><br><span class="line">  <span class="comment">/* USER CODE BEGIN EXTI3_IRQn 1 */</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/* USER CODE END EXTI3_IRQn 1 */</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">  * @brief This function handles EXTI line4 interrupt.</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">EXTI4_IRQHandler</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="comment">/* USER CODE BEGIN EXTI4_IRQn 0 */</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/* USER CODE END EXTI4_IRQn 0 */</span></span><br><span class="line">  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);</span><br><span class="line">  <span class="comment">/* USER CODE BEGIN EXTI4_IRQn 1 */</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/* USER CODE END EXTI4_IRQn 1 */</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>如上图，在stm32f1xx_it.c中<strong>两个外部中断调用的同一个中断函数</strong>？<br>不要担心，我们找到这个函数的定义处</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">HAL_GPIO_EXTI_IRQHandler</span><span class="params">(<span class="keyword">uint16_t</span> GPIO_Pin)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="comment">/* EXTI line interrupt detected */</span></span><br><span class="line">  <span class="keyword">if</span> (__HAL_GPIO_EXTI_GET_IT(GPIO_Pin) != <span class="number">0x00</span>u)</span><br><span class="line">  &#123;</span><br><span class="line">    __HAL_GPIO_EXTI_CLEAR_IT(GPIO_Pin);</span><br><span class="line">    HAL_GPIO_EXTI_Callback(GPIO_Pin);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">  * @brief  EXTI line detection callbacks.</span></span><br><span class="line"><span class="comment">  * @param  GPIO_Pin: Specifies the pins connected EXTI line</span></span><br><span class="line"><span class="comment">  * @retval None</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"><span class="function">__weak <span class="keyword">void</span> <span class="title">HAL_GPIO_EXTI_Callback</span><span class="params">(<span class="keyword">uint16_t</span> GPIO_Pin)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="comment">/* Prevent unused argument(s) compilation warning */</span></span><br><span class="line">  UNUSED(GPIO_Pin);</span><br><span class="line">  <span class="comment">/* <span class="doctag">NOTE:</span> This function Should not be modified, when the callback is needed,</span></span><br><span class="line"><span class="comment">           the HAL_GPIO_EXTI_Callback could be implemented in the user file</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>发现它使用的是一个用_weak定义的回调函数，这意味这，这个函数我们可以重新编写，完成自己想要的功能</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">HAL_GPIO_EXTI_Callback</span><span class="params">(<span class="keyword">uint16_t</span> GPIO_Pin)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="comment">/* 判断哪个引脚触发了中断 */</span></span><br><span class="line">	<span class="keyword">switch</span>(GPIO_Pin)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">case</span> GPIO_PIN_3:</span><br><span class="line">			<span class="comment">/* 处理GPIO3发生的中断 */</span></span><br><span class="line">			<span class="comment">//点亮LED</span></span><br><span class="line">			HAL_GPIO_WritePin(LED1_GPIO_Port,LED1_Pin,GPIO_PIN_SET);</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		<span class="keyword">case</span> GPIO_PIN_4:</span><br><span class="line">			<span class="comment">/* 处理GPIO4发生的中断 */</span></span><br><span class="line">			<span class="comment">//熄灭LED</span></span><br><span class="line">			HAL_GPIO_WritePin(LED1_GPIO_Port,LED1_Pin,GPIO_PIN_RESET);</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在main.c中，我重新定义了这个函数，完成可以控制LED灯亮灭的功能。</p>
+<p>8.下载代码观察现象，发现可以实现我们想要的功能：）</p>
+<p>9.基本功能已经实现，接下来进行后续工作</p>
+<h3 id="实现printf函数重定向至串口"><a href="#实现printf函数重定向至串口" class="headerlink" title="实现printf函数重定向至串口"></a>实现printf函数重定向至串口</h3><p>笔者查看了很多博客，最终发现了一种比较好的方式进行重定向</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;stdarg.h&quot;</span>	 	 </span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;stdio.h&quot;</span>	 	 </span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;string.h&quot;</span>	</span></span><br></pre></td></tr></table></figure>
+<p>首先在usart.c中引入这些库</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* USER CODE BEGIN 1 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">u1_printf</span><span class="params">(<span class="keyword">char</span>* fmt,...)</span>  </span></span><br><span class="line"><span class="function"></span>&#123;  </span><br><span class="line">	<span class="keyword">uint16_t</span> i; </span><br><span class="line">	<span class="keyword">uint16_t</span> j;</span><br><span class="line">	va_list ap; </span><br><span class="line">	va_start(ap,fmt);</span><br><span class="line">	<span class="built_in">vsprintf</span>((<span class="keyword">char</span>*)USART1_TX_BUF,fmt,ap);</span><br><span class="line">	va_end(ap);</span><br><span class="line">	i=<span class="built_in">strlen</span>((<span class="keyword">const</span> <span class="keyword">char</span>*)USART1_TX_BUF);		<span class="comment">//此次发送数据的长度</span></span><br><span class="line">	</span><br><span class="line">	<span class="keyword">for</span>(j=<span class="number">0</span>;j&lt;i;j++)							<span class="comment">//循环发送数据</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">while</span>((USART1-&gt;SR&amp;<span class="number">0X40</span>)==<span class="number">0</span>);			<span class="comment">//循环发送,直到发送完毕   </span></span><br><span class="line">		USART1-&gt;DR=USART1_TX_BUF[j];  </span><br><span class="line">	&#125; </span><br><span class="line">	</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">/* USER CODE END 1 */</span></span><br></pre></td></tr></table></figure>
+<p>在usart.c中添加函数如上</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* USER CODE BEGIN WHILE */</span></span><br><span class="line">  <span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="comment">/* USER CODE END WHILE */</span></span><br><span class="line">		<span class="comment">//接收12个字节的数据，不超时</span></span><br><span class="line">    <span class="keyword">if</span>(HAL_OK == HAL_UART_Receive(&amp;huart1, (<span class="keyword">uint8_t</span>*)recv_buf, <span class="number">12</span>, <span class="number">0xFFFF</span>))</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="comment">//将接收到的数据发送</span></span><br><span class="line">		u1_printf(<span class="string">&quot;your massege is :%s&quot;</span>,recv_buf);</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="comment">/* USER CODE BEGIN 3 */</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">/* USER CODE END 3 */</span></span><br></pre></td></tr></table></figure>
+<p>将main.c中的代码改成这个形式，编译并下载代码到硬件中进行验证<br><img src="https://img-blog.csdnimg.cn/20200222221842947.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<p><strong>可以实现想要的功能，这个函数名可以改成任意你想要的名字就行，叫u1_printf,printf都可以，甚至多个uart模块定义多个printf。<br><em>如u1_printf,u2_printf,u3_printf.</em></strong></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ul>
+<li>这部分内容实现了使用CubeMx配置中断优先级和串口，同时介绍了如何重定义printf到串口，这个之后能用到的地方很多，用于和各种模块通信。</li>
+<li>下一部分介绍如何使用CubeMx配置定时器相关功能，包括使用定时器输出PWM波，使用定时器中断，使用定时器完成输入捕获，敬请关注！</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+        <div id="donation_div"></div>
+
+
+<script src="/js/vdonate.js"></script>
+
+<script>
+var a = new Donate({
+  title: '如果觉得我的文章对您有用，请随意打赏。您的支持将鼓励我继续创作!', // 可选参数，打赏标题
+  btnText: 'Donate', // 可选参数，打赏按钮文字
+  el: document.getElementById('donation_div'),
+  wechatImage: 'https://raw.githubusercontent.com/iTimeTraveler/iTimeTraveler.github.io/site/source/about/donate/images/WeChanQR.png',
+  alipayImage: 'https://raw.githubusercontent.com/iTimeTraveler/iTimeTraveler.github.io/site/source/about/donate/images/AliPayQR.jpg'
+});
+</script>
+      
+      
+      <div>
+        <ul class="post-copyright">
+          <li class="post-copyright-author">
+          <strong>Post author:  </strong>Fran Hawk</a>
+          </li>
+          <li class="post-copyright-link">
+          <strong>Post link:  </strong>
+          <a href="/2020/02/22/STM32 CubeMX 安装与使用入门（三）printf重定向，UART串口配置及GPIO按键中断/" target="_blank" title="STM32 CubeMX 安装与使用入门（三）printf重定向，UART串口配置及GPIO按键中断">http://example.com/2020/02/22/STM32 CubeMX 安装与使用入门（三）printf重定向，UART串口配置及GPIO按键中断/</a>
+          </li>
+          <li class="post-copyright-license">
+            <strong>Copyright Notice:   </strong>
+            All articles in this blog are licensed under <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">CC BY-NC-ND 4.0</a>
+            unless stating additionally.
+          </li>
+         
+        </ul>
+<div>
+
+      
+      
+        
+	<div id="comment">
+		<!-- 来必力City版安装代码 -->
+		<div id="lv-container" data-id="city" data-uid="MTAyMC8yOTQ4MS82MDQ5">
+		<script type="text/javascript">
+		   (function(d, s) {
+		       var j, e = d.getElementsByTagName(s)[0];
+
+		       if (typeof LivereTower === 'function') { return; }
+
+		       j = d.createElement(s);
+		       j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+		       j.async = true;
+
+		       e.parentNode.insertBefore(j, e);
+		   })(document, 'script');
+		</script>
+		<noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+		</div>
+		<!-- City版安装代码已完成 -->
+	</div>
+
+
+
+      
+      
+        
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/STM32/" rel="tag">STM32</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag">嵌入式</a></li></ul>
+
+      
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2020/02/23/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%EF%BC%88%E4%B8%80%EF%BC%89%20%E9%9C%80%E6%B1%82%E5%88%86%E6%9E%90%E4%B8%8E%E6%A6%82%E8%A6%81%E8%AE%BE%E8%AE%A1/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          物联网项目设计（一） 需求分析与概要设计
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2020/02/22/STM32%20CubeMX%20%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8%E5%85%A5%E9%97%A8%EF%BC%88%E4%BA%8C%EF%BC%89GPIO%E7%9A%84%E4%BD%BF%E7%94%A8%EF%BC%8C%E7%82%B9%E4%BA%AELED%E4%BD%BF%E7%94%A8%E6%8C%89%E9%94%AE/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">STM32 CubeMX 安装与使用入门（二）GPIO的使用，点亮LED使用按键</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+<!-- Table of Contents -->
+
+  <aside id="toc-sidebar">
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">Contents</strong>
+    
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%A1%AC%E4%BB%B6%E5%87%86%E5%A4%87"><span class="nav-number">2.</span> <span class="nav-text">硬件准备</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%BD%AF%E4%BB%B6%E5%87%86%E5%A4%87"><span class="nav-number">3.</span> <span class="nav-text">软件准备</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%9E%E9%99%85%E6%93%8D%E4%BD%9C%E9%83%A8%E5%88%86"><span class="nav-number">4.</span> <span class="nav-text">实际操作部分</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9C%80%E6%B1%82%E5%88%86%E6%9E%90"><span class="nav-number">4.1.</span> <span class="nav-text">需求分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8A%E6%89%8B%E6%93%8D%E4%BD%9C"><span class="nav-number">4.2.</span> <span class="nav-text">上手操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0printf%E5%87%BD%E6%95%B0%E9%87%8D%E5%AE%9A%E5%90%91%E8%87%B3%E4%B8%B2%E5%8F%A3"><span class="nav-number">4.2.1.</span> <span class="nav-text">实现printf函数重定向至串口</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></ol>
+    
+    </div>
+  </aside>
+
+</section>
+        
+      </div>
+      
+      <footer id="footer">
+  
+
+  <div class="container">
+      	<div class="row">
+	      <p> Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/iTimeTraveler/hexo-theme-hiker" target="_blank">Hexo-theme-hiker</a> </p>
+	      <p id="copyRightEn">Copyright &copy; 2013 - 2021 张竞豪的小岛 All Rights Reserved.</p>
+	      
+	      
+    		<p class="busuanzi_uv">
+				UV : <span id="busuanzi_value_site_uv"></span> |  
+				PV : <span id="busuanzi_value_site_pv"></span>
+		    </p>
+  		   
+		</div>
+
+		
+  </div>
+</footer>
+
+
+<!-- min height -->
+
+<script>
+    var wrapdiv = document.getElementById("wrap");
+    var contentdiv = document.getElementById("content");
+    var allheader = document.getElementById("allheader");
+
+    wrapdiv.style.minHeight = document.body.offsetHeight + "px";
+    if (allheader != null) {
+      contentdiv.style.minHeight = document.body.offsetHeight - allheader.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    } else {
+      contentdiv.style.minHeight = document.body.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    }
+</script>
+    </div>
+    <!-- <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/categories" class="mobile-nav-link">Categories</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tags</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+</nav> -->
+    
+
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/scripts.js"></script>
+
+
+
+
+
+  
+<script src="/js/dialog.js"></script>
+
+
+
+
+
+
+
+
+
+	<div style="display: none;">
+    <script src="https://s95.cnzz.com/z_stat.php?id=1260716016&web_id=1260716016" language="JavaScript"></script>
+  </div>
+
+
+
+	<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js">
+	</script>
+
+
+
+
+
+
+  </div>
+
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="myModalLabel">设置</h2>
+      </div>
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+
+
+      <div class="modal-body">
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" onclick="javascript:setFontSize();" aria-expanded="true" aria-controls="collapseOne">
+              正文字号大小
+            </a>
+          </div>
+          <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+          <div class="panel-body">
+            您已调整页面字体大小
+          </div>
+        </div>
+      
+
+
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" onclick="javascript:setBackground();" aria-expanded="true" aria-controls="collapseTwo">
+              夜间护眼模式
+            </a>
+        </div>
+          <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+          <div class="panel-body">
+            夜间模式已经开启，再次单击按钮即可关闭 
+          </div>
+        </div>
+
+        <div>
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="true" aria-controls="collapseThree">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关 于&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+        </div>
+         <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+          <div class="panel-body">
+            张竞豪的小岛
+          </div>
+          <div class="panel-body">
+            Copyright © 2021 Fran Hawk All Rights Reserved.
+          </div>
+        </div>
+      </div>
+
+
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <div class="modal-footer">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+  
+  <a id="rocket" href="#top" class=""></a>
+  <script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+  
+    <a id="menu-switch"><i class="fa fa-bars fa-lg"></i></a>
+  
+</body>
+</html>

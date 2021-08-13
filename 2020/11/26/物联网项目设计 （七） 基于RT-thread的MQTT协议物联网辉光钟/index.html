@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>物联网项目设计 （七） 基于rt-thread的mqtt协议物联网辉光钟 | 张竞豪的小岛</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  <meta name="keywords" content="RT-ThreadSTM32物联网" />
+  
+  
+  
+  
+  <meta name="description" content="概述这是物联网项目设计的完结篇，本来想今年上半年完成的，但是中间因为一些事情比较忙，耽误了。后来整个项目设计推倒重来，采用了新的技术栈。但是前面的开发经历也为我提供了不少经验，后面我采用rtthread物联网操作系统，极大的加快了开发进度，同时采用在线电路设计软件立创EDA，让我一个从来没画过电路图的人很快掌握了原理图和PCB的绘制，强推一波。辉光钟的制作网上有很多资料，我也参考了网上的很多资料，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="物联网项目设计 （七） 基于RT-thread的MQTT协议物联网辉光钟">
+<meta property="og:url" content="http://example.com/2020/11/26/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%20%EF%BC%88%E4%B8%83%EF%BC%89%20%E5%9F%BA%E4%BA%8ERT-thread%E7%9A%84MQTT%E5%8D%8F%E8%AE%AE%E7%89%A9%E8%81%94%E7%BD%91%E8%BE%89%E5%85%89%E9%92%9F/index.html">
+<meta property="og:site_name" content="张竞豪的小岛">
+<meta property="og:description" content="概述这是物联网项目设计的完结篇，本来想今年上半年完成的，但是中间因为一些事情比较忙，耽误了。后来整个项目设计推倒重来，采用了新的技术栈。但是前面的开发经历也为我提供了不少经验，后面我采用rtthread物联网操作系统，极大的加快了开发进度，同时采用在线电路设计软件立创EDA，让我一个从来没画过电路图的人很快掌握了原理图和PCB的绘制，强推一波。辉光钟的制作网上有很多资料，我也参考了网上的很多资料，">
+<meta property="og:locale">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126221249441.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215207209.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215239514.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215307573.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215323484.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215332134.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215354289.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215402894.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215412351.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215424535.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215445809.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2020112621553459.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215542955.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215553539.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215601124.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2020112621561983.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215625598.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215634361.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215647225.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215651699.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215701635.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215706212.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215724367.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215728852.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215741677.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210130192555996.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215912922.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215925788.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126215957372.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20201126220003604.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210130192729904.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210130192642206.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2020112622142175.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="article:published_time" content="2020-11-26T11:50:43.000Z">
+<meta property="article:modified_time" content="2021-08-13T02:01:01.820Z">
+<meta property="article:author" content="Fran Hawk">
+<meta property="article:tag" content="RT-Thread">
+<meta property="article:tag" content="STM32">
+<meta property="article:tag" content="物联网">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20201126221249441.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center">
+  
+    <link rel="alternate" href="/atom.xml" title="张竞豪的小岛" type="application/atom+xml">
+  
+
+  
+
+  <link rel="icon" href="/css/images/mylogo.jpg">
+  <link rel="apple-touch-icon" href="/css/images/mylogo.jpg">
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Montserrat:700" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic" rel="stylesheet" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+  <style type="text/css">
+    @font-face{font-family:futura-pt; src:url("/css/fonts/FuturaPTBold.otf") format("woff");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt-light; src:url("/css/fonts/FuturaPTBook.otf") format("woff");font-weight:lighter;font-style:normal;}
+    @font-face{font-family:futura-pt-italic; src:url("/css/fonts/FuturaPTBookOblique.otf") format("woff");font-weight:400;font-style:italic;}
+}
+
+  </style>
+  
+<link rel="stylesheet" href="/css/style.css">
+
+
+  
+<script src="/js/jquery-3.1.1.min.js"></script>
+
+  
+<script src="/js/bootstrap.js"></script>
+
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.css" >
+
+  
+    
+<link rel="stylesheet" href="/css/dialog.css">
+
+  
+
+  
+
+  
+    <link rel="stylesheet" href="/css/header-post.css" >
+  
+
+  
+  
+  
+    <link rel="stylesheet" href="/css/vdonate.css" >
+  
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+
+
+  <body data-spy="scroll" data-target="#toc" data-offset="50">
+
+
+  
+  <div id="container">
+    <div id="wrap">
+      
+        <header>
+
+    <div id="allheader" class="navbar navbar-default navbar-static-top" role="navigation">
+        <div class="navbar-inner">
+          
+          <div class="container"> 
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+
+            
+              <a class="brand" style="
+                 margin-top: 0px;"  
+                href="#" data-toggle="modal" data-target="#myModal" >
+                  <img width="124px" height="124px" alt="Hike News" src="/css/images/mylogo.jpg">
+              </a>
+            
+            
+            <div class="navbar-collapse collapse">
+              <ul class="hnav navbar-nav">
+                
+                  <li> <a class="main-nav-link" href="/">Home</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/archives">Archives</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/categories">Categories</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/tags">Tags</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/about">About</a> </li>
+                
+                  <li><div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="" />
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="Type something..." />
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+</div></li>
+            </div>
+          </div>
+                
+      </div>
+    </div>
+
+</header>
+
+
+
+      
+            
+      <div id="content" class="outer">
+        
+          <section id="main" style="float:none;"><article id="post-物联网项目设计 （七） 基于RT-thread的MQTT协议物联网辉光钟" style="width: 75%; float:left;" class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" class="article-title" itemprop="name">
+      物联网项目设计 （七） 基于RT-thread的MQTT协议物联网辉光钟
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2020/11/26/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%20%EF%BC%88%E4%B8%83%EF%BC%89%20%E5%9F%BA%E4%BA%8ERT-thread%E7%9A%84MQTT%E5%8D%8F%E8%AE%AE%E7%89%A9%E8%81%94%E7%BD%91%E8%BE%89%E5%85%89%E9%92%9F/" class="article-date">
+	  <time datetime="2020-11-26T11:50:43.000Z" itemprop="datePublished">2020-11-26</time>
+	</a>
+
+      
+      
+	<a class="article-views">
+	<span id="busuanzi_container_page_pv">
+		PV:<span id="busuanzi_value_page_pv"></span>
+	</span>
+	</a>
+
+      
+
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>这是物联网项目设计的完结篇，本来想今年上半年完成的，但是中间因为一些事情比较忙，耽误了。后来整个项目设计推倒重来，采用了新的技术栈。但是前面的开发经历也为我提供了不少经验，后面我采用rtthread物联网操作系统，极大的加快了开发进度，同时采用在线电路设计软件立创EDA，让我一个从来没画过电路图的人很快掌握了原理图和PCB的绘制，强推一波。辉光钟的制作网上有很多资料，我也参考了网上的很多资料，但是把辉光钟和物联网结合到一起我觉得是个不错的创意，于是就去做了。<br>下面我先给出本项目的代码和电路图，希望大家喜欢的话给我的github仓库一些小星星~</p>
+<p>####演示视频</p>
+<p><a href="%5Bhttps://www.bilibili.com/video/BV1ir4y1c7zz%5D(https://www.bilibili.com/video/BV1ir4y1c7zz">视频</a></p>
+<h4 id="代码仓库"><a href="#代码仓库" class="headerlink" title="代码仓库"></a>代码仓库</h4><p><a target="_blank" rel="noopener" href="https://github.com/FranHawk/nixie_clock_rt_thread.git">https://github.com/FranHawk/nixie_clock_rt_thread.git</a></p>
+<h4 id="电路工程文件"><a href="#电路工程文件" class="headerlink" title="电路工程文件"></a>电路工程文件</h4><p>因为我用了两个板子拼到一起，所以有两个工程文件，打开网址就可以找到原理图和pcb<br><a target="_blank" rel="noopener" href="https://lceda.cn/FranHawk/nixie_testboard">https://lceda.cn/FranHawk/nixie_testboard</a><br><a target="_blank" rel="noopener" href="https://lceda.cn/FranHawk/nixie_mainboard">https://lceda.cn/FranHawk/nixie_mainboard</a></p>
+<h1 id="一、项目创意"><a href="#一、项目创意" class="headerlink" title="一、项目创意"></a>一、项目创意</h1><p>辉光管属于电真空器件，也就是电子管，玻璃外壳，通常为圆柱形，金属电极从底部引出管身外，内部有一个阳极电极，若干个阴极电极。辉光管内部并不是真空，充满着由氖气、氩气以及水银蒸汽等组成的混合气体，主要成分是惰性气体氖气。</p>
+<p>辉光管属于多年前的古老工艺，本是被时代淘汰的产物，但是由于辉光管发出的橙黄色光芒十分美观，且对驱动电路的要求非常高，所以受到广大爱好者的喜爱。而物联网技术的发展势头正劲，将古老的辉光管和新兴的物联网技术相结合，制作出的物联网辉光管时钟，将使辉光管焕发出新的活力。同时也体现出一定的技术性，创意性和装饰性。<br>     <img src="https://img-blog.csdnimg.cn/20201126221249441.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
+<h1 id="二、项目需求"><a href="#二、项目需求" class="headerlink" title="二、项目需求"></a>二、项目需求</h1><p>1.完成辉光管显示功能，四个IN12辉光管显示小时分钟或者分钟秒<br>2.辉光管发光稳定，走时精确，掉电时时钟保持走时<br>3.自动连接wifi远程控制功能，完成网页访问物联网平台控制辉光钟显示<br>4.自动校时功能，联网自动校准辉光钟时间<br>5.系统可保持长时间运行，不发生崩溃</p>
+<h1 id="三、框图及整机概述"><a href="#三、框图及整机概述" class="headerlink" title="三、框图及整机概述"></a>三、框图及整机概述</h1><p> <img src="https://img-blog.csdnimg.cn/20201126215207209.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
+<p>本项目分为硬件设备端完成主要功能和云服务器端完成人机交互和控制功能。</p>
+<h2 id="硬件设备端"><a href="#硬件设备端" class="headerlink" title="硬件设备端"></a>硬件设备端</h2><h3 id="1-STM32F103RCT6"><a href="#1-STM32F103RCT6" class="headerlink" title="1.STM32F103RCT6"></a>1.STM32F103RCT6</h3><p>使用stm32f103rct6作为主控芯片，48kB RAM，256kB ROM搭载RT-thread物联网实时操作系统.完成对各模块的通讯控制和多任务管理。</p>
+<h3 id="2-ESP8266-WIFI模块"><a href="#2-ESP8266-WIFI模块" class="headerlink" title="2.ESP8266 WIFI模块"></a>2.ESP8266 WIFI模块</h3><p>使用ESP8266模块完成硬件设备的物联网功能，ESP8266在数据链路层使用WIFI协议，适用于家庭室内这种不需要经常移动的场合。ESP8266已完整封装TCP/IP协议，只需要通过AT指令连接WIFI网络，然后进入透传模式，主控MCU发送过来的MQTT消息包就会经ESP8266发送至互联网，完成设备之间的解耦。同时通过ESP8266访问NTP服务器完成时钟的校时功能，ESP8266模块通过串口与主控MCU完成通讯。</p>
+<h3 id="3-DS3231-实时时钟芯片"><a href="#3-DS3231-实时时钟芯片" class="headerlink" title="3.DS3231 实时时钟芯片"></a>3.DS3231 实时时钟芯片</h3><p>使用DS3231高精度实时时钟芯片完成自动走时功能。DS3231是一款高精度I2C实时时钟器件，具有集成的温度补偿晶体振荡器。该器件包含电池输入端，断开主电源时仍可保持精确计时。集成的晶体振荡器可提高器件的长期精确度。DS3231的寄存器能保存秒、分、时、星期、日期、月、年和闹钟设置等信息。少于31天的月份，可自动调整月末日期，包括闰年补偿。时钟的工作格式为24小时或带AM／PM指示的12小时格式。DS3231提供两个可编程日历闹钟和一路可编程方波输出。DS3231与单片机通过I2C双向串行总线传输地址与数据。通过使用DS3231芯片完成自动走时功能，并通过电池提供备用电力的方式，实现调电保持计时功能。</p>
+<h3 id="4-HV57708-高压驱动芯片"><a href="#4-HV57708-高压驱动芯片" class="headerlink" title="4.HV57708 高压驱动芯片"></a>4.HV57708 高压驱动芯片</h3><p> 使用HV57708高压驱动芯片为辉光钟提供驱动信号。HV57708是一款可以承受高电压的串行输入转并行输出的驱动芯片，可完成4路输入转64路输出的功能，适用于驱动辉光管，大大节省了单片机的IO口，同时芯片高度集成，节省了PCB的面积。</p>
+<h3 id="5-MAX1771升压电路"><a href="#5-MAX1771升压电路" class="headerlink" title="5.MAX1771升压电路"></a>5.MAX1771升压电路</h3><p>使用以MAX1771为控制核心的BOOST升压电路，将直流12V输入高效率地转化为170V输出，将辉光管点亮。<br>    整个系统电路部分使用立创EDA完成PCB的绘制，为了使设备整体美观紧凑，将元器件布置在两块PCB上，一块PCB放置主要控制和电源电路，另一块PCB放置辉光管插座。</p>
+<h2 id="云服务器端"><a href="#云服务器端" class="headerlink" title="云服务器端"></a>云服务器端</h2><p>云端服务全部使用阿里云平台的服务，阿里云的服务具有稳定性强，配置便捷的特点，方便部署物联网应用，云端总体应用架构如下<br> <img src="https://img-blog.csdnimg.cn/20201126215239514.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
+<h3 id="1．阿里云物联网平台"><a href="#1．阿里云物联网平台" class="headerlink" title="1．阿里云物联网平台"></a>1．阿里云物联网平台</h3><p>云端物联网平台使用阿里云物联网平台。阿里云物联网平台为设备提供安全可靠的连接通信能力，向下连接海量设备，支撑设备数据采集上云；向上提供云端API，服务端通过调用云端API将指令下发至设备端，实现远程控制。提供设备接入，设备管理，安全能力和规则引擎。其中规则引擎用来完成数据转发，负责沟通数据在设备间，设备与数据库间，设备与服务器间流转。</p>
+<h3 id="2-阿里云-云端服务器"><a href="#2-阿里云-云端服务器" class="headerlink" title="2.阿里云 云端服务器"></a>2.阿里云 云端服务器</h3><p>Web服务器使用阿里云服务器ECS，云服务器（Elastic Compute Service，简称ECS）是阿里云提供的性能卓越、稳定可靠、弹性扩展的IaaS（Infrastructure as a Service）级别云计算服务。云服务器ECS免去了您采购IT硬件的前期准备，让您像使用水、电、天然气等公共资源一样便捷、高效地使用服务器，实现计算资源的即开即用和弹性伸缩。阿里云ECS持续提供创新型服务器，解决多种业务需求，助力业务发展。</p>
+<h1 id="四、各模块电路设计及原理"><a href="#四、各模块电路设计及原理" class="headerlink" title="四、各模块电路设计及原理"></a>四、各模块电路设计及原理</h1><h2 id="4-1-主控模块"><a href="#4-1-主控模块" class="headerlink" title="4.1 主控模块"></a>4.1 主控模块</h2><p>意法半导体的STM32F1系列产品作为基于ARM Cortex M3的32位微控制器，满足了工业、医疗和消费类市场的各种应用需求。使用C语言为编程语言，配合RT-thread操作系统，可以很好的满足需求。STM32F103RCT6 有32K RAM 256K ROM，满足操作系统和响应外设的运行需求。将STM32F103RCT6最小系统直接设计在整体电路板上，提高了整体的紧凑性和集成度。具体电路如下：<br> <img src="https://img-blog.csdnimg.cn/20201126215307573.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
+<p>其中使用UART1串行总线和电脑上位机连接完成和电脑的通讯，方便观察运行状况和调试。原本准备在电路板上使用USB转串口芯片，但是考虑到运行时并不使用该模块，且占用电路板面积，最后使用排针引出加到转串口模块的方式，大大减少了PCB面积和工作量。<br>使用外部8M晶振提高程序运行时的时间准确性。</p>
+<p>设计完成的pcb板如下：<br> <img src="https://img-blog.csdnimg.cn/20201126215323484.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
+<p>实物如下：<br> <img src="https://img-blog.csdnimg.cn/20201126215332134.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
+<h2 id="4-2-实时时钟模块"><a href="#4-2-实时时钟模块" class="headerlink" title="4.2 实时时钟模块"></a>4.2 实时时钟模块</h2><p>使用DS3231MZ 作为实时时钟模块的主要芯片。DS3231是一款高精度I2C实时时钟器件，具有集成的温度补偿晶体振荡器。该器件包含电池输入端，断开主电源时仍可保持精确计时。集成的晶体振荡器可提高器件的长期精确度。芯片封装使用SOP-8封装，且几乎不需要外部器件支持，使用IIC协议和主控STM32f103芯片沟通。<br>    为了达到主要电路调电依旧可以完成走时的功能，使用3.7V CR1220 纽扣电池和电池座为DS3231MZ芯片提供备用电源，使芯片在外部供电中断时依旧可以走时。<br>设计完成的原理图和pcb板如下：<br>   <img src="https://img-blog.csdnimg.cn/20201126215354289.png#pic_center" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/20201126215402894.png#pic_center" alt="在这里插入图片描述"></p>
+<p>实物图如下：<br> <img src="https://img-blog.csdnimg.cn/20201126215412351.png#pic_center" alt="在这里插入图片描述"></p>
+<h2 id="4-3-ATK-ESP8266-WIFI模块"><a href="#4-3-ATK-ESP8266-WIFI模块" class="headerlink" title="4.3 ATK-ESP8266 WIFI模块"></a>4.3 ATK-ESP8266 WIFI模块</h2><p>ATK-ESP8266 是正点原子团队推出的一款高性能的 UART-WiFi（串口-无线）模块，ATK-ESP8266 板载了正点原子团队自主开发的 ATK-ESP-01 模块。<br>ATK-ESP8266 模块采用串口（LVTTL）与 MCU（或其他串口设备）通信，内置TCP/IP 协议栈，能够实现串口与 WIFI 之间的转换。通过 ATK-ESP8266 模块，传统的串口设备只是需要简单的串口配置，即可通过网络（WIFI）传输自己的数据。<br>主板将STM32的UART3总线引出到排母，使用排母和ESP8266模块连接，减少了电路设计工作量和成本。<br>实物如下：<br> <img src="https://img-blog.csdnimg.cn/20201126215424535.png#pic_center" alt="在这里插入图片描述"></p>
+<h2 id="4-4-HV57708-辉光管串转并高压驱动芯片"><a href="#4-4-HV57708-辉光管串转并高压驱动芯片" class="headerlink" title="4.4 HV57708 辉光管串转并高压驱动芯片"></a>4.4 HV57708 辉光管串转并高压驱动芯片</h2><p>使用HV57708高压驱动芯片为辉光钟提供驱动信号。HV57708是一款可以承受高电压的串行输入转并行输出的驱动芯片，可完成4路输入转64路输出的功能，适用于驱动辉光管，大大节省了单片机的IO口，同时芯片高度集成，节省了PCB的面积。<br>    STM32使用7个GPIO和HV57708进行通讯。通过HV57708内部逻辑最终可以输出64路输出，足够为4位辉光管40个引脚提供驱动。HV57708的引脚接在辉光管的阴极,辉光管的阳极接170V。芯片必须工作在反向模式。信号为低电平时，引脚输出为高电平(68V)，此为VPP接入的电压值，这个电压值通过170V接电阻和稳压二极管得到68V电压，这样阴极阳极间无法产生170V压差而熄灭。当引脚输出低电平0V时，辉光管有压差170V，辉光管点亮。<br> <img src="https://img-blog.csdnimg.cn/20201126215445809.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
+<h2 id="4-5-辉光管"><a href="#4-5-辉光管" class="headerlink" title="4.5 辉光管"></a>4.5 辉光管</h2><p>辉光管时钟采用IN12侧显式辉光管，辉光管是发明于1950年代中期，人们期望发明一种非点阵而是线状化地显示数字的方式。辉光管随之诞生，辉光管属于电子管的一种, 发光原理和霓虹灯差不多。通常在一个真空管里，放置一个金属丝网制成的阳极和10个阴极，形状为数字0到9，某些还有一个或两个小数点。在管内充入惰性气体氖气和汞或氩，再通上高压后，每一个阴极可以发出红橙色光。<br>    IN12辉光管生产于上世纪80年代，使用170V高压即可点亮。设计小巧，亮度适中，造型美观，价格合适，于是选用四位IN12辉光管作为显示部分。</p>
+<p><img src="https://img-blog.csdnimg.cn/2020112621553459.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
+<h2 id="4-4-电源模块"><a href="#4-4-电源模块" class="headerlink" title="4.4 电源模块"></a>4.4 电源模块</h2><h3 id="4-4-1-AMS1117-3-3稳压模块"><a href="#4-4-1-AMS1117-3-3稳压模块" class="headerlink" title="4.4.1 AMS1117-3.3稳压模块"></a>4.4.1 AMS1117-3.3稳压模块</h3><p>AMS1117-3.3为一块电压降压型直流线性稳压芯片，最大输出电流可达1A.，输出电压为3.3V。外部电路仅需要电容用来保证输出电压的稳定性，并添加LED灯用于指示稳压芯片是否工作正常。该稳压模块主要输出3.3V电压，给STM32F103，DS3231，ESP8266供电。<br> <img src="https://img-blog.csdnimg.cn/20201126215542955.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
+<h3 id="4-4-2-AMS1117-5-0稳压模块"><a href="#4-4-2-AMS1117-5-0稳压模块" class="headerlink" title="4.4.2 AMS1117-5.0稳压模块"></a>4.4.2 AMS1117-5.0稳压模块</h3><p>AMS1117-5.0为一块电压降压型直流线性稳压芯片，最大输出电流可达1A.，输出电压为5.0V。外部电路仅需要电容用来保证输出电压的稳定性，并添加LED灯用于指示稳压芯片是否工作正常。该稳压模块主要输出5.0V电压，给HV57708高压驱动芯片的逻辑部分供电。<br>电路设计如下：</p>
+<p><img src="https://img-blog.csdnimg.cn/20201126215553539.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
+<h3 id="4-4-3-MAX1771-12V升170V-boost升压电路模块"><a href="#4-4-3-MAX1771-12V升170V-boost升压电路模块" class="headerlink" title="4.4.3 MAX1771 12V升170V boost升压电路模块"></a>4.4.3 MAX1771 12V升170V boost升压电路模块</h3><p>设计要求：Vin=12V，Vout=170V</p>
+<ol>
+<li>   MOS管的选择<br>由于输出电压较高，所以需要耐压值较高的MOSFET，选择耐压值250V以上MOS，其内阻越低越好。考虑到成本和体积限制，我选用的是TK8P65W。</li>
+<li>反馈电阻的选择<br>芯片的参考电压为1.5V，两个电阻对输出电压进行分压之后送入FB引脚进行反馈显然，其中电阻的选择公式如下。<br><img src="https://img-blog.csdnimg.cn/20201126215601124.png#pic_center" alt="在这里插入图片描述"></li>
+</ol>
+<p>这里我们选择R2=1.8MΩ，R1=16KΩ。</p>
+<ol start="3">
+<li>   电流控制电阻的选择<br>Rsense为电流控制电阻，控制着MOS管的最大电流，可以防止意外情况发生，诸如输出短路引起MOS烧毁。这里要根据我们的需求进行选择。假设我们要求输出20mA的最大电流，效率80%情况下， 可计算得到最大的Ids=354mA，此时由于比较电压为0.1V，可计算得到Rsense的最小值为0.1V/354mA=282mΩ。但是往往我们不这样做，因为这样计算出来的Rsense非常大，会严重影响效率。对于这里，我们不需要对输出电流进行太大限制，所以我们适当选择一个防止输出短路引起MOS发烫烧毁就好，我设计时选择的限流电阻为50mΩ。</li>
+<li>   功率电感的选择<br>根据数据手册中的公式可以得到，选择最佳功率电感范围是10uH~300uH。我选取220uH作为电路中功率电感。</li>
+<li>输入输出电容选择<br>为了保持电路输入输出端电压保持稳定，需要选取合适的电容稳定电压，这里选取220UF作为输入端电容，10UF作为输出端电容。<h2 id="4-5-其他I-O模块"><a href="#4-5-其他I-O模块" class="headerlink" title="4.5 其他I/O模块"></a>4.5 其他I/O模块</h2>LED指示灯：用于指示程序是否正常运行<h2 id="4-6-PCB的绘制，焊接与装配"><a href="#4-6-PCB的绘制，焊接与装配" class="headerlink" title="4.6 PCB的绘制，焊接与装配"></a>4.6 PCB的绘制，焊接与装配</h2>PCB的绘制<br> 为了保证设备整体美观大方，将控制部分和辉光管显示部分分成两个pcb板，中间使用排针排母连接。<br> 控制部分PCB板设计时分为电源部分和控制部分，并分成模拟地和数字地中间用0欧电阻用于隔离。控制部分将SWD烧写线和UART串口通讯用排针引出放于电路板边缘，美观且便于调试。<br> 显示部分使用插针的形式而不是直接将辉光管焊在板子上，保证辉光管可以重复利用。<br> 控制部分和显示部分在相同位置都有M3孔，便于使用铜柱相互连接，便于装配。</li>
+</ol>
+<p>控制板顶层和底层<br> <img src="https://img-blog.csdnimg.cn/2020112621561983.png#pic_center" alt="在这里插入图片描述"><br> <img src="https://img-blog.csdnimg.cn/20201126215625598.png#pic_center" alt="在这里插入图片描述"></p>
+<p>显示板顶层和底层</p>
+<p><img src="https://img-blog.csdnimg.cn/20201126215634361.png#pic_center" alt="在这里插入图片描述"></p>
+<p>PCB的焊接和装配<br>    PCB的焊接遵循先电源后控制，由外而内，边焊接边测试的思路，先从电源模块开始焊接，测试电源模块工作情况，再焊接控制部分。电源部分焊接完毕后如图，开关稳压输出保持在170V附近，证明电源部分焊接完毕。<br>   <img src="https://img-blog.csdnimg.cn/20201126215647225.png#pic_center" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/20201126215651699.png#pic_center" alt="在这里插入图片描述"></p>
+<p>电源部分焊接与测试<br>    电源部分焊接完毕后焊接控制部分。控制部分主要芯片为stm32最小系统电路，实时时钟电路和WIFI模块电路。Stm32焊接完毕后烧写测试程序，控制点亮小灯隔1s闪烁一次，证明焊接成功，实时时钟芯片和无线模块焊接完成后分别使用IIC和UART总线使之和STM32完成通讯，证明焊接成功。<br>    下一步焊接辉光管驱动芯片模块和显示部分PCB板，焊接完毕后使用同铜柱将两个板子连接到一起，烧写测试程序并使用电压表测试各管脚电压是否正常，检查完毕后将辉光管插上，成功点亮辉光管。<br>  <img src="https://img-blog.csdnimg.cn/20201126215701635.png#pic_center" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/20201126215706212.png#pic_center" alt="在这里插入图片描述"></p>
+<p>控制板和显示板焊接成品图<br>  <img src="https://img-blog.csdnimg.cn/20201126215724367.png#pic_center" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/20201126215728852.png#pic_center" alt="在这里插入图片描述"></p>
+<p>控制板和显示板装配测试图</p>
+<h1 id="五、程序部分编写与调试"><a href="#五、程序部分编写与调试" class="headerlink" title="五、程序部分编写与调试"></a>五、程序部分编写与调试</h1><h2 id="5-1-RT-Thread物联网操作系统"><a href="#5-1-RT-Thread物联网操作系统" class="headerlink" title="5.1 RT-Thread物联网操作系统"></a>5.1 RT-Thread物联网操作系统</h2><p>辉光钟对时间的要求非常严格。若采用普通的前后台系统，只依靠定时器中断很难做到各模块协调工作，很容易出现逻辑上的漏洞。采用嵌入式实时操作系统可以做到对逻辑和时序的精确控制，可以使各任务执行无误而且准时。<br>本系统采用RT-Thread嵌入式物联网实时操作系统。RT-Thread，全称是 Real Time-Thread，顾名思义，它是一个嵌入式实时多线程操作系统，基本属性之一是支持多任务，允许多个任务同时运行并不意味着处理器在同一时刻真地执行了多个任务。事实上，一个处理器核心在某一时刻只能运行一个任务，由于每次对一个任务的执行时间很短、任务与任务之间通过任务调度器进行非常快速地切换（调度器根据优先级决定此刻该执行的任务），给人造成多个任务在一个时刻同时运行的错觉。在 RT-Thread 系统中，任务通过线程实现的，RT-Thread 中的线程调度器也就是以上提到的任务调度器。对于资源丰富的物联网设备，RT-Thread 又能使用在线的软件包管理工具，配合系统配置工具实现直观快速的模块化裁剪，无缝地导入丰富的软件功能包，实现类似 Android 的图形界面及触摸滑动效果、智能语音交互效果等复杂功能。<br>相较于 Linux 操作系统，RT-Thread 体积小，成本低，功耗低、启动快速，除此以外 RT-Thread 还具有实时性高、占用资源小等特点，非常适用于各种资源受限（如成本、功耗限制等）的场合。<br>近年来，物联网（Internet Of Things，IoT）概念广为普及，物联网市场发展迅猛，嵌入式设备的联网已是大势所趋。终端联网使得软件复杂性大幅增加，传统的 RTOS 内核已经越来越难满足市场的需求，在这种情况下，物联网操作系统（IoT OS）的概念应运而生。物联网操作系统是指以操作系统内核（可以是 RTOS、Linux 等）为基础，包括如文件系统、图形库等较为完整的中间件组件，具备低功耗、安全、通信协议支持和云端连接能力的软件平台，RT-Thread 就是一个 IoT OS。<br>RT-Thread 与其他很多 RTOS 如 FreeRTOS、uC/OS 的主要区别之一是，它不仅仅是一个实时内核，还具备丰富的中间层组件，如下图所示。<br> <img src="https://img-blog.csdnimg.cn/20201126215741677.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
+<h3 id="RT-Thread操作系统的架构"><a href="#RT-Thread操作系统的架构" class="headerlink" title="RT-Thread操作系统的架构"></a>RT-Thread操作系统的架构</h3><p>物联网辉光钟的任务虽然不多，但是使用的模块很多，且都遵循自己的协议，为了方便管理和软件开发，主要使用物联网操作系统提供的中间件驱动的功能，可以为驱动开发节省很多时间。</p>
+<h3 id="RT-Thread操作系统的使用"><a href="#RT-Thread操作系统的使用" class="headerlink" title="RT-Thread操作系统的使用"></a>RT-Thread操作系统的使用</h3><p>我使用RT-Thread官方提供的IDE RT-Thread Studio一站式配置软件包，并且可以进行调试和烧写。</p>
+<p><img src="https://img-blog.csdnimg.cn/20210130192555996.png" alt="在这里插入图片描述"></p>
+<p>使用软件包情况：</p>
+<p>1.cjson，pahomptt：用于物联网相关的相关操作。cjson<br>用于解析json格式mqtt数据包。</p>
+<p>2.netutils：一些网络相关小工具，使用其中的ntp协议用于开机联网校准时间。</p>
+<p>3.ds3231，at_device:分别用于驱动ds3231实时时钟芯片和esp8266模块。</p>
+<h2 id="5-2-硬件设备端软件架构设计"><a href="#5-2-硬件设备端软件架构设计" class="headerlink" title="5.2    硬件设备端软件架构设计"></a>5.2    硬件设备端软件架构设计</h2><p>程序首先执行各外设初始化，首先初始化的是HV57708，因为HV57708控制辉光管且电压为170V，操作不当就会导致同一根管子多个数字同时点亮电流过大烧坏电源。之后初始化DS3231，ESP8266.然后使用ESP8266连接网络，在线更新时间并使用IIC协议存入DS3231中，之后使用MQTT协议登录阿里云物联网平台，订阅控制话题，并开启显示线程。显示线程以200ms为一个周期，先通过DS3231获取当前时间，再通过云端传来的控制信号决定当前显示的是小时分钟模式或者是分钟秒模式。同时加入了阴极保护功能，每隔一段时间就让辉光管所有数字按顺序显示一遍，提高辉光管的寿命。<br> <img src="https://img-blog.csdnimg.cn/20201126215912922.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
+<p>软件流程图</p>
+<h3 id="5-2-1-NTP协议"><a href="#5-2-1-NTP协议" class="headerlink" title="5.2.1     NTP协议"></a>5.2.1     NTP协议</h3><p>NTP(Network Time Protocol）网络时间协议基于UDP，用于网络时间同步的协议，使网络中的计算机时钟同步到UTC，再配合各个时区的偏移调整就能实现精准同步对时功能。提供NTP对时的服务器有很多，比如微软的NTP对时服务器，利用NTP服务器提供的对时功能，可以使我们的设备时钟系统能够正确运行。<br>本系统通过使用RT-Thread提供的NTP协议中间件，在联网的状态下，通过调用相关函数，很方便的将设备时间和网络时间同步，保证时间的准确性。同时使用高精度时钟芯片DS3231，可保证时钟的精确走时。</p>
+<h3 id="5-2-2-MQTT协议"><a href="#5-2-2-MQTT协议" class="headerlink" title="5.2.2 MQTT协议"></a>5.2.2 MQTT协议</h3><p>MQTT（Message Queuing Telemetry Transport，消息队列遥测传输协议），是一种基于发布/订阅（publish/subscribe）模式的”轻量级”通讯协议，该协议构建于TCP/IP协议上，由IBM在1999年发布。MQTT最大优点在于，可以以极少的代码和有限的带宽，为连接远程设备提供实时可靠的消息服务。作为一种低开销、低带宽占用的即时通讯协议，使其在物联网、小型设备、移动应用等方面有较广泛的应用。<br>MQTT是一个基于客户端-服务器的消息发布/订阅传输协议。MQTT协议是轻量、简单、开放和易于实现的，这些特点使它适用范围非常广泛。在很多情况下，包括受限的环境中，如：机器与机器（M2M）通信和物联网（IoT）。其在，通过卫星链路通信传感器、偶尔拨号的医疗设备、智能家居、及一些小型化设备中已广泛使用。<br>实现MQTT协议需要客户端和服务器端通讯完成，在通讯过程中，MQTT协议中有三种身份：发布者（Publish）、代理（Broker）（服务器）、订阅者（Subscribe）。其中，消息的发布者和订阅者都是客户端，消息代理是服务器，消息发布者可以同时是订阅者。<br>在本系统中，物联网辉光钟作为客户端，既作为发布者也作为订阅者，发布当前辉光钟的状态，订阅云端发布的控制信息。信息的载体为JSON格式，所以发送和接收消息后都需要对消息进行一定的加工和利用。</p>
+<h3 id="5-2-3-HV57708和ESP8266，DS3231驱动"><a href="#5-2-3-HV57708和ESP8266，DS3231驱动" class="headerlink" title="5.2.3 HV57708和ESP8266，DS3231驱动"></a>5.2.3 HV57708和ESP8266，DS3231驱动</h3><p>ESP8266，DS3231驱动均使用物联网操作系统提供的中间件驱动程序，使用较为简单，这里不再赘述。<br>HV57708使用场景较少，资料较少，于是查阅数据手册，通过研究数据手册中的芯片操作时序。编写调试驱动代码，最终实现了对HV57708的驱动。</p>
+<h2 id="5-3-云服务器端软件架构设计"><a href="#5-3-云服务器端软件架构设计" class="headerlink" title="5.3    云服务器端软件架构设计"></a>5.3    云服务器端软件架构设计</h2><p>阿里云物联网平台端<br>     <img src="https://img-blog.csdnimg.cn/20201126215925788.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
+<p>云端设备的定义<br>连接物联网平台需要先创建设备，根据这个设备的证书信息，和密码。设备可通过一个三元组证书信息连接到云服务器。阿里云物联网服务器作为设备的接收和中转站，管理所有通过MQTT协议发送和接收的信息。将Web服务器和硬件设备定义成两个设备，通过设置规则引擎，完成数据的接收和转发。<br>通过设计规则引擎，将WEB服务器和辉光钟之间的消息进行转发，实际上将阿里云物联网平台看做一个消息中转站的作用。<br>  <img src="https://img-blog.csdnimg.cn/20201126215957372.png#pic_center" alt="在这里插入图片描述"><br><img src="https://img-blog.csdnimg.cn/20201126220003604.png#pic_center" alt="在这里插入图片描述"></p>
+<p>规则引擎设计<br>阿里云服务器端<br>技术架构<br>原生Linux系统加宝塔面板，对小白用户友好<br>使用node.js框架作为网站后端<br>使用node.js软件包中的node-red数据流处理工具<br>具体步骤<br>    使用node-red，node-red是一种图形化的后端处理工具，适用于物联网服务等小型服务端应用搭建，不需要写代码，部署比较快捷。<br>使用node-red主要完成以下几个功能</p>
+<p>1.作为MQTT协议中的客户端，连接阿里云物联网平台，订阅相关话题，接收上传的JSON格式MQTT报文</p>
+<p>2.对JSON格式的报文进行处理</p>
+<p>3.下发控制信息到物联网辉光钟端</p>
+<p>下图为在node-red上完成的配置，没有写一点代码，点击部署后完成部署，便可以在网页上看到<br><img src="https://img-blog.csdnimg.cn/20210130192729904.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<p>打开硬件设备，待其连接到阿里云物联网平台，然后进入以下网址<br><a target="_blank" rel="noopener" href="http://39.99.247.63:1880/ui/">http://39.99.247.63:1880/ui/</a><br>就可以完成对辉光钟的显示模式的控制，并且可以设置闹钟，因为没有在硬件上设计蜂鸣器，于是想到了让网页端发声的解决方案。</p>
+<p><img src="https://img-blog.csdnimg.cn/20210130192642206.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<h1 id="六、拓展功能"><a href="#六、拓展功能" class="headerlink" title="六、拓展功能"></a>六、拓展功能</h1><p>增加时钟功能，增加闹钟和倒计时和正计时的功能。因为板子上没有画蜂鸣器模块，于是就使用在网页端发声的方式，可以灵活地更改音乐种类。</p>
+<h1 id="心得体会"><a href="#心得体会" class="headerlink" title="心得体会"></a>心得体会</h1><p>本次项目设计初步打通了物联网的整个数据链路，通过该实验，下一步可以完成更加复杂智能的物联网应用，比如实时操控家里的家电，家中电器通过检测环境变化自动开关机。添加微信小程序访问Web服务器，从而监控物联网设备等功能。同时还锻炼了通过查找数据手册完成对芯片的驱动，完成开关稳压的设计，很好的将课堂学习到的知识运用到实际中去。</p>
+<p>本次项目从原理图出发，到PCB，到焊接装配和代码的编写。完整熟悉了开发嵌入式设备的全过程，是一次很好的历练，通过一个项目，使得课堂学习到的知识运用到实际，使我收获颇多。</p>
+<h1 id="总体开支"><a href="#总体开支" class="headerlink" title="总体开支"></a>总体开支</h1><p>把备用原件的开支也算上了<br><img src="https://img-blog.csdnimg.cn/2020112622142175.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center" alt="在这里插入图片描述"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+        <div id="donation_div"></div>
+
+
+<script src="/js/vdonate.js"></script>
+
+<script>
+var a = new Donate({
+  title: '如果觉得我的文章对您有用，请随意打赏。您的支持将鼓励我继续创作!', // 可选参数，打赏标题
+  btnText: 'Donate', // 可选参数，打赏按钮文字
+  el: document.getElementById('donation_div'),
+  wechatImage: 'https://raw.githubusercontent.com/iTimeTraveler/iTimeTraveler.github.io/site/source/about/donate/images/WeChanQR.png',
+  alipayImage: 'https://raw.githubusercontent.com/iTimeTraveler/iTimeTraveler.github.io/site/source/about/donate/images/AliPayQR.jpg'
+});
+</script>
+      
+      
+      <div>
+        <ul class="post-copyright">
+          <li class="post-copyright-author">
+          <strong>Post author:  </strong>Fran Hawk</a>
+          </li>
+          <li class="post-copyright-link">
+          <strong>Post link:  </strong>
+          <a href="/2020/11/26/物联网项目设计 （七） 基于RT-thread的MQTT协议物联网辉光钟/" target="_blank" title="物联网项目设计 （七） 基于RT-thread的MQTT协议物联网辉光钟">http://example.com/2020/11/26/物联网项目设计 （七） 基于RT-thread的MQTT协议物联网辉光钟/</a>
+          </li>
+          <li class="post-copyright-license">
+            <strong>Copyright Notice:   </strong>
+            All articles in this blog are licensed under <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">CC BY-NC-ND 4.0</a>
+            unless stating additionally.
+          </li>
+         
+        </ul>
+<div>
+
+      
+      
+        
+	<div id="comment">
+		<!-- 来必力City版安装代码 -->
+		<div id="lv-container" data-id="city" data-uid="MTAyMC8yOTQ4MS82MDQ5">
+		<script type="text/javascript">
+		   (function(d, s) {
+		       var j, e = d.getElementsByTagName(s)[0];
+
+		       if (typeof LivereTower === 'function') { return; }
+
+		       j = d.createElement(s);
+		       j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+		       j.async = true;
+
+		       e.parentNode.insertBefore(j, e);
+		   })(document, 'script');
+		</script>
+		<noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+		</div>
+		<!-- City版安装代码已完成 -->
+	</div>
+
+
+
+      
+      
+        
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RT-Thread/" rel="tag">RT-Thread</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/STM32/" rel="tag">STM32</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%89%A9%E8%81%94%E7%BD%91/" rel="tag">物联网</a></li></ul>
+
+      
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9A%E7%BD%91%E7%BB%9C%E5%8A%9F%E8%83%BD%E4%BD%BF%E7%94%A8%E5%92%8Cwebsocket%E8%BD%AF%E4%BB%B6%E5%8C%85%E8%8E%B7%E5%8F%96%E5%BF%83%E7%9F%A5%E5%A4%A9%E6%B0%94/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          RT-Thread ART-PI 学习笔记：网络功能使用和websocket软件包获取心知天气
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2020/05/07/%E5%9F%BA%E4%BA%8EMQTT%E5%BA%94%E7%94%A8%E5%B1%82%E5%8D%8F%E8%AE%AE%E7%9A%84%E7%89%A9%E8%81%94%E7%BD%91%E5%AE%B6%E5%BA%AD%E6%B8%A9%E6%B9%BF%E5%BA%A6%E7%9B%91%E6%B5%8B%E7%B3%BB%E7%BB%9F/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">基于MQTT应用层协议的物联网家庭温湿度监测系统</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+<!-- Table of Contents -->
+
+  <aside id="toc-sidebar">
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">Contents</strong>
+    
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E4%BB%93%E5%BA%93"><span class="nav-number">1.0.0.1.</span> <span class="nav-text">代码仓库</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%94%B5%E8%B7%AF%E5%B7%A5%E7%A8%8B%E6%96%87%E4%BB%B6"><span class="nav-number">1.0.0.2.</span> <span class="nav-text">电路工程文件</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E9%A1%B9%E7%9B%AE%E5%88%9B%E6%84%8F"><span class="nav-number">2.</span> <span class="nav-text">一、项目创意</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E9%A1%B9%E7%9B%AE%E9%9C%80%E6%B1%82"><span class="nav-number">3.</span> <span class="nav-text">二、项目需求</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E6%A1%86%E5%9B%BE%E5%8F%8A%E6%95%B4%E6%9C%BA%E6%A6%82%E8%BF%B0"><span class="nav-number">4.</span> <span class="nav-text">三、框图及整机概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A1%AC%E4%BB%B6%E8%AE%BE%E5%A4%87%E7%AB%AF"><span class="nav-number">4.1.</span> <span class="nav-text">硬件设备端</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-STM32F103RCT6"><span class="nav-number">4.1.1.</span> <span class="nav-text">1.STM32F103RCT6</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-ESP8266-WIFI%E6%A8%A1%E5%9D%97"><span class="nav-number">4.1.2.</span> <span class="nav-text">2.ESP8266 WIFI模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-DS3231-%E5%AE%9E%E6%97%B6%E6%97%B6%E9%92%9F%E8%8A%AF%E7%89%87"><span class="nav-number">4.1.3.</span> <span class="nav-text">3.DS3231 实时时钟芯片</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-HV57708-%E9%AB%98%E5%8E%8B%E9%A9%B1%E5%8A%A8%E8%8A%AF%E7%89%87"><span class="nav-number">4.1.4.</span> <span class="nav-text">4.HV57708 高压驱动芯片</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-MAX1771%E5%8D%87%E5%8E%8B%E7%94%B5%E8%B7%AF"><span class="nav-number">4.1.5.</span> <span class="nav-text">5.MAX1771升压电路</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%AB%AF"><span class="nav-number">4.2.</span> <span class="nav-text">云服务器端</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1%EF%BC%8E%E9%98%BF%E9%87%8C%E4%BA%91%E7%89%A9%E8%81%94%E7%BD%91%E5%B9%B3%E5%8F%B0"><span class="nav-number">4.2.1.</span> <span class="nav-text">1．阿里云物联网平台</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E9%98%BF%E9%87%8C%E4%BA%91-%E4%BA%91%E7%AB%AF%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="nav-number">4.2.2.</span> <span class="nav-text">2.阿里云 云端服务器</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E5%90%84%E6%A8%A1%E5%9D%97%E7%94%B5%E8%B7%AF%E8%AE%BE%E8%AE%A1%E5%8F%8A%E5%8E%9F%E7%90%86"><span class="nav-number">5.</span> <span class="nav-text">四、各模块电路设计及原理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E4%B8%BB%E6%8E%A7%E6%A8%A1%E5%9D%97"><span class="nav-number">5.1.</span> <span class="nav-text">4.1 主控模块</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E5%AE%9E%E6%97%B6%E6%97%B6%E9%92%9F%E6%A8%A1%E5%9D%97"><span class="nav-number">5.2.</span> <span class="nav-text">4.2 实时时钟模块</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-ATK-ESP8266-WIFI%E6%A8%A1%E5%9D%97"><span class="nav-number">5.3.</span> <span class="nav-text">4.3 ATK-ESP8266 WIFI模块</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-HV57708-%E8%BE%89%E5%85%89%E7%AE%A1%E4%B8%B2%E8%BD%AC%E5%B9%B6%E9%AB%98%E5%8E%8B%E9%A9%B1%E5%8A%A8%E8%8A%AF%E7%89%87"><span class="nav-number">5.4.</span> <span class="nav-text">4.4 HV57708 辉光管串转并高压驱动芯片</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-5-%E8%BE%89%E5%85%89%E7%AE%A1"><span class="nav-number">5.5.</span> <span class="nav-text">4.5 辉光管</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-%E7%94%B5%E6%BA%90%E6%A8%A1%E5%9D%97"><span class="nav-number">5.6.</span> <span class="nav-text">4.4 电源模块</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-4-1-AMS1117-3-3%E7%A8%B3%E5%8E%8B%E6%A8%A1%E5%9D%97"><span class="nav-number">5.6.1.</span> <span class="nav-text">4.4.1 AMS1117-3.3稳压模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-4-2-AMS1117-5-0%E7%A8%B3%E5%8E%8B%E6%A8%A1%E5%9D%97"><span class="nav-number">5.6.2.</span> <span class="nav-text">4.4.2 AMS1117-5.0稳压模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-4-3-MAX1771-12V%E5%8D%87170V-boost%E5%8D%87%E5%8E%8B%E7%94%B5%E8%B7%AF%E6%A8%A1%E5%9D%97"><span class="nav-number">5.6.3.</span> <span class="nav-text">4.4.3 MAX1771 12V升170V boost升压电路模块</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-5-%E5%85%B6%E4%BB%96I-O%E6%A8%A1%E5%9D%97"><span class="nav-number">5.7.</span> <span class="nav-text">4.5 其他I&#x2F;O模块</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-6-PCB%E7%9A%84%E7%BB%98%E5%88%B6%EF%BC%8C%E7%84%8A%E6%8E%A5%E4%B8%8E%E8%A3%85%E9%85%8D"><span class="nav-number">5.8.</span> <span class="nav-text">4.6 PCB的绘制，焊接与装配</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%94%E3%80%81%E7%A8%8B%E5%BA%8F%E9%83%A8%E5%88%86%E7%BC%96%E5%86%99%E4%B8%8E%E8%B0%83%E8%AF%95"><span class="nav-number">6.</span> <span class="nav-text">五、程序部分编写与调试</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-RT-Thread%E7%89%A9%E8%81%94%E7%BD%91%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F"><span class="nav-number">6.1.</span> <span class="nav-text">5.1 RT-Thread物联网操作系统</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#RT-Thread%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%9E%B6%E6%9E%84"><span class="nav-number">6.1.1.</span> <span class="nav-text">RT-Thread操作系统的架构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RT-Thread%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-number">6.1.2.</span> <span class="nav-text">RT-Thread操作系统的使用</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-%E7%A1%AC%E4%BB%B6%E8%AE%BE%E5%A4%87%E7%AB%AF%E8%BD%AF%E4%BB%B6%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1"><span class="nav-number">6.2.</span> <span class="nav-text">5.2    硬件设备端软件架构设计</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-1-NTP%E5%8D%8F%E8%AE%AE"><span class="nav-number">6.2.1.</span> <span class="nav-text">5.2.1     NTP协议</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-2-MQTT%E5%8D%8F%E8%AE%AE"><span class="nav-number">6.2.2.</span> <span class="nav-text">5.2.2 MQTT协议</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-3-HV57708%E5%92%8CESP8266%EF%BC%8CDS3231%E9%A9%B1%E5%8A%A8"><span class="nav-number">6.2.3.</span> <span class="nav-text">5.2.3 HV57708和ESP8266，DS3231驱动</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-3-%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%AB%AF%E8%BD%AF%E4%BB%B6%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1"><span class="nav-number">6.3.</span> <span class="nav-text">5.3    云服务器端软件架构设计</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%85%AD%E3%80%81%E6%8B%93%E5%B1%95%E5%8A%9F%E8%83%BD"><span class="nav-number">7.</span> <span class="nav-text">六、拓展功能</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BF%83%E5%BE%97%E4%BD%93%E4%BC%9A"><span class="nav-number">8.</span> <span class="nav-text">心得体会</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E4%BD%93%E5%BC%80%E6%94%AF"><span class="nav-number">9.</span> <span class="nav-text">总体开支</span></a></li></ol>
+    
+    </div>
+  </aside>
+
+</section>
+        
+      </div>
+      
+      <footer id="footer">
+  
+
+  <div class="container">
+      	<div class="row">
+	      <p> Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/iTimeTraveler/hexo-theme-hiker" target="_blank">Hexo-theme-hiker</a> </p>
+	      <p id="copyRightEn">Copyright &copy; 2013 - 2021 张竞豪的小岛 All Rights Reserved.</p>
+	      
+	      
+    		<p class="busuanzi_uv">
+				UV : <span id="busuanzi_value_site_uv"></span> |  
+				PV : <span id="busuanzi_value_site_pv"></span>
+		    </p>
+  		   
+		</div>
+
+		
+  </div>
+</footer>
+
+
+<!-- min height -->
+
+<script>
+    var wrapdiv = document.getElementById("wrap");
+    var contentdiv = document.getElementById("content");
+    var allheader = document.getElementById("allheader");
+
+    wrapdiv.style.minHeight = document.body.offsetHeight + "px";
+    if (allheader != null) {
+      contentdiv.style.minHeight = document.body.offsetHeight - allheader.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    } else {
+      contentdiv.style.minHeight = document.body.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    }
+</script>
+    </div>
+    <!-- <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/categories" class="mobile-nav-link">Categories</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tags</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+</nav> -->
+    
+
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/scripts.js"></script>
+
+
+
+
+
+  
+<script src="/js/dialog.js"></script>
+
+
+
+
+
+
+
+
+
+	<div style="display: none;">
+    <script src="https://s95.cnzz.com/z_stat.php?id=1260716016&web_id=1260716016" language="JavaScript"></script>
+  </div>
+
+
+
+	<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js">
+	</script>
+
+
+
+
+
+
+  </div>
+
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="myModalLabel">设置</h2>
+      </div>
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+
+
+      <div class="modal-body">
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" onclick="javascript:setFontSize();" aria-expanded="true" aria-controls="collapseOne">
+              正文字号大小
+            </a>
+          </div>
+          <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+          <div class="panel-body">
+            您已调整页面字体大小
+          </div>
+        </div>
+      
+
+
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" onclick="javascript:setBackground();" aria-expanded="true" aria-controls="collapseTwo">
+              夜间护眼模式
+            </a>
+        </div>
+          <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+          <div class="panel-body">
+            夜间模式已经开启，再次单击按钮即可关闭 
+          </div>
+        </div>
+
+        <div>
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="true" aria-controls="collapseThree">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关 于&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+        </div>
+         <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+          <div class="panel-body">
+            张竞豪的小岛
+          </div>
+          <div class="panel-body">
+            Copyright © 2021 Fran Hawk All Rights Reserved.
+          </div>
+        </div>
+      </div>
+
+
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <div class="modal-footer">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+  
+  <a id="rocket" href="#top" class=""></a>
+  <script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+  
+    <a id="menu-switch"><i class="fa fa-bars fa-lg"></i></a>
+  
+</body>
+</html>

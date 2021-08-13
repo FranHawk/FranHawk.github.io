@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>物联网项目设计（一） 需求分析与概要设计 | 张竞豪的小岛</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  <meta name="keywords" content="STM32物联网" />
+  
+  
+  
+  
+  <meta name="description" content="需求分析主体物联网硬件功能 辉光管时钟功能，实现六个辉光管，六位数字显示时分秒，并实现联网实时更新时间 一块不小于3.0英寸非触摸，彩色屏幕实现天气联网显示，至少要显示一个星期内的气象信息，包括最高温，最低温，天气状况（晴，雨，阴等） 闹钟功能，可通过联网获取闹钟时间，并且可设置备忘录，在特定时间响铃并在屏幕中打印备忘录事件，屏幕可通过按键唤醒 将实时温湿度信息上传至云端存储 可通过手机更改硬件连">
+<meta property="og:type" content="article">
+<meta property="og:title" content="物联网项目设计（一） 需求分析与概要设计">
+<meta property="og:url" content="http://example.com/2020/02/23/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%EF%BC%88%E4%B8%80%EF%BC%89%20%E9%9C%80%E6%B1%82%E5%88%86%E6%9E%90%E4%B8%8E%E6%A6%82%E8%A6%81%E8%AE%BE%E8%AE%A1/index.html">
+<meta property="og:site_name" content="张竞豪的小岛">
+<meta property="og:description" content="需求分析主体物联网硬件功能 辉光管时钟功能，实现六个辉光管，六位数字显示时分秒，并实现联网实时更新时间 一块不小于3.0英寸非触摸，彩色屏幕实现天气联网显示，至少要显示一个星期内的气象信息，包括最高温，最低温，天气状况（晴，雨，阴等） 闹钟功能，可通过联网获取闹钟时间，并且可设置备忘录，在特定时间响铃并在屏幕中打印备忘录事件，屏幕可通过按键唤醒 将实时温湿度信息上传至云端存储 可通过手机更改硬件连">
+<meta property="og:locale">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200222234101872.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="article:published_time" content="2020-02-23T11:50:43.000Z">
+<meta property="article:modified_time" content="2021-08-13T02:01:01.938Z">
+<meta property="article:author" content="Fran Hawk">
+<meta property="article:tag" content="STM32">
+<meta property="article:tag" content="物联网">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20200222234101872.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+  
+    <link rel="alternate" href="/atom.xml" title="张竞豪的小岛" type="application/atom+xml">
+  
+
+  
+
+  <link rel="icon" href="/css/images/mylogo.jpg">
+  <link rel="apple-touch-icon" href="/css/images/mylogo.jpg">
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Montserrat:700" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic" rel="stylesheet" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+  <style type="text/css">
+    @font-face{font-family:futura-pt; src:url("/css/fonts/FuturaPTBold.otf") format("woff");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt-light; src:url("/css/fonts/FuturaPTBook.otf") format("woff");font-weight:lighter;font-style:normal;}
+    @font-face{font-family:futura-pt-italic; src:url("/css/fonts/FuturaPTBookOblique.otf") format("woff");font-weight:400;font-style:italic;}
+}
+
+  </style>
+  
+<link rel="stylesheet" href="/css/style.css">
+
+
+  
+<script src="/js/jquery-3.1.1.min.js"></script>
+
+  
+<script src="/js/bootstrap.js"></script>
+
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.css" >
+
+  
+    
+<link rel="stylesheet" href="/css/dialog.css">
+
+  
+
+  
+
+  
+    <link rel="stylesheet" href="/css/header-post.css" >
+  
+
+  
+  
+  
+    <link rel="stylesheet" href="/css/vdonate.css" >
+  
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+
+
+  <body data-spy="scroll" data-target="#toc" data-offset="50">
+
+
+  
+  <div id="container">
+    <div id="wrap">
+      
+        <header>
+
+    <div id="allheader" class="navbar navbar-default navbar-static-top" role="navigation">
+        <div class="navbar-inner">
+          
+          <div class="container"> 
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+
+            
+              <a class="brand" style="
+                 margin-top: 0px;"  
+                href="#" data-toggle="modal" data-target="#myModal" >
+                  <img width="124px" height="124px" alt="Hike News" src="/css/images/mylogo.jpg">
+              </a>
+            
+            
+            <div class="navbar-collapse collapse">
+              <ul class="hnav navbar-nav">
+                
+                  <li> <a class="main-nav-link" href="/">Home</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/archives">Archives</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/categories">Categories</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/tags">Tags</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/about">About</a> </li>
+                
+                  <li><div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="" />
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="Type something..." />
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+</div></li>
+            </div>
+          </div>
+                
+      </div>
+    </div>
+
+</header>
+
+
+
+      
+            
+      <div id="content" class="outer">
+        
+          <section id="main" style="float:none;"><article id="post-物联网项目设计（一） 需求分析与概要设计" style="width: 75%; float:left;" class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" class="article-title" itemprop="name">
+      物联网项目设计（一） 需求分析与概要设计
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2020/02/23/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%EF%BC%88%E4%B8%80%EF%BC%89%20%E9%9C%80%E6%B1%82%E5%88%86%E6%9E%90%E4%B8%8E%E6%A6%82%E8%A6%81%E8%AE%BE%E8%AE%A1/" class="article-date">
+	  <time datetime="2020-02-23T11:50:43.000Z" itemprop="datePublished">2020-02-23</time>
+	</a>
+
+      
+      
+	<a class="article-views">
+	<span id="busuanzi_container_page_pv">
+		PV:<span id="busuanzi_value_page_pv"></span>
+	</span>
+	</a>
+
+      
+
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="需求分析"><a href="#需求分析" class="headerlink" title="需求分析"></a>需求分析</h1><h2 id="主体物联网硬件功能"><a href="#主体物联网硬件功能" class="headerlink" title="主体物联网硬件功能"></a>主体物联网硬件功能</h2><ul>
+<li>辉光管时钟功能，实现六个辉光管，六位数字显示时分秒，并实现联网实时更新时间</li>
+<li>一块不小于3.0英寸非触摸，彩色屏幕实现天气联网显示，至少要显示一个星期内的气象信息，包括最高温，最低温，天气状况（晴，雨，阴等）</li>
+<li>闹钟功能，可通过联网获取闹钟时间，并且可设置备忘录，在特定时间响铃并在屏幕中打印备忘录事件，屏幕可通过按键唤醒</li>
+<li>将实时温湿度信息上传至云端存储</li>
+<li>可通过手机更改硬件连接的wifi信息，如SSID和密码</li>
+<li>使用usbTypeC接口进行供电，整体外观风格统一，简约美观</li>
+</ul>
+<h2 id="手机端小程序功能"><a href="#手机端小程序功能" class="headerlink" title="手机端小程序功能"></a>手机端小程序功能</h2><ul>
+<li>使用微信小程序完成手机端的操控</li>
+<li>实现显示过去一个星期内的温湿度变化和过去一天内的温湿度按小时变化的可视化信息</li>
+<li>小程序完成闹钟设定与备忘录时间设定与信息提醒功能</li>
+</ul>
+<h1 id="概要设计"><a href="#概要设计" class="headerlink" title="概要设计"></a>概要设计</h1><h4 id="分为三个主要的大模块进行设计"><a href="#分为三个主要的大模块进行设计" class="headerlink" title="分为三个主要的大模块进行设计"></a>分为三个主要的大模块进行设计</h4><ul>
+<li>物联网时钟</li>
+<li>云端服务器</li>
+<li>手机微信小程序<br>其中各模块之间的信息流如图所示<br><img src="https://img-blog.csdnimg.cn/20200222234101872.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><h3 id="各模块设计分析和遇到的问题"><a href="#各模块设计分析和遇到的问题" class="headerlink" title="各模块设计分析和遇到的问题"></a>各模块设计分析和遇到的问题</h3><h4 id="云服务器"><a href="#云服务器" class="headerlink" title="云服务器"></a>云服务器</h4></li>
+<li>使用腾讯云IOT服务器</li>
+<li>MQTT协议进行通讯</li>
+<li>可能会用到数据库，可能需要一定的建站能力<h4 id="物联网时钟"><a href="#物联网时钟" class="headerlink" title="物联网时钟"></a>物联网时钟</h4></li>
+<li>使用stm32f1系列作为主控，使用cubemx+MDK作为开发工具</li>
+<li>驱动辉光管，5v升170v升压电路</li>
+<li>实时时钟，rtc功能，对各寄存器的更改</li>
+<li>联网功能，使用esp8266，需要熟练使用，并掌握嵌入式上mqtt协议的操作</li>
+<li>温湿度，掌握温湿度模块的读取</li>
+<li>电路pcb设计，有可能得不到相关人员的支持，需要自行掌握pcb绘制，使用嘉立创线上eda</li>
+<li>选用合适的LCD模块做液晶显示</li>
+</ul>
+<h4 id="手机端微信小程序"><a href="#手机端微信小程序" class="headerlink" title="手机端微信小程序"></a>手机端微信小程序</h4><ul>
+<li>掌握简单的微信小程序界面的制作并与服务器进行通讯，使用uni-app进行制作</li>
+</ul>
+<h1 id="现阶段掌握能力"><a href="#现阶段掌握能力" class="headerlink" title="现阶段掌握能力"></a>现阶段掌握能力</h1><ul>
+<li>初步掌握stm32f1系列主控的各模块操作</li>
+<li>初步掌握uni-app小程序的界面设计</li>
+<li>初步了解esp8266的使用方法<h1 id="拟定项目所需工作和完成时间"><a href="#拟定项目所需工作和完成时间" class="headerlink" title="拟定项目所需工作和完成时间"></a>拟定项目所需工作和完成时间</h1></li>
+<li>2020.02.28 完成mqtt协议的学习，使用电脑端软件与服务器进行通讯</li>
+<li>2020.03.10 使用stm32f1控制esp8266，完成使用mqtt协议与服务器的交互，上传芯片内部温度至服务器作为模拟信息数据</li>
+<li>2020.03.20完成uni-app编写可以获取温度信息的程序</li>
+<li>2020.03.30学习辉光管驱动电路部分学习，制作初版电路图，驱动单个辉光管</li>
+<li>2020.04.31完成整体电路板的设计，包括六个辉光管和其他模块的整体设计</li>
+<li>回学校后投板，焊接电路，进行联调</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+        <div id="donation_div"></div>
+
+
+<script src="/js/vdonate.js"></script>
+
+<script>
+var a = new Donate({
+  title: '如果觉得我的文章对您有用，请随意打赏。您的支持将鼓励我继续创作!', // 可选参数，打赏标题
+  btnText: 'Donate', // 可选参数，打赏按钮文字
+  el: document.getElementById('donation_div'),
+  wechatImage: 'https://raw.githubusercontent.com/iTimeTraveler/iTimeTraveler.github.io/site/source/about/donate/images/WeChanQR.png',
+  alipayImage: 'https://raw.githubusercontent.com/iTimeTraveler/iTimeTraveler.github.io/site/source/about/donate/images/AliPayQR.jpg'
+});
+</script>
+      
+      
+      <div>
+        <ul class="post-copyright">
+          <li class="post-copyright-author">
+          <strong>Post author:  </strong>Fran Hawk</a>
+          </li>
+          <li class="post-copyright-link">
+          <strong>Post link:  </strong>
+          <a href="/2020/02/23/物联网项目设计（一） 需求分析与概要设计/" target="_blank" title="物联网项目设计（一） 需求分析与概要设计">http://example.com/2020/02/23/物联网项目设计（一） 需求分析与概要设计/</a>
+          </li>
+          <li class="post-copyright-license">
+            <strong>Copyright Notice:   </strong>
+            All articles in this blog are licensed under <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">CC BY-NC-ND 4.0</a>
+            unless stating additionally.
+          </li>
+         
+        </ul>
+<div>
+
+      
+      
+        
+	<div id="comment">
+		<!-- 来必力City版安装代码 -->
+		<div id="lv-container" data-id="city" data-uid="MTAyMC8yOTQ4MS82MDQ5">
+		<script type="text/javascript">
+		   (function(d, s) {
+		       var j, e = d.getElementsByTagName(s)[0];
+
+		       if (typeof LivereTower === 'function') { return; }
+
+		       j = d.createElement(s);
+		       j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+		       j.async = true;
+
+		       e.parentNode.insertBefore(j, e);
+		   })(document, 'script');
+		</script>
+		<noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+		</div>
+		<!-- City版安装代码已完成 -->
+	</div>
+
+
+
+      
+      
+        
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/STM32/" rel="tag">STM32</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%89%A9%E8%81%94%E7%BD%91/" rel="tag">物联网</a></li></ul>
+
+      
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2020/02/24/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%EF%BC%88%E4%BA%8C%EF%BC%89%20MQTT.fx%E4%B8%8E%E7%99%BE%E5%BA%A6%E4%BA%91%E5%A4%A9%E5%B7%A5%20IOT%20hub%20%E7%9A%84%E8%BF%9E%E6%8E%A5%E8%B0%83%E8%AF%95/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          物联网项目设计（二） MQTT.fx与百度云天工 IOT hub 的连接调试
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2020/02/22/STM32%20CubeMX%20%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8%E5%85%A5%E9%97%A8%EF%BC%88%E4%B8%89%EF%BC%89printf%E9%87%8D%E5%AE%9A%E5%90%91%EF%BC%8CUART%E4%B8%B2%E5%8F%A3%E9%85%8D%E7%BD%AE%E5%8F%8AGPIO%E6%8C%89%E9%94%AE%E4%B8%AD%E6%96%AD/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">STM32 CubeMX 安装与使用入门（三）printf重定向，UART串口配置及GPIO按键中断</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+<!-- Table of Contents -->
+
+  <aside id="toc-sidebar">
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">Contents</strong>
+    
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%9C%80%E6%B1%82%E5%88%86%E6%9E%90"><span class="nav-number">1.</span> <span class="nav-text">需求分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BB%E4%BD%93%E7%89%A9%E8%81%94%E7%BD%91%E7%A1%AC%E4%BB%B6%E5%8A%9F%E8%83%BD"><span class="nav-number">1.1.</span> <span class="nav-text">主体物联网硬件功能</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%8B%E6%9C%BA%E7%AB%AF%E5%B0%8F%E7%A8%8B%E5%BA%8F%E5%8A%9F%E8%83%BD"><span class="nav-number">1.2.</span> <span class="nav-text">手机端小程序功能</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%A6%81%E8%AE%BE%E8%AE%A1"><span class="nav-number">2.</span> <span class="nav-text">概要设计</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%86%E4%B8%BA%E4%B8%89%E4%B8%AA%E4%B8%BB%E8%A6%81%E7%9A%84%E5%A4%A7%E6%A8%A1%E5%9D%97%E8%BF%9B%E8%A1%8C%E8%AE%BE%E8%AE%A1"><span class="nav-number">2.0.0.1.</span> <span class="nav-text">分为三个主要的大模块进行设计</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%84%E6%A8%A1%E5%9D%97%E8%AE%BE%E8%AE%A1%E5%88%86%E6%9E%90%E5%92%8C%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">2.0.1.</span> <span class="nav-text">各模块设计分析和遇到的问题</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="nav-number">2.0.1.1.</span> <span class="nav-text">云服务器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%89%A9%E8%81%94%E7%BD%91%E6%97%B6%E9%92%9F"><span class="nav-number">2.0.1.2.</span> <span class="nav-text">物联网时钟</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%89%8B%E6%9C%BA%E7%AB%AF%E5%BE%AE%E4%BF%A1%E5%B0%8F%E7%A8%8B%E5%BA%8F"><span class="nav-number">2.0.1.3.</span> <span class="nav-text">手机端微信小程序</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%8E%B0%E9%98%B6%E6%AE%B5%E6%8E%8C%E6%8F%A1%E8%83%BD%E5%8A%9B"><span class="nav-number">3.</span> <span class="nav-text">现阶段掌握能力</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%8B%9F%E5%AE%9A%E9%A1%B9%E7%9B%AE%E6%89%80%E9%9C%80%E5%B7%A5%E4%BD%9C%E5%92%8C%E5%AE%8C%E6%88%90%E6%97%B6%E9%97%B4"><span class="nav-number">4.</span> <span class="nav-text">拟定项目所需工作和完成时间</span></a></li></ol>
+    
+    </div>
+  </aside>
+
+</section>
+        
+      </div>
+      
+      <footer id="footer">
+  
+
+  <div class="container">
+      	<div class="row">
+	      <p> Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/iTimeTraveler/hexo-theme-hiker" target="_blank">Hexo-theme-hiker</a> </p>
+	      <p id="copyRightEn">Copyright &copy; 2013 - 2021 张竞豪的小岛 All Rights Reserved.</p>
+	      
+	      
+    		<p class="busuanzi_uv">
+				UV : <span id="busuanzi_value_site_uv"></span> |  
+				PV : <span id="busuanzi_value_site_pv"></span>
+		    </p>
+  		   
+		</div>
+
+		
+  </div>
+</footer>
+
+
+<!-- min height -->
+
+<script>
+    var wrapdiv = document.getElementById("wrap");
+    var contentdiv = document.getElementById("content");
+    var allheader = document.getElementById("allheader");
+
+    wrapdiv.style.minHeight = document.body.offsetHeight + "px";
+    if (allheader != null) {
+      contentdiv.style.minHeight = document.body.offsetHeight - allheader.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    } else {
+      contentdiv.style.minHeight = document.body.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    }
+</script>
+    </div>
+    <!-- <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/categories" class="mobile-nav-link">Categories</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tags</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+</nav> -->
+    
+
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/scripts.js"></script>
+
+
+
+
+
+  
+<script src="/js/dialog.js"></script>
+
+
+
+
+
+
+
+
+
+	<div style="display: none;">
+    <script src="https://s95.cnzz.com/z_stat.php?id=1260716016&web_id=1260716016" language="JavaScript"></script>
+  </div>
+
+
+
+	<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js">
+	</script>
+
+
+
+
+
+
+  </div>
+
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="myModalLabel">设置</h2>
+      </div>
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+
+
+      <div class="modal-body">
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" onclick="javascript:setFontSize();" aria-expanded="true" aria-controls="collapseOne">
+              正文字号大小
+            </a>
+          </div>
+          <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+          <div class="panel-body">
+            您已调整页面字体大小
+          </div>
+        </div>
+      
+
+
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" onclick="javascript:setBackground();" aria-expanded="true" aria-controls="collapseTwo">
+              夜间护眼模式
+            </a>
+        </div>
+          <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+          <div class="panel-body">
+            夜间模式已经开启，再次单击按钮即可关闭 
+          </div>
+        </div>
+
+        <div>
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="true" aria-controls="collapseThree">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关 于&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+        </div>
+         <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+          <div class="panel-body">
+            张竞豪的小岛
+          </div>
+          <div class="panel-body">
+            Copyright © 2021 Fran Hawk All Rights Reserved.
+          </div>
+        </div>
+      </div>
+
+
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <div class="modal-footer">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+  
+  <a id="rocket" href="#top" class=""></a>
+  <script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+  
+    <a id="menu-switch"><i class="fa fa-bars fa-lg"></i></a>
+  
+</body>
+</html>

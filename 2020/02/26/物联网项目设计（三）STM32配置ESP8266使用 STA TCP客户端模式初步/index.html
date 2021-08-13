@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>物联网项目设计（三）stm32配置esp8266使用 sta tcp客户端模式初步 | 张竞豪的小岛</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  <meta name="keywords" content="STM32物联网" />
+  
+  
+  
+  
+  <meta name="description" content="代码地址https:&#x2F;&#x2F;github.com&#x2F;FranHawk&#x2F;STM32_ESP8266_STA.git 概要本部分内容介绍如何使用STM32配置ESP8266使用STA模式，这个是使用MQTT与上层服务器链接的必要前提，笔者也是第一次使用ESP8266，通过AT指令来配置，查找了很多资料与代码，借鉴了正点原子ESP8266库和例程，在其基础上修改而来，这篇博客也是我边学边写的记录。 准备硬件准">
+<meta property="og:type" content="article">
+<meta property="og:title" content="物联网项目设计（三）STM32配置ESP8266使用 STA TCP客户端模式初步">
+<meta property="og:url" content="http://example.com/2020/02/26/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%EF%BC%88%E4%B8%89%EF%BC%89STM32%E9%85%8D%E7%BD%AEESP8266%E4%BD%BF%E7%94%A8%20STA%20TCP%E5%AE%A2%E6%88%B7%E7%AB%AF%E6%A8%A1%E5%BC%8F%E5%88%9D%E6%AD%A5/index.html">
+<meta property="og:site_name" content="张竞豪的小岛">
+<meta property="og:description" content="代码地址https:&#x2F;&#x2F;github.com&#x2F;FranHawk&#x2F;STM32_ESP8266_STA.git 概要本部分内容介绍如何使用STM32配置ESP8266使用STA模式，这个是使用MQTT与上层服务器链接的必要前提，笔者也是第一次使用ESP8266，通过AT指令来配置，查找了很多资料与代码，借鉴了正点原子ESP8266库和例程，在其基础上修改而来，这篇博客也是我边学边写的记录。 准备硬件准">
+<meta property="og:locale">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200224182524264.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200224205748537.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200224205936362.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200224205948715.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200224210256453.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2020022421075060.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200224210947109.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200224211119317.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200224211300805.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200226175511622.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200226175525381.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200226180200798.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="article:published_time" content="2020-02-26T11:50:43.000Z">
+<meta property="article:modified_time" content="2021-08-13T02:01:01.904Z">
+<meta property="article:author" content="Fran Hawk">
+<meta property="article:tag" content="STM32">
+<meta property="article:tag" content="物联网">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20200224182524264.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+  
+    <link rel="alternate" href="/atom.xml" title="张竞豪的小岛" type="application/atom+xml">
+  
+
+  
+
+  <link rel="icon" href="/css/images/mylogo.jpg">
+  <link rel="apple-touch-icon" href="/css/images/mylogo.jpg">
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Montserrat:700" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic" rel="stylesheet" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+  <style type="text/css">
+    @font-face{font-family:futura-pt; src:url("/css/fonts/FuturaPTBold.otf") format("woff");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt-light; src:url("/css/fonts/FuturaPTBook.otf") format("woff");font-weight:lighter;font-style:normal;}
+    @font-face{font-family:futura-pt-italic; src:url("/css/fonts/FuturaPTBookOblique.otf") format("woff");font-weight:400;font-style:italic;}
+}
+
+  </style>
+  
+<link rel="stylesheet" href="/css/style.css">
+
+
+  
+<script src="/js/jquery-3.1.1.min.js"></script>
+
+  
+<script src="/js/bootstrap.js"></script>
+
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.css" >
+
+  
+    
+<link rel="stylesheet" href="/css/dialog.css">
+
+  
+
+  
+
+  
+    <link rel="stylesheet" href="/css/header-post.css" >
+  
+
+  
+  
+  
+    <link rel="stylesheet" href="/css/vdonate.css" >
+  
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+
+
+  <body data-spy="scroll" data-target="#toc" data-offset="50">
+
+
+  
+  <div id="container">
+    <div id="wrap">
+      
+        <header>
+
+    <div id="allheader" class="navbar navbar-default navbar-static-top" role="navigation">
+        <div class="navbar-inner">
+          
+          <div class="container"> 
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+
+            
+              <a class="brand" style="
+                 margin-top: 0px;"  
+                href="#" data-toggle="modal" data-target="#myModal" >
+                  <img width="124px" height="124px" alt="Hike News" src="/css/images/mylogo.jpg">
+              </a>
+            
+            
+            <div class="navbar-collapse collapse">
+              <ul class="hnav navbar-nav">
+                
+                  <li> <a class="main-nav-link" href="/">Home</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/archives">Archives</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/categories">Categories</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/tags">Tags</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/about">About</a> </li>
+                
+                  <li><div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="" />
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="Type something..." />
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+</div></li>
+            </div>
+          </div>
+                
+      </div>
+    </div>
+
+</header>
+
+
+
+      
+            
+      <div id="content" class="outer">
+        
+          <section id="main" style="float:none;"><article id="post-物联网项目设计（三）STM32配置ESP8266使用 STA TCP客户端模式初步" style="width: 75%; float:left;" class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" class="article-title" itemprop="name">
+      物联网项目设计（三）STM32配置ESP8266使用 STA TCP客户端模式初步
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2020/02/26/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%EF%BC%88%E4%B8%89%EF%BC%89STM32%E9%85%8D%E7%BD%AEESP8266%E4%BD%BF%E7%94%A8%20STA%20TCP%E5%AE%A2%E6%88%B7%E7%AB%AF%E6%A8%A1%E5%BC%8F%E5%88%9D%E6%AD%A5/" class="article-date">
+	  <time datetime="2020-02-26T11:50:43.000Z" itemprop="datePublished">2020-02-26</time>
+	</a>
+
+      
+      
+	<a class="article-views">
+	<span id="busuanzi_container_page_pv">
+		PV:<span id="busuanzi_value_page_pv"></span>
+	</span>
+	</a>
+
+      
+
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="代码地址"><a href="#代码地址" class="headerlink" title="代码地址"></a><a target="_blank" rel="noopener" href="https://github.com/FranHawk/STM32_ESP8266_STA.git">代码地址</a></h1><p><a target="_blank" rel="noopener" href="https://github.com/FranHawk/STM32_ESP8266_STA.git">https://github.com/FranHawk/STM32_ESP8266_STA.git</a></p>
+<h1 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h1><p>本部分内容介绍如何使用STM32配置ESP8266使用STA模式，这个是使用MQTT与上层服务器链接的必要前提，笔者也是第一次使用ESP8266，通过AT指令来配置，查找了很多资料与代码，借鉴了正点原子ESP8266库和例程，在其基础上修改而来，这篇博客也是我边学边写的记录。</p>
+<h1 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h1><h1 id="硬件准备"><a href="#硬件准备" class="headerlink" title="硬件准备"></a>硬件准备</h1><ul>
+<li>带有stm32主控的硬件一套</li>
+<li>esp8266模块一个</li>
+<li>路由器一个</li>
+</ul>
+<h1 id="软件准备"><a href="#软件准备" class="headerlink" title="软件准备"></a>软件准备</h1><ul>
+<li>CubeMx用来配置工程</li>
+<li>MDK5用于编写调试和下载代码</li>
+</ul>
+<h1 id="配置ESP8266的步骤"><a href="#配置ESP8266的步骤" class="headerlink" title="配置ESP8266的步骤"></a>配置ESP8266的步骤</h1><p>配置ESP8266的目的是为了进入透传模式从而使用MQTT链接网络，我们需要使用AT指令，使ESP8266进入透传模式，步骤如下<br>1.AT+CWMODE=1                         设置模块为STA模式<br>2.AT+CWAUTOCONN=0<br>|按顺序要执行指令|执行指令的意义  |<br>|–|–|<br>|<code>+++</code>|退出透传模式|<br>|<code>AE0</code>|关闭回显|<br>| <code>AT+CWMODE=1</code>      | 设置模块为STA模式 |<br>|<code>AT+RST</code>|重启生效|<br>|等待三秒|等待三秒|<br>|<code>AT+CWAUTOCONN=0</code>|取消自动连接|<br>|<code>AT+ CWJAP = &lt;ssid&gt;,&lt; password&gt;</code>|连接路由器|<br>|<code>AT+CIPMUX=0</code>|关闭多链接|<br>|<code>AT+CIPSTART=&quot;TCP&quot;,&quot;IP号&quot;,端口号</code>|连接到服务器|<br>|<code>AT+CIPMODE=1</code>|设置为透传模式|<br>|<code>AT+CIPSEND</code>|开启透传模式|</p>
+<p>ESP8266的发送命令函数由正点原子的函数改进而来<br>STM32与ESP8266通过串口连接，需要配置的模块有</p>
+<ul>
+<li><strong>TIM2，定时器中断，用来判断接收命令是否超时，如果超时就按照接受命令，中断优先级为1</strong></li>
+<li><strong>USART1，用于向电脑发送数据，便于调试</strong></li>
+<li><strong>USART3，用于向ESP发送数据，包括发送和接受，采用中断方式接收，查询方式发送，中断优先级为2</strong></li>
+<li><strong>整个发送命令并接收的流程比较复杂，用到了定时器中断来设置发送指令，接收到的回复是否完成，并在定时器中断中将接收指令的回复接受完成的标志位置为1，并且与预期回复进行比较。</strong></li>
+<li><strong>这样发送命令并接收的整个流程的好处在于，可以保证发送指令的质量，得到准确的反馈。</strong></li>
+<li><strong>就好像你向一个人说，你帮我倒杯水好吗，然后要等待他的回复，如果听到他说：好的。说明他听到了我们的命令，这个时候我们才能放心。</strong></li>
+</ul>
+<p> <img src="https://img-blog.csdnimg.cn/20200224182524264.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h1 id="实际操作部分"><a href="#实际操作部分" class="headerlink" title="实际操作部分"></a>实际操作部分</h1><h2 id="CubeMx配置工程"><a href="#CubeMx配置工程" class="headerlink" title="CubeMx配置工程"></a>CubeMx配置工程</h2><h3 id="配置工程就像我上面所述的步骤，需要配置相应的外设，两个串口和一个定时器"><a href="#配置工程就像我上面所述的步骤，需要配置相应的外设，两个串口和一个定时器" class="headerlink" title="配置工程就像我上面所述的步骤，需要配置相应的外设，两个串口和一个定时器"></a>配置工程就像我上面所述的步骤，需要配置相应的外设，两个串口和一个定时器</h3><p> 1.打开CubeMx，选择对应型号的芯片，始终选择外部晶振<br> <img src="https://img-blog.csdnimg.cn/20200224205748537.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br> 2.查看原理图，选择相应的引脚<img src="https://img-blog.csdnimg.cn/20200224205936362.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br> <img src="https://img-blog.csdnimg.cn/20200224205948715.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br> 配置UART1，UART3，并设置波特率<br> <img src="https://img-blog.csdnimg.cn/20200224210256453.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br> 设置定时器2，并开启定时器中断，分频为7200，重装值为500，这样，接收信息的缓冲时间为50ms<br> <img src="https://img-blog.csdnimg.cn/2020022421075060.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br> 设置中断分组与中断优先级<br> <img src="https://img-blog.csdnimg.cn/20200224210947109.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<p> 配置时钟树，使主频最高为72MHZ<br> <img src="https://img-blog.csdnimg.cn/20200224211119317.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br> 配置工程并生成代码<br> <img src="https://img-blog.csdnimg.cn/20200224211300805.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h2 id="编写ESP8266函数并添加配套函数"><a href="#编写ESP8266函数并添加配套函数" class="headerlink" title="编写ESP8266函数并添加配套函数"></a>编写ESP8266函数并添加配套函数</h2><h4 id="首先添加两个uart重定向printf函数和uart接收中断处理函数"><a href="#首先添加两个uart重定向printf函数和uart接收中断处理函数" class="headerlink" title="首先添加两个uart重定向printf函数和uart接收中断处理函数"></a>首先添加两个uart重定向printf函数和uart接收中断处理函数</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">u3_printf</span><span class="params">(<span class="keyword">char</span>* fmt,...)</span>  </span></span><br><span class="line"><span class="function"></span>&#123;  </span><br><span class="line">	<span class="keyword">uint8_t</span> i,j; </span><br><span class="line">	va_list ap; </span><br><span class="line">	va_start(ap,fmt);</span><br><span class="line">	<span class="built_in">vsprintf</span>((<span class="keyword">char</span>*)USART3_TX_BUF,fmt,ap);</span><br><span class="line">	va_end(ap);</span><br><span class="line">	i=<span class="built_in">strlen</span>((<span class="keyword">const</span> <span class="keyword">char</span>*)USART3_TX_BUF);		<span class="comment">//此次发送数据的长度</span></span><br><span class="line">	<span class="keyword">for</span>(j=<span class="number">0</span>;j&lt;i;j++)							<span class="comment">//循环发送数据</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">while</span>((USART3-&gt;SR&amp;<span class="number">0X40</span>)==<span class="number">0</span>);			<span class="comment">//循环发送,直到发送完毕   </span></span><br><span class="line">		USART3-&gt;DR=USART3_TX_BUF[j];  </span><br><span class="line">	&#125; </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">u1_printf</span><span class="params">(<span class="keyword">char</span>* fmt,...)</span>  </span></span><br><span class="line"><span class="function"></span>&#123;  </span><br><span class="line">	<span class="keyword">uint8_t</span> i,j; </span><br><span class="line">	va_list ap; </span><br><span class="line">	va_start(ap,fmt);</span><br><span class="line">	<span class="built_in">vsprintf</span>((<span class="keyword">char</span>*)USART1_TX_BUF,fmt,ap);</span><br><span class="line">	va_end(ap);</span><br><span class="line">	i=<span class="built_in">strlen</span>((<span class="keyword">const</span> <span class="keyword">char</span>*)USART1_TX_BUF);		<span class="comment">//此次发送数据的长度</span></span><br><span class="line">	<span class="keyword">for</span>(j=<span class="number">0</span>;j&lt;i;j++)							<span class="comment">//循环发送数据</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">while</span>((USART1-&gt;SR&amp;<span class="number">0X40</span>)==<span class="number">0</span>);			<span class="comment">//循环发送,直到发送完毕   </span></span><br><span class="line">		USART3-&gt;DR=USART1_TX_BUF[j];  </span><br><span class="line">	&#125; </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">HAL_UART_RxCpltCallback</span><span class="params">(UART_HandleTypeDef *huart)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span>(huart-&gt;Instance==USART3)</span><br><span class="line">	&#123;</span><br><span class="line">	<span class="keyword">if</span>((USART3_RX_STA&amp;(<span class="number">1</span>&lt;&lt;<span class="number">15</span>))==<span class="number">0</span>)<span class="comment">//接收完的一批数据,还没有被处理,则不再接收其他数据</span></span><br><span class="line">		&#123; </span><br><span class="line">			<span class="keyword">if</span>(USART3_RX_STA&lt;USART3_MAX_RECV_LEN)	<span class="comment">//还可以接收数据</span></span><br><span class="line">			&#123;</span><br><span class="line">	 			__HAL_TIM_SET_COUNTER(&amp;htim2,<span class="number">0</span>);         				<span class="comment">//计数器清空	</span></span><br><span class="line">				<span class="keyword">if</span>(USART3_RX_STA==<span class="number">0</span>) 				<span class="comment">//使能定时器7的中断 </span></span><br><span class="line">				&#123;</span><br><span class="line">					__HAL_TIM_ENABLE(&amp;htim2);     			<span class="comment">//使能定时器2</span></span><br><span class="line">				&#125;</span><br><span class="line">				USART3_RX_BUF[USART3_RX_STA++]=temp_rx;	<span class="comment">//记录接收到的值	 </span></span><br><span class="line">			&#125;<span class="keyword">else</span> </span><br><span class="line">			&#123;</span><br><span class="line">				USART3_RX_STA|=<span class="number">1</span>&lt;&lt;<span class="number">15</span>;				<span class="comment">//强制标记接收完成</span></span><br><span class="line">			&#125; </span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="编写发送和检查命令核心函数"><a href="#编写发送和检查命令核心函数" class="headerlink" title="编写发送和检查命令核心函数"></a>编写发送和检查命令核心函数</h4><ul>
+<li>创建esp8266.c esp8266.h并按照之前的流程图编写函数如下</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">uint8_t</span> <span class="title">esp8266_send_cmd</span><span class="params">(<span class="keyword">uint8_t</span> *cmd,<span class="keyword">uint8_t</span> *ack,<span class="keyword">uint16_t</span> waittime)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">uint8_t</span> res = <span class="number">0</span>;</span><br><span class="line">	USART3_RX_STA = <span class="number">0</span>;</span><br><span class="line">	u3_printf(<span class="string">&quot;%s\r\n&quot;</span>,cmd);</span><br><span class="line">	<span class="keyword">if</span>(ack&amp;&amp;waittime)		<span class="comment">//需要等待应答</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">while</span>(--waittime)	<span class="comment">//等待倒计时</span></span><br><span class="line">		&#123;</span><br><span class="line">			HAL_Delay(<span class="number">10</span>);</span><br><span class="line">			<span class="keyword">if</span>(USART3_RX_STA&amp;<span class="number">0X8000</span>)<span class="comment">//接收到期待的应答结果</span></span><br><span class="line">			&#123;</span><br><span class="line">				<span class="keyword">if</span>(esp8266_check_cmd(ack))</span><br><span class="line">				&#123;</span><br><span class="line">					u1_printf(<span class="string">&quot;ack:%s\r\n&quot;</span>,(<span class="keyword">uint8_t</span>*)ack);</span><br><span class="line">					<span class="keyword">break</span>;<span class="comment">//得到有效数据 </span></span><br><span class="line">				&#125;</span><br><span class="line">					USART3_RX_STA=<span class="number">0</span>;</span><br><span class="line">			&#125; </span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span>(waittime==<span class="number">0</span>)res=<span class="number">1</span>; </span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> res;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">uint8_t</span>* <span class="title">esp8266_check_cmd</span><span class="params">(<span class="keyword">uint8_t</span> *str)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">char</span> *strx=<span class="number">0</span>;</span><br><span class="line">	<span class="keyword">if</span>(USART3_RX_STA&amp;<span class="number">0X8000</span>)		<span class="comment">//接收到一次数据了</span></span><br><span class="line">	&#123; </span><br><span class="line">		</span><br><span class="line">		USART3_RX_BUF[USART3_RX_STA&amp;<span class="number">0X7FFF</span>]=<span class="number">0</span>;<span class="comment">//添加结束符</span></span><br><span class="line">		u1_printf(<span class="string">&quot;%s\r\n&quot;</span>,(<span class="keyword">char</span>*)USART3_RX_BUF);</span><br><span class="line">		strx=<span class="built_in">strstr</span>((<span class="keyword">const</span> <span class="keyword">char</span>*)USART3_RX_BUF,(<span class="keyword">const</span> <span class="keyword">char</span>*)str);</span><br><span class="line">	&#125; </span><br><span class="line">	<span class="keyword">return</span> (<span class="keyword">uint8_t</span>*)strx;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="在定时器文件中编写定时器中断服务函数"><a href="#在定时器文件中编写定时器中断服务函数" class="headerlink" title="在定时器文件中编写定时器中断服务函数"></a>在定时器文件中编写定时器中断服务函数</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">HAL_TIM_PeriodElapsedCallback</span><span class="params">(TIM_HandleTypeDef *htim)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">   <span class="keyword">if</span>(htim-&gt;Instance == TIM2)</span><br><span class="line">    &#123;</span><br><span class="line">		</span><br><span class="line">		USART3_RX_STA|=<span class="number">1</span>&lt;&lt;<span class="number">15</span>;	<span class="comment">//标记接收完成</span></span><br><span class="line">		__HAL_TIM_CLEAR_FLAG(&amp;htim2,TIM_EVENTSOURCE_UPDATE );       <span class="comment">//清除TIM7更新中断标志  </span></span><br><span class="line">		__HAL_TIM_DISABLE(&amp;htim2);     			<span class="comment">//关闭定时器2</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="在esp8266-c中按照上面的表格编写esp8266的初始化函数"><a href="#在esp8266-c中按照上面的表格编写esp8266的初始化函数" class="headerlink" title="在esp8266.c中按照上面的表格编写esp8266的初始化函数"></a>在esp8266.c中按照上面的表格编写esp8266的初始化函数</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">uint8_t</span> <span class="title">esp8266_Connect_IOTServer</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	u1_printf(<span class="string">&quot;准备配置模块\r\n&quot;</span>);</span><br><span class="line">	HAL_Delay(<span class="number">100</span>);</span><br><span class="line">	</span><br><span class="line">	u1_printf(<span class="string">&quot;准备退出透传模式\n&quot;</span>);</span><br><span class="line">	<span class="keyword">if</span>(esp8266_quit_trans())</span><br><span class="line">	&#123;</span><br><span class="line">		u1_printf(<span class="string">&quot;退出透传模式失败，准备重启\r\n&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">6</span>;</span><br><span class="line">	&#125;<span class="keyword">else</span> u1_printf(<span class="string">&quot;退出透传模式成功\r\n&quot;</span>);</span><br><span class="line">	</span><br><span class="line">	</span><br><span class="line">	</span><br><span class="line">	u1_printf(<span class="string">&quot;准备关闭回显\r\n&quot;</span>);</span><br><span class="line">	<span class="keyword">if</span>(esp8266_send_cmd(<span class="string">&quot;ATE0&quot;</span>,<span class="string">&quot;OK&quot;</span>,<span class="number">50</span>))</span><br><span class="line">	&#123;</span><br><span class="line">		u1_printf(<span class="string">&quot;关闭回显失败准备重启\r\n&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">	&#125;<span class="keyword">else</span> u1_printf(<span class="string">&quot;关闭回显成功\r\n&quot;</span>);</span><br><span class="line">	</span><br><span class="line">	u1_printf(<span class="string">&quot;查询模块是否在线\r\n&quot;</span>);</span><br><span class="line">	<span class="keyword">if</span>(esp8266_send_cmd(<span class="string">&quot;AT&quot;</span>,<span class="string">&quot;OK&quot;</span>,<span class="number">50</span>))</span><br><span class="line">	&#123;</span><br><span class="line">		u1_printf(<span class="string">&quot;模块不在线准备重启\r\n&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">	&#125;<span class="keyword">else</span> u1_printf(<span class="string">&quot;设置查询在线成功\r\n&quot;</span>);</span><br><span class="line">	</span><br><span class="line">	u1_printf(<span class="string">&quot;准备设置STA模式\r\n&quot;</span>);</span><br><span class="line">	<span class="keyword">if</span>(esp8266_send_cmd(<span class="string">&quot;AT+CWMODE=1&quot;</span>,<span class="string">&quot;OK&quot;</span>,<span class="number">50</span>))</span><br><span class="line">	&#123;</span><br><span class="line">		u1_printf(<span class="string">&quot;设置STA模式失败准备重启\r\n&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">	&#125;<span class="keyword">else</span> u1_printf(<span class="string">&quot;设置STA模式成功\r\n&quot;</span>);</span><br><span class="line">	</span><br><span class="line">	u1_printf(<span class="string">&quot;准备重启\r\n&quot;</span>);</span><br><span class="line">	<span class="keyword">if</span>(esp8266_send_cmd(<span class="string">&quot;AT+RST&quot;</span>,<span class="string">&quot;OK&quot;</span>,<span class="number">50</span>))</span><br><span class="line">	&#123;</span><br><span class="line">		u1_printf(<span class="string">&quot;重启失败，准备重启\r\n&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">2</span>;</span><br><span class="line">	&#125;<span class="keyword">else</span> u1_printf(<span class="string">&quot;重启成功，等待三秒\r\n&quot;</span>);</span><br><span class="line">	</span><br><span class="line">	HAL_Delay(<span class="number">1000</span>);</span><br><span class="line">	HAL_Delay(<span class="number">1000</span>);</span><br><span class="line">	HAL_Delay(<span class="number">1000</span>);</span><br><span class="line">	HAL_Delay(<span class="number">1000</span>);</span><br><span class="line">	</span><br><span class="line">	u1_printf(<span class="string">&quot;准备取消自动连接\r\n&quot;</span>);</span><br><span class="line">	<span class="keyword">if</span>(esp8266_send_cmd(<span class="string">&quot;AT+CWAUTOCONN=0&quot;</span>,<span class="string">&quot;OK&quot;</span>,<span class="number">50</span>))</span><br><span class="line">	&#123;</span><br><span class="line">		u1_printf(<span class="string">&quot;取消自动连接失败，准备重启\r\n&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">3</span>;</span><br><span class="line">	&#125;<span class="keyword">else</span> u1_printf(<span class="string">&quot;取消自动连接成功\r\n&quot;</span>);</span><br><span class="line">	</span><br><span class="line">	u1_printf(<span class="string">&quot;准备链接路由器\r\n&quot;</span>);</span><br><span class="line">	<span class="keyword">if</span>(esp8266_Connect_AP())</span><br><span class="line">	&#123;</span><br><span class="line">		u1_printf(<span class="string">&quot;连接路由器失败，等待重启\r\n&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">4</span>;</span><br><span class="line">	&#125;<span class="keyword">else</span> u1_printf(<span class="string">&quot;连接路由器成功\r\n&quot;</span>);</span><br><span class="line">	HAL_Delay(<span class="number">1000</span>);</span><br><span class="line">	HAL_Delay(<span class="number">1000</span>);</span><br><span class="line">	u1_printf(<span class="string">&quot;设置为关闭多路连接\r\n&quot;</span>);</span><br><span class="line">	<span class="keyword">if</span>(esp8266_send_cmd(<span class="string">&quot;AT+CIPMUX=0&quot;</span>,<span class="string">&quot;OK&quot;</span>,<span class="number">100</span>))</span><br><span class="line">	&#123;</span><br><span class="line">		u1_printf(<span class="string">&quot;关闭多路连接失败，准备重启\r\n&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">7</span>;</span><br><span class="line">	&#125;<span class="keyword">else</span> u1_printf(<span class="string">&quot;设置关闭多路连接成功\r\n&quot;</span>);</span><br><span class="line">	u1_printf(<span class="string">&quot;准备链接服务器\r\n&quot;</span>);</span><br><span class="line">	<span class="keyword">if</span>(esp8266_Connect_Server())</span><br><span class="line">	&#123;</span><br><span class="line">		u1_printf(<span class="string">&quot;连接服务器失败，等待重启\r\n&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">8</span>;</span><br><span class="line">	&#125;<span class="keyword">else</span> u1_printf(<span class="string">&quot;连接服务器成功\r\n&quot;</span>);</span><br><span class="line">	</span><br><span class="line">	u1_printf(<span class="string">&quot;准备退出透传模式\n&quot;</span>);</span><br><span class="line">	<span class="keyword">if</span>(esp8266_quit_trans())</span><br><span class="line">	&#123;</span><br><span class="line">		u1_printf(<span class="string">&quot;退出透传模式失败，准备重启\r\n&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">6</span>;</span><br><span class="line">	&#125;<span class="keyword">else</span> u1_printf(<span class="string">&quot;退出透传模式成功\r\n&quot;</span>);</span><br><span class="line">	</span><br><span class="line">	u1_printf(<span class="string">&quot;设置为透传模式\r\n&quot;</span>);</span><br><span class="line">	<span class="keyword">if</span>(esp8266_send_cmd(<span class="string">&quot;AT+CIPMODE=1&quot;</span>,<span class="string">&quot;OK&quot;</span>,<span class="number">50</span>))</span><br><span class="line">	&#123;</span><br><span class="line">		u1_printf(<span class="string">&quot;设置透传失败，准备重启\r\n&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">6</span>;</span><br><span class="line">	&#125;<span class="keyword">else</span> u1_printf(<span class="string">&quot;设置透传成功\r\n&quot;</span>);</span><br><span class="line">	u1_printf(<span class="string">&quot;设置开启透传模式\r\n&quot;</span>);</span><br><span class="line">	<span class="keyword">if</span>(esp8266_send_cmd(<span class="string">&quot;AT+CIPSEND&quot;</span>,<span class="string">&quot;OK&quot;</span>,<span class="number">1000</span>))</span><br><span class="line">	&#123;</span><br><span class="line">		u1_printf(<span class="string">&quot;开启透传失败，准备重启\r\n&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">9</span>;</span><br><span class="line">	&#125;<span class="keyword">else</span> u1_printf(<span class="string">&quot;开启透传成功\r\n&quot;</span>);</span><br><span class="line">	<span class="keyword">while</span>(<span class="number">1</span>)&#123;</span><br><span class="line">		HAL_Delay(<span class="number">1000</span>);</span><br><span class="line">		<span class="comment">//esp8266_send_cmd(&quot;AT+CIPSEND&quot;,&quot;OK&quot;,200);  //发送指定长度的数据</span></span><br><span class="line">		u3_printf(<span class="string">&quot;This is a message\r\n&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="在主函数中初始化相应模块并调用esp8266的初始化函数"><a href="#在主函数中初始化相应模块并调用esp8266的初始化函数" class="headerlink" title="在主函数中初始化相应模块并调用esp8266的初始化函数"></a>在主函数中初始化相应模块并调用esp8266的初始化函数</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="comment">/* USER CODE END WHILE */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* USER CODE BEGIN 3 */</span></span><br><span class="line">	  </span><br><span class="line">	  esp8266_Connect_IOTServer();</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<h1 id="观察实验现象"><a href="#观察实验现象" class="headerlink" title="观察实验现象"></a>观察实验现象</h1><ul>
+<li>打开网络调试助手，调整到TCP服务器模式，并记下此时的ip地址和端口号</li>
+<li>打开串口调试助手</li>
+<li>打开开发板观察现象</li>
+</ul>
+<p>下面是串口调试助手的消息<br><img src="https://img-blog.csdnimg.cn/20200226175511622.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><img src="https://img-blog.csdnimg.cn/20200226175525381.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>上面的图就是进入透传模式的过程，整个过程的AT指令是按照本文章最上面的表格来设置的，观察网络调试助手观察现象<br><img src="https://img-blog.csdnimg.cn/20200226180200798.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>发现进入透传模式之后的数据成功发送到服务器端，试验成功。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>本部分内容介绍了如何使STM32使用串口与ESP8266进行通讯，并且配置ESP8266进入TCP客户端的透传模式链接服务器，下一部分内容不出意外的话应该是介绍如何使STM32使用paho的开源MQTT库连接到百度云天工服务器</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+        <div id="donation_div"></div>
+
+
+<script src="/js/vdonate.js"></script>
+
+<script>
+var a = new Donate({
+  title: '如果觉得我的文章对您有用，请随意打赏。您的支持将鼓励我继续创作!', // 可选参数，打赏标题
+  btnText: 'Donate', // 可选参数，打赏按钮文字
+  el: document.getElementById('donation_div'),
+  wechatImage: 'https://raw.githubusercontent.com/iTimeTraveler/iTimeTraveler.github.io/site/source/about/donate/images/WeChanQR.png',
+  alipayImage: 'https://raw.githubusercontent.com/iTimeTraveler/iTimeTraveler.github.io/site/source/about/donate/images/AliPayQR.jpg'
+});
+</script>
+      
+      
+      <div>
+        <ul class="post-copyright">
+          <li class="post-copyright-author">
+          <strong>Post author:  </strong>Fran Hawk</a>
+          </li>
+          <li class="post-copyright-link">
+          <strong>Post link:  </strong>
+          <a href="/2020/02/26/物联网项目设计（三）STM32配置ESP8266使用 STA TCP客户端模式初步/" target="_blank" title="物联网项目设计（三）STM32配置ESP8266使用 STA TCP客户端模式初步">http://example.com/2020/02/26/物联网项目设计（三）STM32配置ESP8266使用 STA TCP客户端模式初步/</a>
+          </li>
+          <li class="post-copyright-license">
+            <strong>Copyright Notice:   </strong>
+            All articles in this blog are licensed under <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">CC BY-NC-ND 4.0</a>
+            unless stating additionally.
+          </li>
+         
+        </ul>
+<div>
+
+      
+      
+        
+	<div id="comment">
+		<!-- 来必力City版安装代码 -->
+		<div id="lv-container" data-id="city" data-uid="MTAyMC8yOTQ4MS82MDQ5">
+		<script type="text/javascript">
+		   (function(d, s) {
+		       var j, e = d.getElementsByTagName(s)[0];
+
+		       if (typeof LivereTower === 'function') { return; }
+
+		       j = d.createElement(s);
+		       j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+		       j.async = true;
+
+		       e.parentNode.insertBefore(j, e);
+		   })(document, 'script');
+		</script>
+		<noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+		</div>
+		<!-- City版安装代码已完成 -->
+	</div>
+
+
+
+      
+      
+        
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/STM32/" rel="tag">STM32</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%89%A9%E8%81%94%E7%BD%91/" rel="tag">物联网</a></li></ul>
+
+      
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2020/02/27/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%EF%BC%88%E5%9B%9B%EF%BC%89cJSON%20%E5%9C%A8%20STM32%20%E7%A7%BB%E6%A4%8D%E5%92%8C%E4%BD%BF%E7%94%A8/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          物联网项目设计（四）cJSON 在 STM32 移植和使用
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2020/02/24/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%EF%BC%88%E4%BA%8C%EF%BC%89%20MQTT.fx%E4%B8%8E%E7%99%BE%E5%BA%A6%E4%BA%91%E5%A4%A9%E5%B7%A5%20IOT%20hub%20%E7%9A%84%E8%BF%9E%E6%8E%A5%E8%B0%83%E8%AF%95/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">物联网项目设计（二） MQTT.fx与百度云天工 IOT hub 的连接调试</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+<!-- Table of Contents -->
+
+  <aside id="toc-sidebar">
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">Contents</strong>
+    
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E5%9C%B0%E5%9D%80"><span class="nav-number">1.</span> <span class="nav-text">代码地址</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%A6%81"><span class="nav-number">2.</span> <span class="nav-text">概要</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%87%86%E5%A4%87"><span class="nav-number">3.</span> <span class="nav-text">准备</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%A1%AC%E4%BB%B6%E5%87%86%E5%A4%87"><span class="nav-number">4.</span> <span class="nav-text">硬件准备</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%BD%AF%E4%BB%B6%E5%87%86%E5%A4%87"><span class="nav-number">5.</span> <span class="nav-text">软件准备</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%85%8D%E7%BD%AEESP8266%E7%9A%84%E6%AD%A5%E9%AA%A4"><span class="nav-number">6.</span> <span class="nav-text">配置ESP8266的步骤</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%9E%E9%99%85%E6%93%8D%E4%BD%9C%E9%83%A8%E5%88%86"><span class="nav-number">7.</span> <span class="nav-text">实际操作部分</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#CubeMx%E9%85%8D%E7%BD%AE%E5%B7%A5%E7%A8%8B"><span class="nav-number">7.1.</span> <span class="nav-text">CubeMx配置工程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E5%B7%A5%E7%A8%8B%E5%B0%B1%E5%83%8F%E6%88%91%E4%B8%8A%E9%9D%A2%E6%89%80%E8%BF%B0%E7%9A%84%E6%AD%A5%E9%AA%A4%EF%BC%8C%E9%9C%80%E8%A6%81%E9%85%8D%E7%BD%AE%E7%9B%B8%E5%BA%94%E7%9A%84%E5%A4%96%E8%AE%BE%EF%BC%8C%E4%B8%A4%E4%B8%AA%E4%B8%B2%E5%8F%A3%E5%92%8C%E4%B8%80%E4%B8%AA%E5%AE%9A%E6%97%B6%E5%99%A8"><span class="nav-number">7.1.1.</span> <span class="nav-text">配置工程就像我上面所述的步骤，需要配置相应的外设，两个串口和一个定时器</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%96%E5%86%99ESP8266%E5%87%BD%E6%95%B0%E5%B9%B6%E6%B7%BB%E5%8A%A0%E9%85%8D%E5%A5%97%E5%87%BD%E6%95%B0"><span class="nav-number">7.2.</span> <span class="nav-text">编写ESP8266函数并添加配套函数</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%A6%96%E5%85%88%E6%B7%BB%E5%8A%A0%E4%B8%A4%E4%B8%AAuart%E9%87%8D%E5%AE%9A%E5%90%91printf%E5%87%BD%E6%95%B0%E5%92%8Cuart%E6%8E%A5%E6%94%B6%E4%B8%AD%E6%96%AD%E5%A4%84%E7%90%86%E5%87%BD%E6%95%B0"><span class="nav-number">7.2.0.1.</span> <span class="nav-text">首先添加两个uart重定向printf函数和uart接收中断处理函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BC%96%E5%86%99%E5%8F%91%E9%80%81%E5%92%8C%E6%A3%80%E6%9F%A5%E5%91%BD%E4%BB%A4%E6%A0%B8%E5%BF%83%E5%87%BD%E6%95%B0"><span class="nav-number">7.2.0.2.</span> <span class="nav-text">编写发送和检查命令核心函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9C%A8%E5%AE%9A%E6%97%B6%E5%99%A8%E6%96%87%E4%BB%B6%E4%B8%AD%E7%BC%96%E5%86%99%E5%AE%9A%E6%97%B6%E5%99%A8%E4%B8%AD%E6%96%AD%E6%9C%8D%E5%8A%A1%E5%87%BD%E6%95%B0"><span class="nav-number">7.2.0.3.</span> <span class="nav-text">在定时器文件中编写定时器中断服务函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9C%A8esp8266-c%E4%B8%AD%E6%8C%89%E7%85%A7%E4%B8%8A%E9%9D%A2%E7%9A%84%E8%A1%A8%E6%A0%BC%E7%BC%96%E5%86%99esp8266%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E5%87%BD%E6%95%B0"><span class="nav-number">7.2.0.4.</span> <span class="nav-text">在esp8266.c中按照上面的表格编写esp8266的初始化函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9C%A8%E4%B8%BB%E5%87%BD%E6%95%B0%E4%B8%AD%E5%88%9D%E5%A7%8B%E5%8C%96%E7%9B%B8%E5%BA%94%E6%A8%A1%E5%9D%97%E5%B9%B6%E8%B0%83%E7%94%A8esp8266%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E5%87%BD%E6%95%B0"><span class="nav-number">7.2.0.5.</span> <span class="nav-text">在主函数中初始化相应模块并调用esp8266的初始化函数</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A7%82%E5%AF%9F%E5%AE%9E%E9%AA%8C%E7%8E%B0%E8%B1%A1"><span class="nav-number">8.</span> <span class="nav-text">观察实验现象</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">9.</span> <span class="nav-text">总结</span></a></li></ol>
+    
+    </div>
+  </aside>
+
+</section>
+        
+      </div>
+      
+      <footer id="footer">
+  
+
+  <div class="container">
+      	<div class="row">
+	      <p> Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/iTimeTraveler/hexo-theme-hiker" target="_blank">Hexo-theme-hiker</a> </p>
+	      <p id="copyRightEn">Copyright &copy; 2013 - 2021 张竞豪的小岛 All Rights Reserved.</p>
+	      
+	      
+    		<p class="busuanzi_uv">
+				UV : <span id="busuanzi_value_site_uv"></span> |  
+				PV : <span id="busuanzi_value_site_pv"></span>
+		    </p>
+  		   
+		</div>
+
+		
+  </div>
+</footer>
+
+
+<!-- min height -->
+
+<script>
+    var wrapdiv = document.getElementById("wrap");
+    var contentdiv = document.getElementById("content");
+    var allheader = document.getElementById("allheader");
+
+    wrapdiv.style.minHeight = document.body.offsetHeight + "px";
+    if (allheader != null) {
+      contentdiv.style.minHeight = document.body.offsetHeight - allheader.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    } else {
+      contentdiv.style.minHeight = document.body.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    }
+</script>
+    </div>
+    <!-- <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/categories" class="mobile-nav-link">Categories</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tags</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+</nav> -->
+    
+
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/scripts.js"></script>
+
+
+
+
+
+  
+<script src="/js/dialog.js"></script>
+
+
+
+
+
+
+
+
+
+	<div style="display: none;">
+    <script src="https://s95.cnzz.com/z_stat.php?id=1260716016&web_id=1260716016" language="JavaScript"></script>
+  </div>
+
+
+
+	<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js">
+	</script>
+
+
+
+
+
+
+  </div>
+
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="myModalLabel">设置</h2>
+      </div>
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+
+
+      <div class="modal-body">
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" onclick="javascript:setFontSize();" aria-expanded="true" aria-controls="collapseOne">
+              正文字号大小
+            </a>
+          </div>
+          <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+          <div class="panel-body">
+            您已调整页面字体大小
+          </div>
+        </div>
+      
+
+
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" onclick="javascript:setBackground();" aria-expanded="true" aria-controls="collapseTwo">
+              夜间护眼模式
+            </a>
+        </div>
+          <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+          <div class="panel-body">
+            夜间模式已经开启，再次单击按钮即可关闭 
+          </div>
+        </div>
+
+        <div>
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="true" aria-controls="collapseThree">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关 于&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+        </div>
+         <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+          <div class="panel-body">
+            张竞豪的小岛
+          </div>
+          <div class="panel-body">
+            Copyright © 2021 Fran Hawk All Rights Reserved.
+          </div>
+        </div>
+      </div>
+
+
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <div class="modal-footer">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+  
+  <a id="rocket" href="#top" class=""></a>
+  <script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+  
+    <a id="menu-switch"><i class="fa fa-bars fa-lg"></i></a>
+  
+</body>
+</html>

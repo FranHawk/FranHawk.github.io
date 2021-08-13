@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>物联网项目设计 （六） stm32+mqtt连接阿里云iot完成话题发布与订阅 | 张竞豪的小岛</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  <meta name="keywords" content="STM32物联网" />
+  
+  
+  
+  
+  <meta name="description" content="概述上一部分成功连接阿里云，完成了阿里云的连接与ping操作。下面介绍使用pahomqtt连接阿里云IOT，完成消息的发布和订阅。完成云端和设备端的通讯。 实现步骤1.使用MQTT.fx模拟设备端，与阿里云平台进行通讯，验证可行性2.使用stm32编写代码，完成真机调试 准备工作硬件准备使用stm32系列MCU，并有带网络功能的外设 软件准备 CubeMX用于配置工程 MDK5编写编译代码 MQT">
+<meta property="og:type" content="article">
+<meta property="og:title" content="物联网项目设计 （六） stm32+mqtt连接阿里云IOT完成话题发布与订阅">
+<meta property="og:url" content="http://example.com/2020/03/03/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%20%EF%BC%88%E5%85%AD%EF%BC%89%20stm32+mqtt%E8%BF%9E%E6%8E%A5%E9%98%BF%E9%87%8C%E4%BA%91IOT%E5%AE%8C%E6%88%90%E8%AF%9D%E9%A2%98%E5%8F%91%E5%B8%83%E4%B8%8E%E8%AE%A2%E9%98%85/index.html">
+<meta property="og:site_name" content="张竞豪的小岛">
+<meta property="og:description" content="概述上一部分成功连接阿里云，完成了阿里云的连接与ping操作。下面介绍使用pahomqtt连接阿里云IOT，完成消息的发布和订阅。完成云端和设备端的通讯。 实现步骤1.使用MQTT.fx模拟设备端，与阿里云平台进行通讯，验证可行性2.使用stm32编写代码，完成真机调试 准备工作硬件准备使用stm32系列MCU，并有带网络功能的外设 软件准备 CubeMX用于配置工程 MDK5编写编译代码 MQT">
+<meta property="og:locale">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200303163827588.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200303163911960.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200303164031251.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200303164229112.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2020030316454025.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200303165020381.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200303165416603.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200303165627527.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200303170018400.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200303170127796.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200303171534778.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200303185010204.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200303185235567.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200303185247255.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="article:published_time" content="2020-03-03T11:50:43.000Z">
+<meta property="article:modified_time" content="2021-08-13T02:01:01.837Z">
+<meta property="article:author" content="Fran Hawk">
+<meta property="article:tag" content="STM32">
+<meta property="article:tag" content="物联网">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20200303163827588.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+  
+    <link rel="alternate" href="/atom.xml" title="张竞豪的小岛" type="application/atom+xml">
+  
+
+  
+
+  <link rel="icon" href="/css/images/mylogo.jpg">
+  <link rel="apple-touch-icon" href="/css/images/mylogo.jpg">
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Montserrat:700" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic" rel="stylesheet" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+  <style type="text/css">
+    @font-face{font-family:futura-pt; src:url("/css/fonts/FuturaPTBold.otf") format("woff");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt-light; src:url("/css/fonts/FuturaPTBook.otf") format("woff");font-weight:lighter;font-style:normal;}
+    @font-face{font-family:futura-pt-italic; src:url("/css/fonts/FuturaPTBookOblique.otf") format("woff");font-weight:400;font-style:italic;}
+}
+
+  </style>
+  
+<link rel="stylesheet" href="/css/style.css">
+
+
+  
+<script src="/js/jquery-3.1.1.min.js"></script>
+
+  
+<script src="/js/bootstrap.js"></script>
+
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.css" >
+
+  
+    
+<link rel="stylesheet" href="/css/dialog.css">
+
+  
+
+  
+
+  
+    <link rel="stylesheet" href="/css/header-post.css" >
+  
+
+  
+  
+  
+    <link rel="stylesheet" href="/css/vdonate.css" >
+  
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+
+
+  <body data-spy="scroll" data-target="#toc" data-offset="50">
+
+
+  
+  <div id="container">
+    <div id="wrap">
+      
+        <header>
+
+    <div id="allheader" class="navbar navbar-default navbar-static-top" role="navigation">
+        <div class="navbar-inner">
+          
+          <div class="container"> 
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+
+            
+              <a class="brand" style="
+                 margin-top: 0px;"  
+                href="#" data-toggle="modal" data-target="#myModal" >
+                  <img width="124px" height="124px" alt="Hike News" src="/css/images/mylogo.jpg">
+              </a>
+            
+            
+            <div class="navbar-collapse collapse">
+              <ul class="hnav navbar-nav">
+                
+                  <li> <a class="main-nav-link" href="/">Home</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/archives">Archives</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/categories">Categories</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/tags">Tags</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/about">About</a> </li>
+                
+                  <li><div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="" />
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="Type something..." />
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+</div></li>
+            </div>
+          </div>
+                
+      </div>
+    </div>
+
+</header>
+
+
+
+      
+            
+      <div id="content" class="outer">
+        
+          <section id="main" style="float:none;"><article id="post-物联网项目设计 （六） stm32+mqtt连接阿里云IOT完成话题发布与订阅" style="width: 75%; float:left;" class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" class="article-title" itemprop="name">
+      物联网项目设计 （六） stm32+mqtt连接阿里云IOT完成话题发布与订阅
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2020/03/03/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%20%EF%BC%88%E5%85%AD%EF%BC%89%20stm32+mqtt%E8%BF%9E%E6%8E%A5%E9%98%BF%E9%87%8C%E4%BA%91IOT%E5%AE%8C%E6%88%90%E8%AF%9D%E9%A2%98%E5%8F%91%E5%B8%83%E4%B8%8E%E8%AE%A2%E9%98%85/" class="article-date">
+	  <time datetime="2020-03-03T11:50:43.000Z" itemprop="datePublished">2020-03-03</time>
+	</a>
+
+      
+      
+	<a class="article-views">
+	<span id="busuanzi_container_page_pv">
+		PV:<span id="busuanzi_value_page_pv"></span>
+	</span>
+	</a>
+
+      
+
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>上一部分成功连接阿里云，完成了阿里云的连接与ping操作。<br>下面介绍使用pahomqtt连接阿里云IOT，完成消息的发布和订阅。完成云端和设备端的通讯。</p>
+<h1 id="实现步骤"><a href="#实现步骤" class="headerlink" title="实现步骤"></a>实现步骤</h1><p>1.使用MQTT.fx模拟设备端，与阿里云平台进行通讯，验证可行性<br>2.使用stm32编写代码，完成真机调试</p>
+<h1 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h1><h3 id="硬件准备"><a href="#硬件准备" class="headerlink" title="硬件准备"></a>硬件准备</h3><p>使用stm32系列MCU，并有带网络功能的外设</p>
+<h3 id="软件准备"><a href="#软件准备" class="headerlink" title="软件准备"></a>软件准备</h3><ul>
+<li>CubeMX用于配置工程</li>
+<li>MDK5编写编译代码</li>
+<li>MQTT.fx作为虚拟设备端完成仿真调试</li>
+<li>阿里云IOT平台</li>
+</ul>
+<h1 id="实现部分"><a href="#实现部分" class="headerlink" title="实现部分"></a>实现部分</h1><h3 id="使用MQTT-fx完成仿真"><a href="#使用MQTT-fx完成仿真" class="headerlink" title="使用MQTT.fx完成仿真"></a>使用MQTT.fx完成仿真</h3><p>1.根据阿里云的文档创建一个产品，创建一个这个产品的设备，并添加一个自定义功能<br><img src="https://img-blog.csdnimg.cn/20200303163827588.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><img src="https://img-blog.csdnimg.cn/20200303163911960.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>为了便于验证，我创建的是一个最简单的属性，一个LED灯的开关<br><img src="https://img-blog.csdnimg.cn/20200303164031251.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>2.根据生成的设备三元组，使用MQTT.fx添加参数连接阿里云<br><img src="https://img-blog.csdnimg.cn/20200303164229112.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>以上参数如何填写在阿里云文档里都能找到，我在前面的内容中也说过，这里不再赘述。见物联网设计 （五）</p>
+<p>填写完，点击Connect，连接阿里云，成功后看到阿里云控制台显示在线<br><img src="https://img-blog.csdnimg.cn/2020030316454025.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>2.在MQTT.fx中添加要订阅和发布的话题<br><img src="https://img-blog.csdnimg.cn/20200303165020381.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>在设备的Topic列表中发现，有两个话题分别是我们需要的上报属性的话题和云端设置属性的话题。<br>根据这个，在MQTT.fx中订阅<code>/sys/a1w0XJbXwh0/SmartLED_01/thing/service/property/set</code>这个话题<br>发布<code>sys/a1w0XJbXwh0/SmartLED_01/thing/event/property/post</code>这个话题</p>
+<p>3.在阿里云控制台点击在线运维，选择刚刚我们创建的设备的功能，方法选择：<strong>设置</strong><br><img src="https://img-blog.csdnimg.cn/20200303165416603.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>如上图，会自动生成一个JSON格式的数据。点击发送指令。我们会在MQTT.fx端接收到消息。<br><img src="https://img-blog.csdnimg.cn/20200303165627527.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>接收成功，下面我们要向post话题发布消息<br>发布消息的JSON格式仿照我们接收回来的消息格式</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="string">&quot;method&quot;</span> : <span class="string">&quot;thing.service.property.post&quot;</span>,</span><br><span class="line">  <span class="string">&quot;id&quot;</span> : <span class="string">&quot;12345&quot;</span>,</span><br><span class="line">  <span class="string">&quot;params&quot;</span> : &#123;</span><br><span class="line">    <span class="string">&quot;LEDSwitch&quot;</span> : <span class="number">1</span></span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="string">&quot;version&quot;</span> : <span class="string">&quot;1.0.0&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其中method一定要填对，id可以随便填，LEDSwitch就是我们需要的属性<br>点击Publish发送<br><img src="https://img-blog.csdnimg.cn/20200303170018400.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>在阿里云控制台观察到LED开关的状态已经被我们更新了<br><img src="https://img-blog.csdnimg.cn/20200303170127796.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>至此，完成使用MQTT.fx模拟设备端与阿里云IOT平台进行通讯。</p>
+<h3 id="使用stm32编写代码，完成真机调试"><a href="#使用stm32编写代码，完成真机调试" class="headerlink" title="使用stm32编写代码，完成真机调试"></a>使用stm32编写代码，完成真机调试</h3><h3 id="准备工作-1"><a href="#准备工作-1" class="headerlink" title="准备工作"></a>准备工作</h3><p>工程基于物联网设计 （五）的工程，使用CubeMx增加一个按键和一个LED的配置，使用CubeMx增加LED1和KEY1<br><img src="https://img-blog.csdnimg.cn/20200303171534778.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h3 id="分成两个步骤，我们分别完成订阅和发送的功能"><a href="#分成两个步骤，我们分别完成订阅和发送的功能" class="headerlink" title="分成两个步骤，我们分别完成订阅和发送的功能"></a>分成两个步骤，我们分别完成订阅和发送的功能</h3><p>在头文件中添加订阅和发布的话题</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span>  S_TOPIC_NAME         <span class="meta-string">&quot;/sys/a1w0XJbXwh0/SmartLED_01/thing/service/property/set&quot;</span>    </span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span>  P_TOPIC_NAME         <span class="meta-string">&quot;/sys/a1w0XJbXwh0/SmartLED_01/thing/event/property/post&quot;</span>      </span></span><br></pre></td></tr></table></figure>
+
+<h4 id="发送功能"><a href="#发送功能" class="headerlink" title="发送功能"></a>发送功能</h4><p>1.编写向指定话题发布消息的函数</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">uint8_t</span> <span class="title">IOT_baidu_connect_publish</span><span class="params">(<span class="keyword">char</span> *pTopic,<span class="keyword">char</span> *pMessage)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">static</span> <span class="keyword">uint8_t</span> err_cnt=<span class="number">0</span>;</span><br><span class="line">    <span class="keyword">int32_t</span> len;</span><br><span class="line">    MQTTString topicString = MQTTString_initializer;</span><br><span class="line">    <span class="keyword">int</span> msglen = <span class="built_in">strlen</span>(pMessage);</span><br><span class="line">    <span class="keyword">int</span> buflen = <span class="keyword">sizeof</span>(buf);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (MQTTPacket_read(buf, buflen, transport_getdata) == PUBREC)</span><br><span class="line">		&#123;</span><br><span class="line">				<span class="keyword">unsigned</span> <span class="keyword">char</span> packettype = <span class="number">0</span>;</span><br><span class="line">				<span class="keyword">unsigned</span> <span class="keyword">char</span> dup_ack = <span class="number">0</span>;</span><br><span class="line">				<span class="keyword">unsigned</span> <span class="keyword">short</span> packetid = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">				MQTTDeserialize_ack(&amp;packettype,&amp;dup_ack,&amp;packetid,buf,buflen);</span><br><span class="line">				err_cnt=<span class="number">0</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span><span class="comment">//Ã»½ÓÊÕµ½»Ø¸´</span></span><br><span class="line">		&#123;</span><br><span class="line">				err_cnt++;</span><br><span class="line">				<span class="keyword">if</span>(err_cnt&gt;<span class="number">3</span>)</span><br><span class="line">				&#123;</span><br><span class="line">					err_cnt=<span class="number">0</span>;</span><br><span class="line">					u1_printf(<span class="string">&quot;Something Wrong\r\n&quot;</span>);</span><br><span class="line">				&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		</span><br><span class="line">    <span class="built_in">memset</span>(buf,<span class="number">0</span>,buflen);</span><br><span class="line">    topicString.cstring = pTopic;</span><br><span class="line">    len = MQTTSerialize_publish(buf, buflen, <span class="number">0</span>, <span class="number">2</span>, <span class="number">0</span>, <span class="number">0</span>, topicString, (<span class="keyword">unsigned</span> <span class="keyword">char</span>*)pMessage, msglen);</span><br><span class="line"></span><br><span class="line">	USART3_RX_STA = <span class="number">0</span>;</span><br><span class="line">	<span class="built_in">memset</span>(USART3_RX_BUF,<span class="number">0</span>,USART3_MAX_RECV_LEN);</span><br><span class="line">    transport_sendPacketBuffer(<span class="number">3</span>,buf,len);</span><br><span class="line">		<span class="built_in">free</span>(pMessage);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>2.在main函数中扫描按键，并将按键状态作为LEDStatus，按照之前说的格式，制作JSON数据包并发布</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line"> &#123;</span><br><span class="line">   <span class="comment">/* USER CODE END WHILE */</span></span><br><span class="line"></span><br><span class="line">   <span class="comment">/* USER CODE BEGIN 3 */</span></span><br><span class="line">  HAL_Delay(<span class="number">1000</span>);</span><br><span class="line">  <span class="keyword">if</span>(HAL_GPIO_ReadPin(KEY1_GPIO_Port,KEY1_Pin))</span><br><span class="line">  &#123;</span><br><span class="line">	KEY_STATUS = <span class="number">1</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">else</span>&#123;</span><br><span class="line">	KEY_STATUS = <span class="number">0</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  cJSON * pJsonRoot = <span class="literal">NULL</span>;</span><br><span class="line">  pJsonRoot = cJSON_CreateObject();<span class="comment">//</span></span><br><span class="line">  cJSON_AddStringToObject(pJsonRoot, <span class="string">&quot;id&quot;</span>, <span class="string">&quot;12345&quot;</span>);<span class="comment">//</span></span><br><span class="line">  cJSON_AddStringToObject(pJsonRoot, <span class="string">&quot;method&quot;</span>, <span class="string">&quot;thing.event.property.post&quot;</span>);<span class="comment">//</span></span><br><span class="line">  cJSON * pJsonChild = cJSON_CreateObject();<span class="comment">//</span></span><br><span class="line">  cJSON_AddNumberToObject(pJsonChild, <span class="string">&quot;LEDSwitch&quot;</span>, KEY_STATUS);</span><br><span class="line">  cJSON_AddItemToObject(pJsonRoot, <span class="string">&quot;params&quot;</span>, pJsonChild);<span class="comment">//</span></span><br><span class="line">  </span><br><span class="line">  <span class="keyword">char</span> * lpJsonStr = cJSON_Print(pJsonRoot);</span><br><span class="line">  cJSON_Delete(pJsonRoot);<span class="comment">//</span></span><br><span class="line">  </span><br><span class="line">  IOT_baidu_connect_publish(P_TOPIC_NAME,lpJsonStr);</span><br><span class="line"> &#125;		</span><br></pre></td></tr></table></figure>
+
+<p>3.通过阿里云控制台观察现象<br>通过调试窗口发现，每隔一秒，接收到一个数据<br><img src="https://img-blog.csdnimg.cn/20200303185010204.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>通过设备状态窗口看到，按键按下，显示为0，按键松开，显示为1，说明向话题发送数据成功<br><img src="https://img-blog.csdnimg.cn/20200303185235567.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20200303185247255.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h4 id="接收功能"><a href="#接收功能" class="headerlink" title="接收功能"></a>接收功能</h4>
+      
+    </div>
+    <footer class="article-footer">
+      
+        <div id="donation_div"></div>
+
+
+<script src="/js/vdonate.js"></script>
+
+<script>
+var a = new Donate({
+  title: '如果觉得我的文章对您有用，请随意打赏。您的支持将鼓励我继续创作!', // 可选参数，打赏标题
+  btnText: 'Donate', // 可选参数，打赏按钮文字
+  el: document.getElementById('donation_div'),
+  wechatImage: 'https://raw.githubusercontent.com/iTimeTraveler/iTimeTraveler.github.io/site/source/about/donate/images/WeChanQR.png',
+  alipayImage: 'https://raw.githubusercontent.com/iTimeTraveler/iTimeTraveler.github.io/site/source/about/donate/images/AliPayQR.jpg'
+});
+</script>
+      
+      
+      <div>
+        <ul class="post-copyright">
+          <li class="post-copyright-author">
+          <strong>Post author:  </strong>Fran Hawk</a>
+          </li>
+          <li class="post-copyright-link">
+          <strong>Post link:  </strong>
+          <a href="/2020/03/03/物联网项目设计 （六） stm32+mqtt连接阿里云IOT完成话题发布与订阅/" target="_blank" title="物联网项目设计 （六） stm32+mqtt连接阿里云IOT完成话题发布与订阅">http://example.com/2020/03/03/物联网项目设计 （六） stm32+mqtt连接阿里云IOT完成话题发布与订阅/</a>
+          </li>
+          <li class="post-copyright-license">
+            <strong>Copyright Notice:   </strong>
+            All articles in this blog are licensed under <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">CC BY-NC-ND 4.0</a>
+            unless stating additionally.
+          </li>
+         
+        </ul>
+<div>
+
+      
+      
+        
+	<div id="comment">
+		<!-- 来必力City版安装代码 -->
+		<div id="lv-container" data-id="city" data-uid="MTAyMC8yOTQ4MS82MDQ5">
+		<script type="text/javascript">
+		   (function(d, s) {
+		       var j, e = d.getElementsByTagName(s)[0];
+
+		       if (typeof LivereTower === 'function') { return; }
+
+		       j = d.createElement(s);
+		       j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+		       j.async = true;
+
+		       e.parentNode.insertBefore(j, e);
+		   })(document, 'script');
+		</script>
+		<noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+		</div>
+		<!-- City版安装代码已完成 -->
+	</div>
+
+
+
+      
+      
+        
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/STM32/" rel="tag">STM32</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%89%A9%E8%81%94%E7%BD%91/" rel="tag">物联网</a></li></ul>
+
+      
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2020/05/07/%E5%9F%BA%E4%BA%8EMQTT%E5%BA%94%E7%94%A8%E5%B1%82%E5%8D%8F%E8%AE%AE%E7%9A%84%E7%89%A9%E8%81%94%E7%BD%91%E5%AE%B6%E5%BA%AD%E6%B8%A9%E6%B9%BF%E5%BA%A6%E7%9B%91%E6%B5%8B%E7%B3%BB%E7%BB%9F/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          基于MQTT应用层协议的物联网家庭温湿度监测系统
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2020/03/02/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%20%EF%BC%88%E4%BA%94%EF%BC%89%20Paho%20mqtt%20%E5%BA%93%E5%9C%A8STM32+esp8266%20%E7%A1%AC%E4%BB%B6%E5%B9%B3%E5%8F%B0%E4%B8%8A%E7%9A%84%E7%A7%BB%E6%A4%8D%E5%92%8C%E4%BD%BF%E7%94%A8%E7%AC%AC%E4%B8%80%E9%83%A8%E5%88%86%EF%BC%8C%E8%BF%9E%E6%8E%A5%E9%98%BF%E9%87%8C%E4%BA%91IOT%E5%B9%B3%E5%8F%B0/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">物联网项目设计 （五） Paho mqtt 库在STM32+esp8266 硬件平台上的移植和使用第一部分，连接阿里云IOT平台</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+<!-- Table of Contents -->
+
+  <aside id="toc-sidebar">
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">Contents</strong>
+    
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E6%AD%A5%E9%AA%A4"><span class="nav-number">2.</span> <span class="nav-text">实现步骤</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%87%86%E5%A4%87%E5%B7%A5%E4%BD%9C"><span class="nav-number">3.</span> <span class="nav-text">准备工作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A1%AC%E4%BB%B6%E5%87%86%E5%A4%87"><span class="nav-number">3.0.1.</span> <span class="nav-text">硬件准备</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BD%AF%E4%BB%B6%E5%87%86%E5%A4%87"><span class="nav-number">3.0.2.</span> <span class="nav-text">软件准备</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E9%83%A8%E5%88%86"><span class="nav-number">4.</span> <span class="nav-text">实现部分</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8MQTT-fx%E5%AE%8C%E6%88%90%E4%BB%BF%E7%9C%9F"><span class="nav-number">4.0.1.</span> <span class="nav-text">使用MQTT.fx完成仿真</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8stm32%E7%BC%96%E5%86%99%E4%BB%A3%E7%A0%81%EF%BC%8C%E5%AE%8C%E6%88%90%E7%9C%9F%E6%9C%BA%E8%B0%83%E8%AF%95"><span class="nav-number">4.0.2.</span> <span class="nav-text">使用stm32编写代码，完成真机调试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%87%86%E5%A4%87%E5%B7%A5%E4%BD%9C-1"><span class="nav-number">4.0.3.</span> <span class="nav-text">准备工作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E6%88%90%E4%B8%A4%E4%B8%AA%E6%AD%A5%E9%AA%A4%EF%BC%8C%E6%88%91%E4%BB%AC%E5%88%86%E5%88%AB%E5%AE%8C%E6%88%90%E8%AE%A2%E9%98%85%E5%92%8C%E5%8F%91%E9%80%81%E7%9A%84%E5%8A%9F%E8%83%BD"><span class="nav-number">4.0.4.</span> <span class="nav-text">分成两个步骤，我们分别完成订阅和发送的功能</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%91%E9%80%81%E5%8A%9F%E8%83%BD"><span class="nav-number">4.0.4.1.</span> <span class="nav-text">发送功能</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8E%A5%E6%94%B6%E5%8A%9F%E8%83%BD"><span class="nav-number">4.0.4.2.</span> <span class="nav-text">接收功能</span></a></li></ol></li></ol></li></ol></li></ol>
+    
+    </div>
+  </aside>
+
+</section>
+        
+      </div>
+      
+      <footer id="footer">
+  
+
+  <div class="container">
+      	<div class="row">
+	      <p> Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/iTimeTraveler/hexo-theme-hiker" target="_blank">Hexo-theme-hiker</a> </p>
+	      <p id="copyRightEn">Copyright &copy; 2013 - 2021 张竞豪的小岛 All Rights Reserved.</p>
+	      
+	      
+    		<p class="busuanzi_uv">
+				UV : <span id="busuanzi_value_site_uv"></span> |  
+				PV : <span id="busuanzi_value_site_pv"></span>
+		    </p>
+  		   
+		</div>
+
+		
+  </div>
+</footer>
+
+
+<!-- min height -->
+
+<script>
+    var wrapdiv = document.getElementById("wrap");
+    var contentdiv = document.getElementById("content");
+    var allheader = document.getElementById("allheader");
+
+    wrapdiv.style.minHeight = document.body.offsetHeight + "px";
+    if (allheader != null) {
+      contentdiv.style.minHeight = document.body.offsetHeight - allheader.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    } else {
+      contentdiv.style.minHeight = document.body.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    }
+</script>
+    </div>
+    <!-- <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/categories" class="mobile-nav-link">Categories</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tags</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+</nav> -->
+    
+
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/scripts.js"></script>
+
+
+
+
+
+  
+<script src="/js/dialog.js"></script>
+
+
+
+
+
+
+
+
+
+	<div style="display: none;">
+    <script src="https://s95.cnzz.com/z_stat.php?id=1260716016&web_id=1260716016" language="JavaScript"></script>
+  </div>
+
+
+
+	<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js">
+	</script>
+
+
+
+
+
+
+  </div>
+
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="myModalLabel">设置</h2>
+      </div>
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+
+
+      <div class="modal-body">
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" onclick="javascript:setFontSize();" aria-expanded="true" aria-controls="collapseOne">
+              正文字号大小
+            </a>
+          </div>
+          <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+          <div class="panel-body">
+            您已调整页面字体大小
+          </div>
+        </div>
+      
+
+
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" onclick="javascript:setBackground();" aria-expanded="true" aria-controls="collapseTwo">
+              夜间护眼模式
+            </a>
+        </div>
+          <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+          <div class="panel-body">
+            夜间模式已经开启，再次单击按钮即可关闭 
+          </div>
+        </div>
+
+        <div>
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="true" aria-controls="collapseThree">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关 于&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+        </div>
+         <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+          <div class="panel-body">
+            张竞豪的小岛
+          </div>
+          <div class="panel-body">
+            Copyright © 2021 Fran Hawk All Rights Reserved.
+          </div>
+        </div>
+      </div>
+
+
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <div class="modal-footer">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+  
+  <a id="rocket" href="#top" class=""></a>
+  <script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+  
+    <a id="menu-switch"><i class="fa fa-bars fa-lg"></i></a>
+  
+</body>
+</html>

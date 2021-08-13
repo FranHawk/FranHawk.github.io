@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>基于rt-thread的can电机驱动板设计 （三）can驱动配置与实现 | 张竞豪的小岛</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  <meta name="keywords" content="RT-ThreadCAN" />
+  
+  
+  
+  
+  <meta name="description" content="引言上一篇文章实现了基于rtthread的uart 的DMA接收驱动的配置与使用。下面重点需要完成rtthread对stm32的CAN驱动的配置，由于rtthread默认工程中没有对特定芯片如stm32的CAN驱动的芯片级驱动代码，但是在rtthread的github仓库中有相关的代码，需要我们自己完成配置。因此本文的重点工作是完成stm32的CAN驱动的配置，通过上述流程达到一以贯之的效果，以后">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于RT-Thread的CAN电机驱动板设计 （三）CAN驱动配置与实现">
+<meta property="og:url" content="http://example.com/2021/06/06/%E5%9F%BA%E4%BA%8ERT-Thread%E7%9A%84CAN%E7%94%B5%E6%9C%BA%E9%A9%B1%E5%8A%A8%E6%9D%BF%E8%AE%BE%E8%AE%A1%20%EF%BC%88%E4%B8%89%EF%BC%89CAN%E9%A9%B1%E5%8A%A8%E9%85%8D%E7%BD%AE%E4%B8%8E%E5%AE%9E%E7%8E%B0/index.html">
+<meta property="og:site_name" content="张竞豪的小岛">
+<meta property="og:description" content="引言上一篇文章实现了基于rtthread的uart 的DMA接收驱动的配置与使用。下面重点需要完成rtthread对stm32的CAN驱动的配置，由于rtthread默认工程中没有对特定芯片如stm32的CAN驱动的芯片级驱动代码，但是在rtthread的github仓库中有相关的代码，需要我们自己完成配置。因此本文的重点工作是完成stm32的CAN驱动的配置，通过上述流程达到一以贯之的效果，以后">
+<meta property="og:locale">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210604144019677.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210605111914719.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210605112000702.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210605112102554.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210605112229283.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210605112351903.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210605112705740.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210605112752650.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210605112849458.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210605113816142.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210605122652132.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210605123035129.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210605094724457.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210605094748588.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210605094828795.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="article:published_time" content="2021-06-06T11:50:43.000Z">
+<meta property="article:modified_time" content="2021-08-13T02:01:02.001Z">
+<meta property="article:author" content="Fran Hawk">
+<meta property="article:tag" content="RT-Thread">
+<meta property="article:tag" content="CAN">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20210604144019677.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center">
+  
+    <link rel="alternate" href="/atom.xml" title="张竞豪的小岛" type="application/atom+xml">
+  
+
+  
+
+  <link rel="icon" href="/css/images/mylogo.jpg">
+  <link rel="apple-touch-icon" href="/css/images/mylogo.jpg">
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Montserrat:700" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic" rel="stylesheet" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+  <style type="text/css">
+    @font-face{font-family:futura-pt; src:url("/css/fonts/FuturaPTBold.otf") format("woff");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt-light; src:url("/css/fonts/FuturaPTBook.otf") format("woff");font-weight:lighter;font-style:normal;}
+    @font-face{font-family:futura-pt-italic; src:url("/css/fonts/FuturaPTBookOblique.otf") format("woff");font-weight:400;font-style:italic;}
+}
+
+  </style>
+  
+<link rel="stylesheet" href="/css/style.css">
+
+
+  
+<script src="/js/jquery-3.1.1.min.js"></script>
+
+  
+<script src="/js/bootstrap.js"></script>
+
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.css" >
+
+  
+    
+<link rel="stylesheet" href="/css/dialog.css">
+
+  
+
+  
+
+  
+    <link rel="stylesheet" href="/css/header-post.css" >
+  
+
+  
+  
+  
+    <link rel="stylesheet" href="/css/vdonate.css" >
+  
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+
+
+  <body data-spy="scroll" data-target="#toc" data-offset="50">
+
+
+  
+  <div id="container">
+    <div id="wrap">
+      
+        <header>
+
+    <div id="allheader" class="navbar navbar-default navbar-static-top" role="navigation">
+        <div class="navbar-inner">
+          
+          <div class="container"> 
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+
+            
+              <a class="brand" style="
+                 margin-top: 0px;"  
+                href="#" data-toggle="modal" data-target="#myModal" >
+                  <img width="124px" height="124px" alt="Hike News" src="/css/images/mylogo.jpg">
+              </a>
+            
+            
+            <div class="navbar-collapse collapse">
+              <ul class="hnav navbar-nav">
+                
+                  <li> <a class="main-nav-link" href="/">Home</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/archives">Archives</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/categories">Categories</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/tags">Tags</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/about">About</a> </li>
+                
+                  <li><div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="" />
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="Type something..." />
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+</div></li>
+            </div>
+          </div>
+                
+      </div>
+    </div>
+
+</header>
+
+
+
+      
+            
+      <div id="content" class="outer">
+        
+          <section id="main" style="float:none;"><article id="post-基于RT-Thread的CAN电机驱动板设计 （三）CAN驱动配置与实现" style="width: 75%; float:left;" class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" class="article-title" itemprop="name">
+      基于RT-Thread的CAN电机驱动板设计 （三）CAN驱动配置与实现
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2021/06/06/%E5%9F%BA%E4%BA%8ERT-Thread%E7%9A%84CAN%E7%94%B5%E6%9C%BA%E9%A9%B1%E5%8A%A8%E6%9D%BF%E8%AE%BE%E8%AE%A1%20%EF%BC%88%E4%B8%89%EF%BC%89CAN%E9%A9%B1%E5%8A%A8%E9%85%8D%E7%BD%AE%E4%B8%8E%E5%AE%9E%E7%8E%B0/" class="article-date">
+	  <time datetime="2021-06-06T11:50:43.000Z" itemprop="datePublished">2021-06-06</time>
+	</a>
+
+      
+      
+	<a class="article-views">
+	<span id="busuanzi_container_page_pv">
+		PV:<span id="busuanzi_value_page_pv"></span>
+	</span>
+	</a>
+
+      
+
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><p>上一篇文章实现了基于rtthread的uart 的DMA接收驱动的配置与使用。下面重点需要完成rtthread对stm32的CAN驱动的配置，由于rtthread默认工程中没有对特定芯片如stm32的CAN驱动的芯片级驱动代码，但是在rtthread的github仓库中有相关的代码，需要我们自己完成配置。因此本文的重点工作是完成stm32的CAN驱动的配置，通过上述流程达到一以贯之的效果，以后再遇到其他协议也可以如此处理。</p>
+<h1 id="资料连接"><a href="#资料连接" class="headerlink" title="资料连接"></a>资料连接</h1><p>本项目的所有资料全部开源：</p>
+<p><strong>硬件工程</strong>：<a target="_blank" rel="noopener" href="https://lceda.cn/FranHawk/485tocan_motor_controller">https://lceda.cn/FranHawk/485tocan_motor_controller</a><br><strong>软件工程</strong>：<a target="_blank" rel="noopener" href="https://github.com/FranHawk/RT-Thread-485toCAN">https://github.com/FranHawk/RT-Thread-485toCAN</a></p>
+<h1 id="前期准备"><a href="#前期准备" class="headerlink" title="前期准备"></a>前期准备</h1><ul>
+<li>制作好的电机驱动板一块</li>
+<li>USB转485模块一个，用来插在PC上实现485协议与电机驱动板通讯</li>
+<li>rtthread studio开发环境</li>
+<li>cubemx配置工具</li>
+<li>硬件连接图如下所示，蓝色的就是USB转485模块<br><img src="https://img-blog.csdnimg.cn/20210604144019677.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70#pic_center"><h1 id="CAN驱动配置"><a href="#CAN驱动配置" class="headerlink" title="CAN驱动配置"></a>CAN驱动配置</h1>这篇文章依托上一篇文章已经创建好的工程<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2>这篇文章是rtthread官方文档的CAN驱动说明，里面有CAN协议简要介绍和CAN应用层代码示例<br><a target="_blank" rel="noopener" href="https://www.rt-thread.org/document/site/#/rt-thread-version/rt-thread-standard/programming-manual/device/can/can">https://www.rt-thread.org/document/site/#/rt-thread-version/rt-thread-standard/programming-manual/device/can/can</a><br>这几篇文章教如何在rtthread studio中配置CAN驱动，重点看前三篇，里面有一些疑难问题的解决<br><a target="_blank" rel="noopener" href="https://club.rt-thread.org/ask/question/429883.html">https://club.rt-thread.org/ask/question/429883.html</a><br><a target="_blank" rel="noopener" href="https://www.icode9.com/content-4-826571.html">https://www.icode9.com/content-4-826571.html</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_25186745/article/details/112788923?utm_source=app&app_version=4.8.0&code=app_1562916241&uLinkId=usr1mkqgl919blen">https://blog.csdn.net/qq_25186745/article/details/112788923?utm_source=app&amp;app_version=4.8.0&amp;code=app_1562916241&amp;uLinkId=usr1mkqgl919blen</a><br><a target="_blank" rel="noopener" href="https://club.rt-thread.org/ask/question/427543.html">https://club.rt-thread.org/ask/question/427543.html</a><h2 id="代码下载"><a href="#代码下载" class="headerlink" title="代码下载"></a>代码下载</h2>根据上述几篇参考文献，我们首先要去rtthread的github仓库下载stm32的can驱动支持代码<br>打开以下链接<br><a target="_blank" rel="noopener" href="https://github.com/RT-Thread/rt-thread">https://github.com/RT-Thread/rt-thread</a><br><img src="https://img-blog.csdnimg.cn/20210605111914719.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>进入bsp文件夹，找到stm32<br><img src="https://img-blog.csdnimg.cn/20210605112000702.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>进入以下路径，找到drv_can.h和drv_can.c,下载这两个文件，并分别放到rtthread studio工程的drivers/include和drivers文件夹中，然后在rtthread studio中刷新，才能看到新添加的两个文件<br><img src="https://img-blog.csdnimg.cn/20210605112102554.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20210605112229283.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20210605112351903.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><h2 id="配置CAN驱动"><a href="#配置CAN驱动" class="headerlink" title="配置CAN驱动"></a>配置CAN驱动</h2>打开stm32f1xx_hal_conf.h，注释掉CAN的使能如下图<br><img src="https://img-blog.csdnimg.cn/20210605112705740.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>打开rtthread settings，使能CAN设备驱动程序<br><img src="https://img-blog.csdnimg.cn/20210605112752650.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>在board.h中添加</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> BSP_USING_CAN</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> BSP_USING_CAN1</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img-blog.csdnimg.cn/20210605112849458.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>最后还需要CAN的两个引脚初始化的代码，我们打开cubemx完成CAN配置<br><img src="https://img-blog.csdnimg.cn/20210605113816142.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>选中master mode就行了，我们只用到cubemx生成的引脚初始化代码，其余的包括波特率不用管，这个后面用rtthread的设备驱动设置，最后打开生成的MDK5工程，把stm32f1xx_hal_msp.c中的如下代码复制到rtthread studio的board.c中</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* @brief CAN MSP Initialization</span></span><br><span class="line"><span class="comment">* This function configures the hardware resources used in this example</span></span><br><span class="line"><span class="comment">* @param hcan: CAN handle pointer</span></span><br><span class="line"><span class="comment">* @retval None</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">HAL_CAN_MspInit</span><span class="params">(CAN_HandleTypeDef* hcan)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  GPIO_InitTypeDef GPIO_InitStruct = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">  <span class="keyword">if</span>(hcan-&gt;Instance==CAN1)</span><br><span class="line">  &#123;</span><br><span class="line">  <span class="comment">/* USER CODE BEGIN CAN1_MspInit 0 */</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/* USER CODE END CAN1_MspInit 0 */</span></span><br><span class="line">    <span class="comment">/* Peripheral clock enable */</span></span><br><span class="line">    __HAL_RCC_CAN1_CLK_ENABLE();</span><br><span class="line">  </span><br><span class="line">    __HAL_RCC_GPIOA_CLK_ENABLE();</span><br><span class="line">    <span class="comment">/**CAN GPIO Configuration    </span></span><br><span class="line"><span class="comment">    PA11     ------&gt; CAN_RX</span></span><br><span class="line"><span class="comment">    PA12     ------&gt; CAN_TX </span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    GPIO_InitStruct.Pin = GPIO_PIN_11;</span><br><span class="line">    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;</span><br><span class="line">    GPIO_InitStruct.Pull = GPIO_NOPULL;</span><br><span class="line">    HAL_GPIO_Init(GPIOA, &amp;GPIO_InitStruct);</span><br><span class="line"></span><br><span class="line">    GPIO_InitStruct.Pin = GPIO_PIN_12;</span><br><span class="line">    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;</span><br><span class="line">    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;</span><br><span class="line">    HAL_GPIO_Init(GPIOA, &amp;GPIO_InitStruct);</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* USER CODE BEGIN CAN1_MspInit 1 */</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/* USER CODE END CAN1_MspInit 1 */</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* @brief CAN MSP De-Initialization</span></span><br><span class="line"><span class="comment">* This function freeze the hardware resources used in this example</span></span><br><span class="line"><span class="comment">* @param hcan: CAN handle pointer</span></span><br><span class="line"><span class="comment">* @retval None</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">HAL_CAN_MspDeInit</span><span class="params">(CAN_HandleTypeDef* hcan)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">if</span>(hcan-&gt;Instance==CAN1)</span><br><span class="line">  &#123;</span><br><span class="line">  <span class="comment">/* USER CODE BEGIN CAN1_MspDeInit 0 */</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/* USER CODE END CAN1_MspDeInit 0 */</span></span><br><span class="line">    <span class="comment">/* Peripheral clock disable */</span></span><br><span class="line">    __HAL_RCC_CAN1_CLK_DISABLE();</span><br><span class="line">  </span><br><span class="line">    <span class="comment">/**CAN GPIO Configuration    </span></span><br><span class="line"><span class="comment">    PA11     ------&gt; CAN_RX</span></span><br><span class="line"><span class="comment">    PA12     ------&gt; CAN_TX </span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_11|GPIO_PIN_12);</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* USER CODE BEGIN CAN1_MspDeInit 1 */</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/* USER CODE END CAN1_MspDeInit 1 */</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://img-blog.csdnimg.cn/20210605122652132.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>至此完成了CAN驱动配置</p>
+<h2 id="参考rtthread官网的CAN设备的示例程序编写代码"><a href="#参考rtthread官网的CAN设备的示例程序编写代码" class="headerlink" title="参考rtthread官网的CAN设备的示例程序编写代码"></a>参考rtthread官网的CAN设备的示例程序编写代码</h2><p><a target="_blank" rel="noopener" href="https://www.rt-thread.org/document/site/#/rt-thread-version/rt-thread-standard/programming-manual/device/can/can">https://www.rt-thread.org/document/site/#/rt-thread-version/rt-thread-standard/programming-manual/device/can/can</a><br><img src="https://img-blog.csdnimg.cn/20210605123035129.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>根据电机数据手册，设置波特率是1M，8个电机的ID号从0x141到0x148</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*各电机ID定义*/</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MOTOR1_ID   0x141</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MOTOR2_ID   0x142</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MOTOR3_ID   0x143</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MOTOR4_ID   0x144</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MOTOR5_ID   0x145</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MOTOR6_ID   0x146</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MOTOR7_ID   0x147</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MOTOR8_ID   0x148</span></span><br></pre></td></tr></table></figure>
+<p><img src="https://img-blog.csdnimg.cn/20210605094724457.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20210605094748588.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20210605094828795.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>根据数据手册，定义电机命令</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*电机控制指令定义*/</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> TORQUE_CURRENT_CMD 0xA1</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> STATE_QUEST_CMD    0x9C</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MOTOR_ON_CMD       0x81</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MOTOR_OFF_CMD      0x88</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* CAN 设备名称定义 */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> CAN_DEV_NAME       <span class="meta-string">&quot;can1&quot;</span></span></span><br><span class="line"><span class="comment">/* 用于CAN接收消息的信号量 */</span></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">rt_semaphore</span> <span class="title">can_rx_sem</span>;</span></span><br><span class="line"><span class="comment">/* CAN设备句柄 */</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">rt_device_t</span> can_dev;</span><br></pre></td></tr></table></figure>
+<p>CAN采用中断的方式接收数据，还是分为顶半处理和底半处理，顶半处理就是CAN接收中断函数，里面只负责释放信号量，底半处理是CAN数据处理线程，负责对CAN接收的数据进行解码，并且把有效信息存放在数组中等待被电机驱动板发送至上位机。<br>下面是CAN接收中断函数</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* CAN接收数据回调函数 */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">rt_err_t</span> <span class="title">can_rx_call</span><span class="params">(<span class="keyword">rt_device_t</span> dev, <span class="keyword">rt_size_t</span> size)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">/* CAN 接收到数据后产生中断，调用此回调函数，然后发送接收信号量 */</span></span><br><span class="line">    rt_sem_release(&amp;can_rx_sem);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> RT_EOK;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>CAN数据处理线程初始化函数，由于CAN发送控制和查询指令至电机的程序在串口数据处理线程中，优先级为5，每发给一个电机指令，电机就会返回一条指令，为了不让CAN数据接收受到影响，将CAN数据接收线程的优先级调整至比CAN数据发送更高。CAN数据处理线程优先级设为6。<strong>这个地方要注意的是，在电机驱动板连接电机时，将CAN工作模式设为正常模式，在未连接电机，单独调试时需要设置为LOOPBACK回环模式</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* CAN接收数据处理初始化 */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">rt_err_t</span> <span class="title">can_rx_thread_init</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">rt_err_t</span> res;</span><br><span class="line">    <span class="keyword">rt_thread_t</span> thread;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 查找 CAN 设备 */</span></span><br><span class="line">    can_dev = rt_device_find(CAN_DEV_NAME);</span><br><span class="line">    <span class="keyword">if</span> (!can_dev)</span><br><span class="line">    &#123;</span><br><span class="line">        rt_kprintf(<span class="string">&quot;find %s failed!\n&quot;</span>, CAN_DEV_NAME);</span><br><span class="line">        <span class="keyword">return</span> RT_ERROR;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 初始化 CAN 接收信号量 */</span></span><br><span class="line">    rt_sem_init(&amp;can_rx_sem, <span class="string">&quot;rx_sem&quot;</span>, <span class="number">0</span>, RT_IPC_FLAG_FIFO);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 以中断接收及发送方式打开 CAN 设备 */</span></span><br><span class="line">    res = rt_device_open(can_dev, RT_DEVICE_FLAG_INT_TX | RT_DEVICE_FLAG_INT_RX);</span><br><span class="line">    res = rt_device_control(can_dev, RT_CAN_CMD_SET_BAUD, (<span class="keyword">void</span> *) CAN1MBaud);</span><br><span class="line">    res = rt_device_control(can_dev, RT_CAN_CMD_SET_MODE, (<span class="keyword">void</span> *) RT_CAN_MODE_NORMAL);</span><br><span class="line">    RT_ASSERT(res == RT_EOK);</span><br><span class="line">    <span class="comment">/* 创建数据接收线程,优先级为5 */</span></span><br><span class="line">    thread = rt_thread_create(<span class="string">&quot;can_rx&quot;</span>, can_rx_thread_entry, RT_NULL, <span class="number">2048</span>, <span class="number">5</span>, <span class="number">10</span>);</span><br><span class="line">    <span class="keyword">if</span> (thread != RT_NULL)</span><br><span class="line">    &#123;</span><br><span class="line">        rt_thread_startup(thread);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        res = RT_ERROR;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> res;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>CAN数据处理线程</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* CAN接收数据处理线程 */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">can_rx_thread_entry</span><span class="params">(<span class="keyword">void</span> *parameter)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">rt_can_msg</span> <span class="title">rxmsg</span> =</span> &#123; <span class="number">0</span> &#125;;</span><br><span class="line"></span><br><span class="line">    serial_tx_buffer[<span class="number">0</span>] = <span class="number">0x5A</span>;</span><br><span class="line">    serial_tx_buffer[<span class="number">34</span>] = <span class="number">0xA5</span>;</span><br><span class="line">    <span class="comment">/* 设置接收回调函数 */</span></span><br><span class="line">    rt_device_set_rx_indicate(can_dev, can_rx_call);</span><br><span class="line">    <span class="comment">/*不使用硬件过滤表*/</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> RT_CAN_USING_HDR</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">rt_can_filter_item</span> <span class="title">items</span>[5] =</span></span><br><span class="line">    &#123;</span><br><span class="line">        RT_CAN_FILTER_ITEM_INIT(<span class="number">0x100</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="number">0x700</span>, RT_NULL, RT_NULL), <span class="comment">/* std,match ID:0x100~0x1ff，hdr 为 - 1，设置默认过滤表 */</span></span><br><span class="line">        RT_CAN_FILTER_ITEM_INIT(<span class="number">0x300</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="number">0x700</span>, RT_NULL, RT_NULL), <span class="comment">/* std,match ID:0x300~0x3ff，hdr 为 - 1 */</span></span><br><span class="line">        RT_CAN_FILTER_ITEM_INIT(<span class="number">0x211</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="number">0x7ff</span>, RT_NULL, RT_NULL), <span class="comment">/* std,match ID:0x211，hdr 为 - 1 */</span></span><br><span class="line">        RT_CAN_FILTER_STD_INIT(<span class="number">0x486</span>, RT_NULL, RT_NULL), <span class="comment">/* std,match ID:0x486，hdr 为 - 1 */</span></span><br><span class="line">        &#123;   <span class="number">0x555</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="number">0x7ff</span>, <span class="number">7</span>,&#125; <span class="comment">/* std,match ID:0x555，hdr 为 7，指定设置 7 号过滤表 */</span></span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">rt_can_filter_config</span> <span class="title">cfg</span> =</span></span><br><span class="line">    &#123;   <span class="number">5</span>, <span class="number">1</span>, items&#125;; <span class="comment">/* 一共有 5 个过滤表 */</span></span><br><span class="line">    <span class="comment">/* 设置硬件过滤表 */</span></span><br><span class="line">    res = rt_device_control(can_dev, RT_CAN_CMD_SET_FILTER, &amp;cfg);</span><br><span class="line">    RT_ASSERT(res == RT_EOK);</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/* hdr 值为 - 1，表示直接从 uselist 链表读取数据 */</span></span><br><span class="line">        rxmsg.hdr = <span class="number">-1</span>;</span><br><span class="line">        <span class="comment">/* 阻塞等待接收信号量 */</span></span><br><span class="line">        rt_sem_take(&amp;can_rx_sem, RT_WAITING_FOREVER);</span><br><span class="line">        <span class="comment">/* 从 CAN 读取一帧数据 */</span></span><br><span class="line">        rt_device_read(can_dev, <span class="number">0</span>, &amp;rxmsg, <span class="keyword">sizeof</span>(rxmsg));</span><br><span class="line">        <span class="comment">/* 打印数据 ID 及内容 */</span></span><br><span class="line"><span class="comment">//        rt_kprintf(&quot;ID:%x&quot;, rxmsg.id);</span></span><br><span class="line"><span class="comment">//        for (i = 0; i &lt; 8; i++)</span></span><br><span class="line"><span class="comment">//        &#123;</span></span><br><span class="line"><span class="comment">//            rt_kprintf(&quot;%2x&quot;, rxmsg.data[i]);</span></span><br><span class="line"><span class="comment">//        &#125;</span></span><br><span class="line">        <span class="comment">//rt_kprintf(&quot;\n&quot;);</span></span><br><span class="line">        <span class="comment">// rt_kprintf(&quot;state_quest\n&quot;);</span></span><br><span class="line">        <span class="comment">/*根据id号判断是哪个电机，并把相应的值放进数据发送数组中*/</span></span><br><span class="line">        <span class="comment">/*由于控制指令和查询状态指令的返回值格式相同，这里不做区分*/</span></span><br><span class="line">        <span class="keyword">if</span> (rxmsg.data[<span class="number">0</span>] == STATE_QUEST_CMD || rxmsg.data[<span class="number">0</span>] == TORQUE_CURRENT_CMD)<span class="comment">/*判断是不是状态查询帧*/</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">switch</span> (rxmsg.id)</span><br><span class="line">            &#123;</span><br><span class="line">            <span class="keyword">case</span> MOTOR1_ID:</span><br><span class="line">                serial_tx_buffer[<span class="number">1</span>] = rxmsg.data[<span class="number">2</span>];</span><br><span class="line">                serial_tx_buffer[<span class="number">2</span>] = rxmsg.data[<span class="number">3</span>];</span><br><span class="line">                serial_tx_buffer[<span class="number">17</span>] = rxmsg.data[<span class="number">6</span>];</span><br><span class="line">                serial_tx_buffer[<span class="number">18</span>] = rxmsg.data[<span class="number">7</span>];</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> MOTOR2_ID:</span><br><span class="line">                serial_tx_buffer[<span class="number">3</span>] = rxmsg.data[<span class="number">2</span>];</span><br><span class="line">                serial_tx_buffer[<span class="number">4</span>] = rxmsg.data[<span class="number">3</span>];</span><br><span class="line">                serial_tx_buffer[<span class="number">19</span>] = rxmsg.data[<span class="number">6</span>];</span><br><span class="line">                serial_tx_buffer[<span class="number">20</span>] = rxmsg.data[<span class="number">7</span>];</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> MOTOR3_ID:</span><br><span class="line">                serial_tx_buffer[<span class="number">5</span>] = rxmsg.data[<span class="number">2</span>];</span><br><span class="line">                serial_tx_buffer[<span class="number">6</span>] = rxmsg.data[<span class="number">3</span>];</span><br><span class="line">                serial_tx_buffer[<span class="number">21</span>] = rxmsg.data[<span class="number">6</span>];</span><br><span class="line">                serial_tx_buffer[<span class="number">22</span>] = rxmsg.data[<span class="number">7</span>];</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> MOTOR4_ID:</span><br><span class="line">                serial_tx_buffer[<span class="number">7</span>] = rxmsg.data[<span class="number">2</span>];</span><br><span class="line">                serial_tx_buffer[<span class="number">8</span>] = rxmsg.data[<span class="number">3</span>];</span><br><span class="line">                serial_tx_buffer[<span class="number">23</span>] = rxmsg.data[<span class="number">6</span>];</span><br><span class="line">                serial_tx_buffer[<span class="number">24</span>] = rxmsg.data[<span class="number">7</span>];</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> MOTOR5_ID:</span><br><span class="line">                serial_tx_buffer[<span class="number">9</span>] = rxmsg.data[<span class="number">2</span>];</span><br><span class="line">                serial_tx_buffer[<span class="number">10</span>] = rxmsg.data[<span class="number">3</span>];</span><br><span class="line">                serial_tx_buffer[<span class="number">25</span>] = rxmsg.data[<span class="number">6</span>];</span><br><span class="line">                serial_tx_buffer[<span class="number">26</span>] = rxmsg.data[<span class="number">7</span>];</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> MOTOR6_ID:</span><br><span class="line">                serial_tx_buffer[<span class="number">11</span>] = rxmsg.data[<span class="number">2</span>];</span><br><span class="line">                serial_tx_buffer[<span class="number">12</span>] = rxmsg.data[<span class="number">3</span>];</span><br><span class="line">                serial_tx_buffer[<span class="number">27</span>] = rxmsg.data[<span class="number">6</span>];</span><br><span class="line">                serial_tx_buffer[<span class="number">28</span>] = rxmsg.data[<span class="number">7</span>];</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> MOTOR7_ID:</span><br><span class="line">                serial_tx_buffer[<span class="number">13</span>] = rxmsg.data[<span class="number">2</span>];</span><br><span class="line">                serial_tx_buffer[<span class="number">14</span>] = rxmsg.data[<span class="number">3</span>];</span><br><span class="line">                serial_tx_buffer[<span class="number">29</span>] = rxmsg.data[<span class="number">6</span>];</span><br><span class="line">                serial_tx_buffer[<span class="number">30</span>] = rxmsg.data[<span class="number">7</span>];</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> MOTOR8_ID:<span class="comment">/*收到电机8数据，说明所有数据均发送完成*/</span></span><br><span class="line">                serial_tx_buffer[<span class="number">15</span>] = rxmsg.data[<span class="number">2</span>];</span><br><span class="line">                serial_tx_buffer[<span class="number">16</span>] = rxmsg.data[<span class="number">3</span>];</span><br><span class="line">                serial_tx_buffer[<span class="number">31</span>] = rxmsg.data[<span class="number">6</span>];</span><br><span class="line">                serial_tx_buffer[<span class="number">32</span>] = rxmsg.data[<span class="number">7</span>];</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">default</span>:</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面都是CAN接收数据的部分，下面展示部分CAN发送数据的代码，下面是上一篇所述的串口数据处理函数，对上位机的指令解码，然后通过CAN向电机发送指令</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 串口处理接收数据线程入口 */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">rs485_serial_thread_entry</span><span class="params">(<span class="keyword">void</span> *parameter)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">rt_size_t</span> size;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">rs485_serial_rx_msg</span> <span class="title">msg</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">rt_can_msg</span> <span class="title">can_tx_msg</span> =</span> &#123; <span class="number">0</span> &#125;;</span><br><span class="line">    <span class="keyword">rt_err_t</span> result;</span><br><span class="line">    <span class="keyword">rt_uint32_t</span> rx_length;</span><br><span class="line">    <span class="keyword">rt_uint8_t</span> check_sum, check_index;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">char</span> rx_buffer[RT_SERIAL_RB_BUFSZ + <span class="number">1</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        rt_memset(&amp;msg, <span class="number">0</span>, <span class="keyword">sizeof</span>(msg));</span><br><span class="line">        <span class="comment">/* 从消息队列中读取消息*/</span></span><br><span class="line">        result = rt_mq_recv(&amp;rs485_serial_rx_mq, &amp;msg, <span class="keyword">sizeof</span>(msg), RT_WAITING_FOREVER);</span><br><span class="line">        <span class="keyword">if</span> (result == RT_EOK)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">//rt_kprintf(&quot;%d\n&quot;, msg.size);</span></span><br><span class="line">            <span class="comment">/* 从串口读取数据*/</span></span><br><span class="line"></span><br><span class="line">            rx_length = rt_device_read(msg.dev, <span class="number">0</span>, rx_buffer, msg.size);</span><br><span class="line">            <span class="keyword">if</span> ((rx_buffer[<span class="number">0</span>] == <span class="number">0x5A</span>) &amp;&amp; (rx_buffer[<span class="number">18</span>] == <span class="number">0xA5</span>))</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">//rt_kprintf(&quot;recevice success\n&quot;);</span></span><br><span class="line">                <span class="comment">//判断指令类型，若不为0xFF，则是转矩控制指令,否则为状态查询指令</span></span><br><span class="line">                <span class="keyword">if</span> ((rx_buffer[<span class="number">1</span>] != <span class="number">0xFF</span>) &amp;&amp; (rx_buffer[<span class="number">17</span>] != <span class="number">0xFF</span>))</span><br><span class="line">                &#123;</span><br><span class="line">                    check_sum = <span class="number">0</span>;</span><br><span class="line">                    <span class="keyword">for</span> (check_index = <span class="number">1</span>; check_index &lt; <span class="number">17</span>; check_index++)</span><br><span class="line">                    &#123;</span><br><span class="line">                        check_sum += rx_buffer[check_index];</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> ((check_sum != rx_buffer[<span class="number">17</span>]) &amp;&amp; (rx_buffer[<span class="number">17</span>] != <span class="number">0x00</span>))</span><br><span class="line">                    &#123;</span><br><span class="line">                        rt_kprintf(<span class="string">&quot;check_sum wrong\n&quot;</span>);</span><br><span class="line">                        rt_kprintf(<span class="string">&quot;%02x\n&quot;</span>, check_sum);</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">else</span></span><br><span class="line">                    &#123;</span><br><span class="line">                        <span class="comment">//rt_kprintf(&quot;check_sum right\n&quot;);</span></span><br><span class="line"></span><br><span class="line">                        <span class="comment">/* 向电机发送转矩电流控制数据 */</span></span><br><span class="line">                        can_tx_msg.ide = RT_CAN_STDID; <span class="comment">/* 标准格式 */</span></span><br><span class="line">                        can_tx_msg.rtr = RT_CAN_DTR; <span class="comment">/* 数据帧 */</span></span><br><span class="line">                        can_tx_msg.len = <span class="number">8</span>; <span class="comment">/* 数据长度为 8 */</span></span><br><span class="line">                        can_tx_msg.data[<span class="number">0</span>] = TORQUE_CURRENT_CMD;</span><br><span class="line">                        can_tx_msg.data[<span class="number">1</span>] = <span class="number">0x00</span>;</span><br><span class="line">                        can_tx_msg.data[<span class="number">2</span>] = <span class="number">0x00</span>;</span><br><span class="line">                        can_tx_msg.data[<span class="number">3</span>] = <span class="number">0x00</span>;</span><br><span class="line">                        can_tx_msg.data[<span class="number">6</span>] = <span class="number">0x00</span>;</span><br><span class="line">                        can_tx_msg.data[<span class="number">7</span>] = <span class="number">0x00</span>;</span><br><span class="line"></span><br><span class="line">                        <span class="comment">/* CAN向电机1发送数据 */</span></span><br><span class="line">                        can_tx_msg.id = MOTOR1_ID;</span><br><span class="line">                        can_tx_msg.data[<span class="number">4</span>] = rx_buffer[<span class="number">1</span>];</span><br><span class="line">                        can_tx_msg.data[<span class="number">5</span>] = rx_buffer[<span class="number">2</span>];</span><br><span class="line">                        <span class="comment">/* 发送一帧 CAN 数据 */</span></span><br><span class="line">                        size = rt_device_write(can_dev, <span class="number">0</span>, &amp;can_tx_msg, <span class="keyword">sizeof</span>(can_tx_msg));</span><br><span class="line"></span><br><span class="line">                        <span class="comment">/* CAN向电机2发送数据 */</span></span><br><span class="line">                        can_tx_msg.id = MOTOR2_ID;</span><br><span class="line">                        can_tx_msg.data[<span class="number">4</span>] = rx_buffer[<span class="number">3</span>];</span><br><span class="line">                        can_tx_msg.data[<span class="number">5</span>] = rx_buffer[<span class="number">4</span>];</span><br><span class="line">                        <span class="comment">/* 发送一帧 CAN 数据 */</span></span><br><span class="line">                        size = rt_device_write(can_dev, <span class="number">0</span>, &amp;can_tx_msg, <span class="keyword">sizeof</span>(can_tx_msg));</span><br><span class="line"></span><br><span class="line">                        <span class="comment">/* CAN向电机3发送数据 */</span></span><br><span class="line">                        can_tx_msg.id = MOTOR3_ID;</span><br><span class="line">                        can_tx_msg.data[<span class="number">4</span>] = rx_buffer[<span class="number">5</span>];</span><br><span class="line">                        can_tx_msg.data[<span class="number">5</span>] = rx_buffer[<span class="number">6</span>];</span><br><span class="line">                        <span class="comment">/* 发送一帧 CAN 数据 */</span></span><br><span class="line">                        size = rt_device_write(can_dev, <span class="number">0</span>, &amp;can_tx_msg, <span class="keyword">sizeof</span>(can_tx_msg));</span><br><span class="line"></span><br><span class="line">                        <span class="comment">/* CAN向电机4发送数据 */</span></span><br><span class="line">                        can_tx_msg.id = MOTOR4_ID;</span><br><span class="line">                        can_tx_msg.data[<span class="number">4</span>] = rx_buffer[<span class="number">7</span>];</span><br><span class="line">                        can_tx_msg.data[<span class="number">5</span>] = rx_buffer[<span class="number">8</span>];</span><br><span class="line">                        <span class="comment">/* 发送一帧 CAN 数据 */</span></span><br><span class="line">                        size = rt_device_write(can_dev, <span class="number">0</span>, &amp;can_tx_msg, <span class="keyword">sizeof</span>(can_tx_msg));</span><br><span class="line"></span><br><span class="line">                        <span class="comment">/* CAN向电机5发送数据 */</span></span><br><span class="line">                        can_tx_msg.id = MOTOR5_ID;</span><br><span class="line">                        can_tx_msg.data[<span class="number">4</span>] = rx_buffer[<span class="number">9</span>];</span><br><span class="line">                        can_tx_msg.data[<span class="number">5</span>] = rx_buffer[<span class="number">10</span>];</span><br><span class="line">                        <span class="comment">/* 发送一帧 CAN 数据 */</span></span><br><span class="line">                        size = rt_device_write(can_dev, <span class="number">0</span>, &amp;can_tx_msg, <span class="keyword">sizeof</span>(can_tx_msg));</span><br><span class="line"></span><br><span class="line">                        <span class="comment">/* CAN向电机6发送数据 */</span></span><br><span class="line">                        can_tx_msg.id = MOTOR6_ID;</span><br><span class="line">                        can_tx_msg.data[<span class="number">4</span>] = rx_buffer[<span class="number">11</span>];</span><br><span class="line">                        can_tx_msg.data[<span class="number">5</span>] = rx_buffer[<span class="number">12</span>];</span><br><span class="line">                        <span class="comment">/* 发送一帧 CAN 数据 */</span></span><br><span class="line">                        size = rt_device_write(can_dev, <span class="number">0</span>, &amp;can_tx_msg, <span class="keyword">sizeof</span>(can_tx_msg));</span><br><span class="line"></span><br><span class="line">                        <span class="comment">/* CAN向电机7发送数据 */</span></span><br><span class="line">                        can_tx_msg.id = MOTOR7_ID;</span><br><span class="line">                        can_tx_msg.data[<span class="number">4</span>] = rx_buffer[<span class="number">13</span>];</span><br><span class="line">                        can_tx_msg.data[<span class="number">5</span>] = rx_buffer[<span class="number">14</span>];</span><br><span class="line">                        <span class="comment">/* 发送一帧 CAN 数据 */</span></span><br><span class="line">                        size = rt_device_write(can_dev, <span class="number">0</span>, &amp;can_tx_msg, <span class="keyword">sizeof</span>(can_tx_msg));</span><br><span class="line"></span><br><span class="line">                        <span class="comment">/* CAN向电机8发送数据 */</span></span><br><span class="line">                        can_tx_msg.id = MOTOR8_ID;</span><br><span class="line">                        can_tx_msg.data[<span class="number">4</span>] = rx_buffer[<span class="number">15</span>];</span><br><span class="line">                        can_tx_msg.data[<span class="number">5</span>] = rx_buffer[<span class="number">16</span>];</span><br><span class="line">                        <span class="comment">/* 发送一帧 CAN 数据 */</span></span><br><span class="line">                        size = rt_device_write(can_dev, <span class="number">0</span>, &amp;can_tx_msg, <span class="keyword">sizeof</span>(can_tx_msg));</span><br><span class="line">                        <span class="keyword">for</span> (check_index = <span class="number">1</span>; check_index &lt; <span class="number">33</span>; check_index++)</span><br><span class="line">                        &#123;</span><br><span class="line">                            serial_tx_buffer[<span class="number">33</span>] += serial_tx_buffer[check_index];</span><br><span class="line">                        &#125;</span><br><span class="line">                        rt_pin_write(RS485A_RE_PIN, PIN_HIGH);<span class="comment">/*使485处于发送模式*/</span></span><br><span class="line">                        rt_device_write(rs485_serial_device_handle, <span class="number">0</span>, serial_tx_buffer, <span class="keyword">sizeof</span>(serial_tx_buffer));</span><br><span class="line">                        rt_pin_write(RS485A_RE_PIN, PIN_LOW);<span class="comment">/*使485处于接收模式*/</span></span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">else</span></span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="comment">/* 向电机发送状态查询指令 */</span></span><br><span class="line">                    can_tx_msg.ide = RT_CAN_STDID; <span class="comment">/* 标准格式 */</span></span><br><span class="line">                    can_tx_msg.rtr = RT_CAN_DTR; <span class="comment">/* 数据帧 */</span></span><br><span class="line">                    can_tx_msg.len = <span class="number">8</span>; <span class="comment">/* 数据长度为 8 */</span></span><br><span class="line">                    can_tx_msg.data[<span class="number">0</span>] = STATE_QUEST_CMD;<span class="comment">/* 指令类型为状态查询 */</span></span><br><span class="line">                    can_tx_msg.data[<span class="number">1</span>] = <span class="number">0x00</span>;</span><br><span class="line">                    can_tx_msg.data[<span class="number">2</span>] = <span class="number">0x00</span>;</span><br><span class="line">                    can_tx_msg.data[<span class="number">3</span>] = <span class="number">0x00</span>;</span><br><span class="line">                    can_tx_msg.data[<span class="number">4</span>] = <span class="number">0x00</span>;</span><br><span class="line">                    can_tx_msg.data[<span class="number">5</span>] = <span class="number">0x00</span>;</span><br><span class="line">                    can_tx_msg.data[<span class="number">6</span>] = <span class="number">0x00</span>;</span><br><span class="line">                    can_tx_msg.data[<span class="number">7</span>] = <span class="number">0x00</span>;</span><br><span class="line"></span><br><span class="line">                    <span class="comment">/* CAN向电机1发送数据 */</span></span><br><span class="line">                    can_tx_msg.id = MOTOR1_ID;</span><br><span class="line">                    <span class="comment">/* 发送一帧 CAN 数据 */</span></span><br><span class="line">                    size = rt_device_write(can_dev, <span class="number">0</span>, &amp;can_tx_msg, <span class="keyword">sizeof</span>(can_tx_msg));</span><br><span class="line"></span><br><span class="line">                    <span class="comment">/* CAN向电机2发送数据 */</span></span><br><span class="line">                    can_tx_msg.id = MOTOR2_ID;</span><br><span class="line">                    <span class="comment">/* 发送一帧 CAN 数据 */</span></span><br><span class="line">                    size = rt_device_write(can_dev, <span class="number">0</span>, &amp;can_tx_msg, <span class="keyword">sizeof</span>(can_tx_msg));</span><br><span class="line"></span><br><span class="line">                    <span class="comment">/* CAN向电机3发送数据 */</span></span><br><span class="line">                    can_tx_msg.id = MOTOR3_ID;</span><br><span class="line">                    <span class="comment">/* 发送一帧 CAN 数据 */</span></span><br><span class="line">                    size = rt_device_write(can_dev, <span class="number">0</span>, &amp;can_tx_msg, <span class="keyword">sizeof</span>(can_tx_msg));</span><br><span class="line"></span><br><span class="line">                    <span class="comment">/* CAN向电机4发送数据 */</span></span><br><span class="line">                    can_tx_msg.id = MOTOR4_ID;</span><br><span class="line">                    <span class="comment">/* 发送一帧 CAN 数据 */</span></span><br><span class="line">                    size = rt_device_write(can_dev, <span class="number">0</span>, &amp;can_tx_msg, <span class="keyword">sizeof</span>(can_tx_msg));</span><br><span class="line"></span><br><span class="line">                    <span class="comment">/* CAN向电机5发送数据 */</span></span><br><span class="line">                    can_tx_msg.id = MOTOR5_ID;</span><br><span class="line">                    <span class="comment">/* 发送一帧 CAN 数据 */</span></span><br><span class="line">                    size = rt_device_write(can_dev, <span class="number">0</span>, &amp;can_tx_msg, <span class="keyword">sizeof</span>(can_tx_msg));</span><br><span class="line"></span><br><span class="line">                    <span class="comment">/* CAN向电机6发送数据 */</span></span><br><span class="line">                    can_tx_msg.id = MOTOR6_ID;</span><br><span class="line">                    <span class="comment">/* 发送一帧 CAN 数据 */</span></span><br><span class="line">                    size = rt_device_write(can_dev, <span class="number">0</span>, &amp;can_tx_msg, <span class="keyword">sizeof</span>(can_tx_msg));</span><br><span class="line"></span><br><span class="line">                    <span class="comment">/* CAN向电机7发送数据 */</span></span><br><span class="line">                    can_tx_msg.id = MOTOR7_ID;</span><br><span class="line">                    <span class="comment">/* 发送一帧 CAN 数据 */</span></span><br><span class="line">                    size = rt_device_write(can_dev, <span class="number">0</span>, &amp;can_tx_msg, <span class="keyword">sizeof</span>(can_tx_msg));</span><br><span class="line"></span><br><span class="line">                    <span class="comment">/* CAN向电机8发送数据 */</span></span><br><span class="line">                    can_tx_msg.id = MOTOR8_ID;</span><br><span class="line">                    <span class="comment">/* 发送一帧 CAN 数据 */</span></span><br><span class="line">                    size = rt_device_write(can_dev, <span class="number">0</span>, &amp;can_tx_msg, <span class="keyword">sizeof</span>(can_tx_msg));</span><br><span class="line"></span><br><span class="line">                    <span class="comment">//通过485向上位机发送数据</span></span><br><span class="line">                    <span class="keyword">for</span> (check_index = <span class="number">1</span>; check_index &lt; <span class="number">33</span>; check_index++)</span><br><span class="line">                    &#123;</span><br><span class="line">                        serial_tx_buffer[<span class="number">33</span>] += serial_tx_buffer[check_index];</span><br><span class="line">                    &#125;</span><br><span class="line">                    rt_pin_write(RS485A_RE_PIN, PIN_HIGH);<span class="comment">/*使485处于发送模式*/</span></span><br><span class="line">                    rt_device_write(rs485_serial_device_handle, <span class="number">0</span>, serial_tx_buffer, <span class="keyword">sizeof</span>(serial_tx_buffer));</span><br><span class="line">                    rt_pin_write(RS485A_RE_PIN, PIN_LOW);<span class="comment">/*使485处于接收模式*/</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>通过上述代码，完成了针对stm32的CAN驱动的配置与应用，完成了电机驱动板大部分需求，可以通过电机驱动板控制电机转矩电流并查询电机状态了，<strong>详细代码我均已开源至github</strong>。下一篇准备实现用两个按键中断向电机发送CAN指令控制电机启停的功能。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+        <div id="donation_div"></div>
+
+
+<script src="/js/vdonate.js"></script>
+
+<script>
+var a = new Donate({
+  title: '如果觉得我的文章对您有用，请随意打赏。您的支持将鼓励我继续创作!', // 可选参数，打赏标题
+  btnText: 'Donate', // 可选参数，打赏按钮文字
+  el: document.getElementById('donation_div'),
+  wechatImage: 'https://raw.githubusercontent.com/iTimeTraveler/iTimeTraveler.github.io/site/source/about/donate/images/WeChanQR.png',
+  alipayImage: 'https://raw.githubusercontent.com/iTimeTraveler/iTimeTraveler.github.io/site/source/about/donate/images/AliPayQR.jpg'
+});
+</script>
+      
+      
+      <div>
+        <ul class="post-copyright">
+          <li class="post-copyright-author">
+          <strong>Post author:  </strong>Fran Hawk</a>
+          </li>
+          <li class="post-copyright-link">
+          <strong>Post link:  </strong>
+          <a href="/2021/06/06/基于RT-Thread的CAN电机驱动板设计 （三）CAN驱动配置与实现/" target="_blank" title="基于RT-Thread的CAN电机驱动板设计 （三）CAN驱动配置与实现">http://example.com/2021/06/06/基于RT-Thread的CAN电机驱动板设计 （三）CAN驱动配置与实现/</a>
+          </li>
+          <li class="post-copyright-license">
+            <strong>Copyright Notice:   </strong>
+            All articles in this blog are licensed under <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">CC BY-NC-ND 4.0</a>
+            unless stating additionally.
+          </li>
+         
+        </ul>
+<div>
+
+      
+      
+        
+	<div id="comment">
+		<!-- 来必力City版安装代码 -->
+		<div id="lv-container" data-id="city" data-uid="MTAyMC8yOTQ4MS82MDQ5">
+		<script type="text/javascript">
+		   (function(d, s) {
+		       var j, e = d.getElementsByTagName(s)[0];
+
+		       if (typeof LivereTower === 'function') { return; }
+
+		       j = d.createElement(s);
+		       j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+		       j.async = true;
+
+		       e.parentNode.insertBefore(j, e);
+		   })(document, 'script');
+		</script>
+		<noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+		</div>
+		<!-- City版安装代码已完成 -->
+	</div>
+
+
+
+      
+      
+        
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CAN/" rel="tag">CAN</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RT-Thread/" rel="tag">RT-Thread</a></li></ul>
+
+      
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2021/06/07/%E5%9F%BA%E4%BA%8ERT-Thread%E7%9A%84CAN%E7%94%B5%E6%9C%BA%E9%A9%B1%E5%8A%A8%E6%9D%BF%E8%AE%BE%E8%AE%A1%20%EF%BC%88%E5%9B%9B%EF%BC%89%E4%BD%BF%E7%94%A8PIN%E8%AE%BE%E5%A4%87%E9%85%8D%E7%BD%AE%E6%8C%89%E9%94%AE%E4%B8%AD%E6%96%AD%E5%AE%9E%E7%8E%B0%E7%94%B5%E6%9C%BA%E5%90%AF%E5%81%9C/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          基于RT-Thread的CAN电机驱动板设计 （四）使用PIN设备配置按键中断实现电机启停
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2021/06/05/%E5%9F%BA%E4%BA%8ERT-Thread%E7%9A%84CAN%E7%94%B5%E6%9C%BA%E9%A9%B1%E5%8A%A8%E6%9D%BF%E8%AE%BE%E8%AE%A1%20%EF%BC%88%E4%BA%8C%EF%BC%89uart%E4%B8%B2%E5%8F%A3DMA%E7%9A%84%E5%AE%9E%E7%8E%B0/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">基于RT-Thread的CAN电机驱动板设计 （二）uart串口DMA的实现</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+<!-- Table of Contents -->
+
+  <aside id="toc-sidebar">
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">Contents</strong>
+    
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BC%95%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">引言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%B5%84%E6%96%99%E8%BF%9E%E6%8E%A5"><span class="nav-number">2.</span> <span class="nav-text">资料连接</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E6%9C%9F%E5%87%86%E5%A4%87"><span class="nav-number">3.</span> <span class="nav-text">前期准备</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CAN%E9%A9%B1%E5%8A%A8%E9%85%8D%E7%BD%AE"><span class="nav-number">4.</span> <span class="nav-text">CAN驱动配置</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">4.1.</span> <span class="nav-text">参考文献</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E4%B8%8B%E8%BD%BD"><span class="nav-number">4.2.</span> <span class="nav-text">代码下载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AECAN%E9%A9%B1%E5%8A%A8"><span class="nav-number">4.3.</span> <span class="nav-text">配置CAN驱动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83rtthread%E5%AE%98%E7%BD%91%E7%9A%84CAN%E8%AE%BE%E5%A4%87%E7%9A%84%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F%E7%BC%96%E5%86%99%E4%BB%A3%E7%A0%81"><span class="nav-number">4.4.</span> <span class="nav-text">参考rtthread官网的CAN设备的示例程序编写代码</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></ol>
+    
+    </div>
+  </aside>
+
+</section>
+        
+      </div>
+      
+      <footer id="footer">
+  
+
+  <div class="container">
+      	<div class="row">
+	      <p> Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/iTimeTraveler/hexo-theme-hiker" target="_blank">Hexo-theme-hiker</a> </p>
+	      <p id="copyRightEn">Copyright &copy; 2013 - 2021 张竞豪的小岛 All Rights Reserved.</p>
+	      
+	      
+    		<p class="busuanzi_uv">
+				UV : <span id="busuanzi_value_site_uv"></span> |  
+				PV : <span id="busuanzi_value_site_pv"></span>
+		    </p>
+  		   
+		</div>
+
+		
+  </div>
+</footer>
+
+
+<!-- min height -->
+
+<script>
+    var wrapdiv = document.getElementById("wrap");
+    var contentdiv = document.getElementById("content");
+    var allheader = document.getElementById("allheader");
+
+    wrapdiv.style.minHeight = document.body.offsetHeight + "px";
+    if (allheader != null) {
+      contentdiv.style.minHeight = document.body.offsetHeight - allheader.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    } else {
+      contentdiv.style.minHeight = document.body.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    }
+</script>
+    </div>
+    <!-- <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/categories" class="mobile-nav-link">Categories</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tags</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+</nav> -->
+    
+
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/scripts.js"></script>
+
+
+
+
+
+  
+<script src="/js/dialog.js"></script>
+
+
+
+
+
+
+
+
+
+	<div style="display: none;">
+    <script src="https://s95.cnzz.com/z_stat.php?id=1260716016&web_id=1260716016" language="JavaScript"></script>
+  </div>
+
+
+
+	<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js">
+	</script>
+
+
+
+
+
+
+  </div>
+
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="myModalLabel">设置</h2>
+      </div>
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+
+
+      <div class="modal-body">
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" onclick="javascript:setFontSize();" aria-expanded="true" aria-controls="collapseOne">
+              正文字号大小
+            </a>
+          </div>
+          <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+          <div class="panel-body">
+            您已调整页面字体大小
+          </div>
+        </div>
+      
+
+
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" onclick="javascript:setBackground();" aria-expanded="true" aria-controls="collapseTwo">
+              夜间护眼模式
+            </a>
+        </div>
+          <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+          <div class="panel-body">
+            夜间模式已经开启，再次单击按钮即可关闭 
+          </div>
+        </div>
+
+        <div>
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="true" aria-controls="collapseThree">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关 于&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+        </div>
+         <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+          <div class="panel-body">
+            张竞豪的小岛
+          </div>
+          <div class="panel-body">
+            Copyright © 2021 Fran Hawk All Rights Reserved.
+          </div>
+        </div>
+      </div>
+
+
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <div class="modal-footer">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+  
+  <a id="rocket" href="#top" class=""></a>
+  <script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+  
+    <a id="menu-switch"><i class="fa fa-bars fa-lg"></i></a>
+  
+</body>
+</html>

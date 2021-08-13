@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>riscv 向量指令集和nice接口学习笔记 | 张竞豪的小岛</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  <meta name="keywords" content="RISC-V" />
+  
+  
+  
+  
+  <meta name="description" content="本文档链接 https:&#x2F;&#x2F;blog.csdn.net&#x2F;weixin_42487906&#x2F;article&#x2F;details&#x2F;115437890 RISCV向量指令集学习参考链接https:&#x2F;&#x2F;github.com&#x2F;riscv&#x2F;riscv-v-specRSIC-V——指令集spec阅读笔记——向量扩展0.9RISC-V Vector Extension学习笔记 向量指令集用例可以对照下面的说明来看这个例">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RISCV 向量指令集和NICE接口学习笔记">
+<meta property="og:url" content="http://example.com/2021/04/05/RISCV%20%E5%90%91%E9%87%8F%E6%8C%87%E4%BB%A4%E9%9B%86%E5%92%8CNICE%E6%8E%A5%E5%8F%A3%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/index.html">
+<meta property="og:site_name" content="张竞豪的小岛">
+<meta property="og:description" content="本文档链接 https:&#x2F;&#x2F;blog.csdn.net&#x2F;weixin_42487906&#x2F;article&#x2F;details&#x2F;115437890 RISCV向量指令集学习参考链接https:&#x2F;&#x2F;github.com&#x2F;riscv&#x2F;riscv-v-specRSIC-V——指令集spec阅读笔记——向量扩展0.9RISC-V Vector Extension学习笔记 向量指令集用例可以对照下面的说明来看这个例">
+<meta property="og:locale">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210405091135873.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210405091149965.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210405091302524.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210405091307804.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210405091326615.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2021040509133320.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/202104050913551.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210405091359401.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210405093046399.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210405092012852.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210405092017271.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2021040509214397.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2021040509291595.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210405092427339.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210405092653576.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210405092847625.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2021040509521097.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210405185250929.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20210405185317370.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2021040518563613.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+<meta property="article:published_time" content="2021-04-05T11:50:43.000Z">
+<meta property="article:modified_time" content="2021-08-13T02:01:01.803Z">
+<meta property="article:author" content="Fran Hawk">
+<meta property="article:tag" content="RISC-V">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20210405091135873.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70">
+  
+    <link rel="alternate" href="/atom.xml" title="张竞豪的小岛" type="application/atom+xml">
+  
+
+  
+
+  <link rel="icon" href="/css/images/mylogo.jpg">
+  <link rel="apple-touch-icon" href="/css/images/mylogo.jpg">
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Montserrat:700" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic" rel="stylesheet" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+  <style type="text/css">
+    @font-face{font-family:futura-pt; src:url("/css/fonts/FuturaPTBold.otf") format("woff");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt-light; src:url("/css/fonts/FuturaPTBook.otf") format("woff");font-weight:lighter;font-style:normal;}
+    @font-face{font-family:futura-pt-italic; src:url("/css/fonts/FuturaPTBookOblique.otf") format("woff");font-weight:400;font-style:italic;}
+}
+
+  </style>
+  
+<link rel="stylesheet" href="/css/style.css">
+
+
+  
+<script src="/js/jquery-3.1.1.min.js"></script>
+
+  
+<script src="/js/bootstrap.js"></script>
+
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.css" >
+
+  
+    
+<link rel="stylesheet" href="/css/dialog.css">
+
+  
+
+  
+
+  
+    <link rel="stylesheet" href="/css/header-post.css" >
+  
+
+  
+  
+  
+    <link rel="stylesheet" href="/css/vdonate.css" >
+  
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+
+
+  <body data-spy="scroll" data-target="#toc" data-offset="50">
+
+
+  
+  <div id="container">
+    <div id="wrap">
+      
+        <header>
+
+    <div id="allheader" class="navbar navbar-default navbar-static-top" role="navigation">
+        <div class="navbar-inner">
+          
+          <div class="container"> 
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+
+            
+              <a class="brand" style="
+                 margin-top: 0px;"  
+                href="#" data-toggle="modal" data-target="#myModal" >
+                  <img width="124px" height="124px" alt="Hike News" src="/css/images/mylogo.jpg">
+              </a>
+            
+            
+            <div class="navbar-collapse collapse">
+              <ul class="hnav navbar-nav">
+                
+                  <li> <a class="main-nav-link" href="/">Home</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/archives">Archives</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/categories">Categories</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/tags">Tags</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/about">About</a> </li>
+                
+                  <li><div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="" />
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="Type something..." />
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+</div></li>
+            </div>
+          </div>
+                
+      </div>
+    </div>
+
+</header>
+
+
+
+      
+            
+      <div id="content" class="outer">
+        
+          <section id="main" style="float:none;"><article id="post-RISCV 向量指令集和NICE接口学习笔记" style="width: 75%; float:left;" class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" class="article-title" itemprop="name">
+      RISCV 向量指令集和NICE接口学习笔记
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2021/04/05/RISCV%20%E5%90%91%E9%87%8F%E6%8C%87%E4%BB%A4%E9%9B%86%E5%92%8CNICE%E6%8E%A5%E5%8F%A3%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" class="article-date">
+	  <time datetime="2021-04-05T11:50:43.000Z" itemprop="datePublished">2021-04-05</time>
+	</a>
+
+      
+      
+	<a class="article-views">
+	<span id="busuanzi_container_page_pv">
+		PV:<span id="busuanzi_value_page_pv"></span>
+	</span>
+	</a>
+
+      
+
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>本文档链接 <a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_42487906/article/details/115437890">https://blog.csdn.net/weixin_42487906/article/details/115437890</a></p>
+<h1 id="RISCV向量指令集学习"><a href="#RISCV向量指令集学习" class="headerlink" title="RISCV向量指令集学习"></a>RISCV向量指令集学习</h1><h3 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h3><p><a target="_blank" rel="noopener" href="https://github.com/riscv/riscv-v-spec">https://github.com/riscv/riscv-v-spec</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_39815222/article/details/109570539">RSIC-V——指令集spec阅读笔记——向量扩展0.9</a><br><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/140772040">RISC-V Vector Extension学习笔记</a></p>
+<h3 id="向量指令集用例"><a href="#向量指令集用例" class="headerlink" title="向量指令集用例"></a>向量指令集用例</h3><p>可以对照下面的说明来看这个例子</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">.text</span><br><span class="line">    .balign <span class="number">4</span></span><br><span class="line">    .global vvaddint32</span><br><span class="line">    <span class="meta"># vector-vector add routine of 32-bit integers</span></span><br><span class="line">    <span class="meta"># void vvaddint32(size_t n, const int*x, const int*y, int*z)</span></span><br><span class="line">    # &#123; <span class="keyword">for</span> (<span class="keyword">size_t</span> i=<span class="number">0</span>; i&lt;n; i++) &#123; z[i]=x[i]+y[i]; &#125; &#125;</span><br><span class="line">    #</span><br><span class="line">    # a0 = n, a1 = x, a2 = y, a3 = z</span><br><span class="line">    # Non-<span class="built_in">vector</span> instructions are indented</span><br><span class="line">vvaddint32:</span><br><span class="line">    vsetvli t0, a0, e32, ta,ma  # Set <span class="built_in">vector</span> length based on <span class="number">32</span>-bit vectors</span><br><span class="line">    vle32.v v0, (a1)         # Get first <span class="built_in">vector</span></span><br><span class="line">      sub a0, a0, t0         # Decrement number done</span><br><span class="line">      slli t0, t0, <span class="number">2</span>         # Multiply number done by <span class="number">4</span> bytes</span><br><span class="line">      add a1, a1, t0         # Bump pointer</span><br><span class="line">    vle32.v v1, (a2)         # Get second <span class="built_in">vector</span></span><br><span class="line">      add a2, a2, t0         # Bump pointer</span><br><span class="line">    vadd.vv v2, v0, v1       # Sum vectors</span><br><span class="line">    vse32.v v2, (a3)         # Store result</span><br><span class="line">      add a3, a3, t0         # Bump pointer</span><br><span class="line">      bnez a0, vvaddint32    # Loop back</span><br><span class="line">      ret                    # Finished</span><br></pre></td></tr></table></figure>
+
+<h3 id="名词解释"><a href="#名词解释" class="headerlink" title="名词解释"></a>名词解释</h3><table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ELEN</td>
+<td>向量中单个元素的最大长度，bit为单位，要求ELEN&gt;=8，且为2的幂</td>
+</tr>
+<tr>
+<td>VLEN</td>
+<td>向量寄存器的位数，bit为单位，要求VLEN ≥ ELEN，并且必须是2的幂</td>
+</tr>
+<tr>
+<td>SLEN</td>
+<td>分段距离（The striping distance in bits），要求必须为VLEN ≥ SLEN ≥ 32，并且必须为2的幂，这个暂时没懂</td>
+</tr>
+<tr>
+<td>SEW</td>
+<td>标准元素宽度，以bit为单位，指向量中一个元素占向量寄存器中的位数</td>
+</tr>
+<tr>
+<td>LMUL</td>
+<td>向量寄存器分组数</td>
+</tr>
+<tr>
+<td>寄存器定义</td>
+<td></td>
+</tr>
+<tr>
+<td>v0-v31</td>
+<td>向量数据寄存器，共32个，固定位宽为VLEN位</td>
+</tr>
+<tr>
+<td>vtype</td>
+<td>向量数据类型寄存器，并且只能通过vsetvl{i}指令进行更新，向量类型还决定了每个向量寄存器中元素的排布，以及如何对多个向量寄存器进行分组。</td>
+</tr>
+<tr>
+<td>vsew[2：0]</td>
+<td>变化的标准元素宽度（SEW, standard element width）值通过vsew中的值设置。默认情况下，向量寄存器被视为分成 VLEN / SEW 个标准宽度元素。</td>
+</tr>
+<tr>
+<td>vlmul[2：0 ]</td>
+<td>向量寄存器分组，分成一组的多个向量寄存器可以当作一个操作数来用，用来存放一个向量，该值也可以是小数，用来等效增加向量数据寄存器的数量</td>
+</tr>
+<tr>
+<td>VLMAX</td>
+<td>VLMAX = LMUL * VLEN / SEW，</td>
+</tr>
+<tr>
+<td>vta和vma</td>
+<td>这两位元素值在执行向量指令期间分别修改了目标尾部元素（Tail Elements）和非活跃的掩码元素（Inactive masked-off Elements）的行为。</td>
+</tr>
+<tr>
+<td>vill</td>
+<td>vill位用于编码先前的vsetvl{i} 指令试图向vtype写入不支持的值</td>
+</tr>
+<tr>
+<td>vl</td>
+<td>向量长度寄存器，以存放向量总共有多少个元素，只能通过vsetvli和vsetvl指令进行更新。</td>
+</tr>
+<tr>
+<td>vlen</td>
+<td>向量寄存器长度寄存器，是一个常数，保存值 VLEN / 8，即向量寄存器长度（以字节为单位）。</td>
+</tr>
+<tr>
+<td>vstart</td>
+<td>vstart是一个可读可写的CSR寄存器，指定向量指令要执行的第一个元素的索引。每个向量指令执行完后，该寄存器清零。</td>
+</tr>
+<tr>
+<td>vcsr</td>
+<td>向量控制和状态寄存器vcsr，保存定点舍入的方式和饱和状态</td>
+</tr>
+<tr>
+<td><img src="https://img-blog.csdnimg.cn/20210405091135873.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></td>
+<td></td>
+</tr>
+<tr>
+<td><img src="https://img-blog.csdnimg.cn/20210405091149965.png"></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="向量元素到向量寄存器的映射"><a href="#向量元素到向量寄存器的映射" class="headerlink" title="向量元素到向量寄存器的映射"></a>向量元素到向量寄存器的映射</h3><p>根据当前的 SEW 和 LMUL 设置以及 ELEN，VLEN 和 SLEN 的值，怎么将不同宽度的元素存放到矢量寄存器的字节中。并且使用最少位数的最低有效字节将元素放到每个向量寄存器中。<br>当 VLEN=SLEN ， LMUL=1 时，从向量寄存器的最低有效位到最高有效位依次对元素进行简单排布。当 LMUL &lt;1 时，仅使用向量寄存器中的第一个 LMUL * VLEN / SEW 元素。 向量寄存器中的剩余空间被视为尾部的一部分。</p>
+<p><img src="https://img-blog.csdnimg.cn/20210405091302524.png"><br><img src="https://img-blog.csdnimg.cn/20210405091307804.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>VLEN = SLEN 且 LMUL &gt; 1时, 将向量寄存器分组后，根据向量寄存器组中的向量寄存器来划分组中的元素。当 SLEN = VLEN 时，按元素顺序将其放在组中的每个向量寄存器中，填满一个向量寄存器后，便移至组中下一个编号最高的向量寄存器。</p>
+<p><img src="https://img-blog.csdnimg.cn/20210405091326615.png"><br><img src="https://img-blog.csdnimg.cn/2021040509133320.png"><br>向量 ISA 的设计目的是支持混合宽度操作，并且不需要大量显式的额外的重排指令，也不需要大量额外的数据路径（datapath）布线。在对不同精度值的向量进行操作时，推荐的做法是动态修改 vtype 值，从而使得 SEW/LMUL 为常量（因此 VLMAX 常量）。向量寄存器分组因子（LMUL）按相关元素大小增加，这样每个向量寄存器组可以保存相同数量的向量元素（本例中 VLMAX=16 ），从而简化 stripmining 代码。下表列出了执行混合宽度操作的循环的每个可能的 SEW / LMUL 操作点。 每列代表一个恒定的 SEW / LMUL 操作点。 表中列出的内容是 LMUL 值，该值生成该列的 SEW / LMUL 值。 在同一列中， LMUL 的值不同，但 VLMAX 值相同。(可以保证每个向量寄存器组中的向量元素数量相同)<br><img src="https://img-blog.csdnimg.cn/202104050913551.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20210405091359401.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h3 id="配置寄存器操作指令"><a href="#配置寄存器操作指令" class="headerlink" title="配置寄存器操作指令"></a>配置寄存器操作指令</h3><p><strong>vsetvli/vsetvl</strong></p>
+<h4 id="用例"><a href="#用例" class="headerlink" title="用例"></a>用例</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">vsetvli rd, rs1, vtypei <span class="meta"># rd = new vl, rs1 = AVL, vtypei = new vtype setting</span></span><br><span class="line">vsetvl  rd, rs1, rs2    <span class="meta"># rd = new vl, rs1 = AVL, rs2 = new vtype value</span></span><br></pre></td></tr></table></figure>
+<p><img src="https://img-blog.csdnimg.cn/20210405093046399.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h4 id="解释"><a href="#解释" class="headerlink" title="解释"></a>解释</h4><p>指令根据其参数设置 vtype 和 vl CSRs，并将 vl 的新值写入 rd。<br>两个指令的区别：vtypei是个立即数，rs2是个寄存器<br>AVL=应用程序向量长度</p>
+<p>vsetvl{i}指令首先根据 vtype 参数，设定 VLMAX ，然后设置vl服从以下约束：</p>
+<ul>
+<li>如果 AVL ≤ VLMAX ，则 vl = AVL</li>
+<li>如果 AVL &lt; (2 * VLMAX)，则ceil(AVL / 2) ≤ vl ≤ VLMAX</li>
+<li>如果 AVL ≥ (2 * VLMAX)，则 vl = VLMAX</li>
+<li>如果输入相同的 AVL 和 VLMAX 值，则任何实现中，v1 都是确定的<br>满足之前提及的规则：<br>如果 AVL = 0，则 vl = 0<br>如果 AVL &gt; 0，vl &gt; 0<br>vl ≤ VLMAX<br>vl ≤ AVL<br>从 vl 中读取的值（用作 vsetvl{i} 的 AVL 参数时）会在 vl 中产生相同的值，前提是所得的 VLMAX 等于读取vl时的 VLMAX 值<br><img src="https://img-blog.csdnimg.cn/20210405092012852.png"><br><img src="https://img-blog.csdnimg.cn/20210405092017271.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><h3 id="向量操作指令中的掩码"><a href="#向量操作指令中的掩码" class="headerlink" title="向量操作指令中的掩码"></a>向量操作指令中的掩码</h3></li>
+</ul>
+<p><strong>掩码vm</strong><br>在指令中占一位，使用v0寄存器存放掩码值，vm为1时不启动掩码，vm为0时，当v0的相应位为1，目标向量寄存器写入相应的值<br><img src="https://img-blog.csdnimg.cn/2021040509214397.png"></p>
+<p>掩码向量的加载操作不会更新目标向量寄存器组中的非活跃元素。掩码向量的存储操作只更新内存中的活跃元素。</p>
+<h3 id="向量加载和存储指令（访存）"><a href="#向量加载和存储指令（访存）" class="headerlink" title="向量加载和存储指令（访存）"></a>向量加载和存储指令（访存）</h3><p><img src="https://img-blog.csdnimg.cn/2021040509291595.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h4 id="mop-访存时选择访存模式"><a href="#mop-访存时选择访存模式" class="headerlink" title="mop 访存时选择访存模式"></a>mop 访存时选择访存模式</h4><p><img src="https://img-blog.csdnimg.cn/20210405092427339.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>支持连续访存，跨步访存和按索引访存</p>
+<h4 id="lumop-sumop"><a href="#lumop-sumop" class="headerlink" title="lumop/sumop"></a>lumop/sumop</h4><p>还没搞懂是做什么用的 fault only first似乎可以简化循环操作<br><img src="https://img-blog.csdnimg.cn/20210405092653576.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h4 id="向量加载-存储的宽度编码"><a href="#向量加载-存储的宽度编码" class="headerlink" title="向量加载/存储的宽度编码"></a>向量加载/存储的宽度编码</h4><ul>
+<li>Mem bits（内存位）是内存中访问的每个元素的大小。</li>
+<li>Reg bits（寄存器位）是寄存器中访问的每个元素的大小。<br><img src="https://img-blog.csdnimg.cn/20210405092847625.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></li>
+</ul>
+<h4 id="向量单步幅跨步（Unit-Stride）指令"><a href="#向量单步幅跨步（Unit-Stride）指令" class="headerlink" title="向量单步幅跨步（Unit-Stride）指令"></a>向量单步幅跨步（Unit-Stride）指令</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#vd destination, rs1 base address, vm is mask encoding (v0.t or <span class="meta-string">&lt;missing&gt;</span>)</span></span><br><span class="line">    vle32.v  vd, (rs1), vm # <span class="number">32</span>-bit loads</span><br></pre></td></tr></table></figure>
+
+<p>l代表load，e32代表向量元素长32</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#vs3 store data, rs1 base address, <span class="function">vm is mask <span class="title">encoding</span> <span class="params">(v0.t <span class="keyword">or</span> &lt;missing&gt;)</span></span></span><br><span class="line"><span class="function">    vse64.v  vs3, <span class="params">(rs1)</span>, vm  # 64-bit stores</span></span><br></pre></td></tr></table></figure>
+
+<p>s代表save</p>
+<h4 id="向量跨步-Strided-指令"><a href="#向量跨步-Strided-指令" class="headerlink" title="向量跨步(Strided)指令"></a>向量跨步(Strided)指令</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"># vd destination, rs1 base address, rs2 byte stride</span></span><br><span class="line">    vlse8.v  vd, (rs1), rs2, vm  # Load bytes separated by stride</span><br></pre></td></tr></table></figure>
+
+<p>vls中l代表load，s代表stride，rs2存放跨步值</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># vs3 store data, rs1 base address, rs2 byte stride</span><br><span class="line">    vsse128.v vs3, (rs1), rs2, vm  # Store <span class="number">128b</span> values separated by stride.</span><br></pre></td></tr></table></figure>
+
+<p>vsse128中，第一个s是save，第二个是stride</p>
+<h4 id="向量索引（indexed）指令"><a href="#向量索引（indexed）指令" class="headerlink" title="向量索引（indexed）指令"></a>向量索引（indexed）指令</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"># vd destination, rs1 base address, vs2 indices</span></span><br><span class="line">    vlxei16.v  vd, (rs1), vs2, vm  # vs2 data EEW = SEW, indices EEW = <span class="number">16b</span></span><br></pre></td></tr></table></figure>
+
+<p>有序加载，vs2存放索引，vs2中元素大小为16bit</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># Vector unordered-indexed store instructions</span><br><span class="line">    vsuxei64.v vs3, (rs1), vs2, vm # SEW data, <span class="number">64b</span> indices</span><br></pre></td></tr></table></figure>
+
+<p>无序存储，vs2中元素大小为64bit</p>
+<h3 id="向量原子操作"><a href="#向量原子操作" class="headerlink" title="向量原子操作"></a>向量原子操作</h3><p>原子操作指令 暂时用不到</p>
+<h3 id="向量计算指令"><a href="#向量计算指令" class="headerlink" title="向量计算指令"></a>向量计算指令</h3><p>向量的算术指令使用与 OP-FP 相邻的新的主要操作码1010111。 funct3 字段的三位用于定义向量指令的子类。<br><img src="https://img-blog.csdnimg.cn/2021040509521097.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>向量与标量之间的运算可以采取三种可能的形式，但无论采取哪种形式，都要从 vs2 指定的向量寄存器组中获取一个操作数向量，并从三个替代源之一获取第二个标量源操作数。</p>
+<ul>
+<li>对于整数运算，标量可以是编码在 rs1 字段中5位立即数。该值通过符号扩展或加零扩展到SEW 位。</li>
+<li>对于整数运算，可以从rs1 指定的标量寄存器x中提取标量。如果 XLEN &gt; SEW，则使用x的最低有效SEW位。如果 XLEN &lt; SEW，则x 寄存器的值通过符号扩展到 SEW 位。</li>
+<li>对于浮点运算，可以从标量寄存器f中获取标量。如果 FLEN&gt; SEW，则检查f寄存器中的值是否为有效的 NaN-boxed 值，如果是，则使用f寄存器的最低有效SEW位，否则将使用规范的 NaN 值。如果执行向量指令时，任何浮点向量操作数的 EEW 都不是支持的浮点类型宽度（包括 FLEN &lt;SEW 时），则会引发非法指令异常。<h4 id="向量算术指令在vm-字段下被掩码。"><a href="#向量算术指令在vm-字段下被掩码。" class="headerlink" title="向量算术指令在vm 字段下被掩码。"></a>向量算术指令在vm 字段下被掩码。</h4></li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># Operations returning <span class="built_in">vector</span> results, <span class="function">masked by <span class="title">vm</span> <span class="params">(v0.t, &lt;nothing&gt;)</span></span></span><br><span class="line"><span class="function">vop.vv  vd, vs2, vs1, vm  <span class="meta"># integer vector-vector      vd[i] = vs2[i] op vs1[i]</span></span></span><br><span class="line"><span class="function">vop.vx  vd, vs2, rs1, vm  <span class="meta"># integer vector-scalar      vd[i] = vs2[i] op x[rs1]</span></span></span><br><span class="line"><span class="function">vop.vi  vd, vs2, imm, vm  <span class="meta"># integer vector-immediate   vd[i] = vs2[i] op imm</span></span></span><br></pre></td></tr></table></figure>
+<h4 id="浮点指令"><a href="#浮点指令" class="headerlink" title="浮点指令"></a>浮点指令</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">vfop.vv  vd, vs2, vs1, vm # FP <span class="built_in">vector</span>-<span class="built_in">vector</span> operation vd[i] = vs2[i] fop vs1[i]</span><br><span class="line">vfop.vf  vd, vs2, rs1, vm # FP <span class="built_in">vector</span>-scalar operation vd[i] = vs2[i] fop f[rs1]<span class="number">4</span></span><br></pre></td></tr></table></figure>
+<h4 id="不同的指令格式"><a href="#不同的指令格式" class="headerlink" title="不同的指令格式"></a>不同的指令格式</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"># Integer operations overwriting sum input</span><br><span class="line">vop.vv vd, vs1, vs2, vm  <span class="meta"># vd[i] = vs1[i] * vs2[i] + vd[i]</span></span><br><span class="line">vop.vx vd, rs1, vs2, vm  <span class="meta"># vd[i] = x[rs1] * vs2[i] + vd[i]</span></span><br><span class="line"></span><br><span class="line"># Integer operations overwriting product input</span><br><span class="line">vop.vv vd, vs1, vs2, vm  <span class="meta"># vd[i] = vs1[i] * vd[i] + vs2[i]</span></span><br><span class="line">vop.vx vd, rs1, vs2, vm  <span class="meta"># vd[i] = x[rs1] * vd[i] + vs2[i]</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>从指令上看没有什么区别，怎么区分二者呢</strong><br><em>通过vop的不同来区分</em></p>
+<h4 id="Widening向量算术指令"><a href="#Widening向量算术指令" class="headerlink" title="Widening向量算术指令"></a>Widening向量算术指令</h4><p>一些矢量算术指令被定义为加宽（widening） 操作，其中 EEW = 2 * SEW ，EMUL = 2 * LMUL。<br>第一个操作数可以是单宽度或双宽度。这些通常在操作码上具有前缀 vw<em>，或对于矢量浮点运算具有前缀 vfw</em>。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># Double-width result, two single-width sources: <span class="number">2</span>*SEW = SEW op SEW</span><br><span class="line">vwop.vv  vd, vs2, vs1, vm  <span class="meta"># integer vector-vector      vd[i] = vs2[i] op vs1[i]</span></span><br><span class="line">vwop.vx  vd, vs2, rs1, vm  <span class="meta"># integer vector-scalar      vd[i] = vs2[i] op x[rs1]</span></span><br></pre></td></tr></table></figure>
+
+<p>结果为双宽度，两个源操作数均为单宽度</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># Double-width result, first source <span class="keyword">double</span>-width, second source single-width: <span class="number">2</span>*SEW = <span class="number">2</span>*SEW op SEW</span><br><span class="line">vwop.wv  vd, vs2, vs1, vm  <span class="meta"># integer vector-vector      vd[i] = vs2[i] op vs1[i]</span></span><br><span class="line">vwop.wx  vd, vs2, rs1, vm  <span class="meta"># integer vector-scalar      vd[i] = vs2[i] op x[rs1]</span></span><br></pre></td></tr></table></figure>
+
+<p>结果为双宽度，源操作数1为双宽度，源操作数2为单宽度</p>
+<h4 id="Narrowing向量算术指令"><a href="#Narrowing向量算术指令" class="headerlink" title="Narrowing向量算术指令"></a>Narrowing向量算术指令</h4><p><strong>和加宽指令类似</strong><br>这些指令将 EEW/EMUL = 2 * SEW / 2 * LMUL 的向量寄存器组转换为具有当前 LMUL/SEW 向量/元素的向量寄存器组。<br>如果 EEW&gt; ELEN 或 EMUL&gt; 8，则会引发非法指令异常。</p>
+<h4 id="向量单宽度加减"><a href="#向量单宽度加减" class="headerlink" title="向量单宽度加减"></a>向量单宽度加减</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"># Integer adds.</span><br><span class="line">vadd.vv vd, vs2, vs1, vm   # Vector-<span class="built_in">vector</span></span><br><span class="line">vadd.vx vd, vs2, rs1, vm   <span class="meta"># vector-scalar</span></span><br><span class="line">vadd.vi vd, vs2, imm, vm   <span class="meta"># vector-immediate</span></span><br><span class="line"></span><br><span class="line"># Integer subtract</span><br><span class="line">vsub.vv vd, vs2, vs1, vm   # Vector-<span class="built_in">vector</span></span><br><span class="line">vsub.vx vd, vs2, rs1, vm   <span class="meta"># vector-scalar</span></span><br><span class="line"></span><br><span class="line"># Integer reverse subtract</span><br><span class="line">vrsub.vx vd, vs2, rs1, vm   <span class="meta"># vd[i] = rs1 - vs2[i]</span></span><br><span class="line">vrsub.vi vd, vs2, imm, vm   <span class="meta"># vd[i] = imm - vs2[i]</span></span><br></pre></td></tr></table></figure>
+<h4 id="向量结果加宽加减，包括有符号数和无符号数"><a href="#向量结果加宽加减，包括有符号数和无符号数" class="headerlink" title="向量结果加宽加减，包括有符号数和无符号数"></a>向量结果加宽加减，包括有符号数和无符号数</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"># Widening <span class="keyword">unsigned</span> integer add/subtract, <span class="number">2</span>*SEW = SEW +/- SEW</span><br><span class="line">vwaddu.vv  vd, vs2, vs1, vm  <span class="meta"># vector-vector</span></span><br><span class="line">vwaddu.vx  vd, vs2, rs1, vm  <span class="meta"># vector-scalar</span></span><br><span class="line">vwsubu.vv  vd, vs2, vs1, vm  <span class="meta"># vector-vector</span></span><br><span class="line">vwsubu.vx  vd, vs2, rs1, vm  <span class="meta"># vector-scalar</span></span><br><span class="line"></span><br><span class="line"># Widening <span class="keyword">signed</span> integer add/subtract, <span class="number">2</span>*SEW = SEW +/- SEW</span><br><span class="line">vwadd.vv  vd, vs2, vs1, vm  <span class="meta"># vector-vector</span></span><br><span class="line">vwadd.vx  vd, vs2, rs1, vm  <span class="meta"># vector-scalar</span></span><br><span class="line">vwsub.vv  vd, vs2, vs1, vm  <span class="meta"># vector-vector</span></span><br><span class="line">vwsub.vx  vd, vs2, rs1, vm  <span class="meta"># vector-scalar</span></span><br><span class="line"></span><br><span class="line"># Widening <span class="keyword">unsigned</span> integer add/subtract, <span class="number">2</span>*SEW = <span class="number">2</span>*SEW +/- SEW</span><br><span class="line">vwaddu.wv  vd, vs2, vs1, vm  <span class="meta"># vector-vector</span></span><br><span class="line">vwaddu.wx  vd, vs2, rs1, vm  <span class="meta"># vector-scalar</span></span><br><span class="line">vwsubu.wv  vd, vs2, vs1, vm  <span class="meta"># vector-vector</span></span><br><span class="line">vwsubu.wx  vd, vs2, rs1, vm  <span class="meta"># vector-scalar</span></span><br><span class="line"></span><br><span class="line"># Widening <span class="keyword">signed</span> integer add/subtract, <span class="number">2</span>*SEW = <span class="number">2</span>*SEW +/- SEW</span><br><span class="line">vwadd.wv  vd, vs2, vs1, vm  <span class="meta"># vector-vector</span></span><br><span class="line">vwadd.wx  vd, vs2, rs1, vm  <span class="meta"># vector-scalar</span></span><br><span class="line">vwsub.wv  vd, vs2, vs1, vm  <span class="meta"># vector-vector</span></span><br><span class="line">vwsub.wx  vd, vs2, rs1, vm  <span class="meta"># vector-scalar</span></span><br></pre></td></tr></table></figure>
+<h4 id="向量有，无符号数元素位数扩展"><a href="#向量有，无符号数元素位数扩展" class="headerlink" title="向量有，无符号数元素位数扩展"></a>向量有，无符号数元素位数扩展</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">vzext.vf2 vd, vs2, vm  # Zero-extend SEW/<span class="number">2</span> source to SEW destination</span><br><span class="line">vsext.vf2 vd, vs2, vm  # Sign-extend SEW/<span class="number">2</span> source to SEW destination</span><br><span class="line">vzext.vf4 vd, vs2, vm  # Zero-extend SEW/<span class="number">4</span> source to SEW destination</span><br><span class="line">vsext.vf4 vd, vs2, vm  # Sign-extend SEW/<span class="number">4</span> source to SEW destination</span><br><span class="line">vzext.vf8 vd, vs2, vm  # Zero-extend SEW/<span class="number">8</span> source to SEW destination</span><br><span class="line">vsext.vf8 vd, vs2, vm  # Sign-extend SEW/<span class="number">8</span> source to SEW destination</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="带进位借位加减法"><a href="#带进位借位加减法" class="headerlink" title="带进位借位加减法"></a>带进位借位加减法</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"># Produce sum with carry.</span><br><span class="line"></span><br><span class="line"> <span class="meta"># vd[i] = vs2[i] + vs1[i] + v0.mask[i]</span></span><br><span class="line"> vadc.vvm   vd, vs2, vs1, v0  # Vector-<span class="built_in">vector</span></span><br><span class="line"></span><br><span class="line"> <span class="meta"># vd[i] = vs2[i] + x[rs1] + v0.mask[i]</span></span><br><span class="line"> vadc.vxm   vd, vs2, rs1, v0  # Vector-scalar</span><br><span class="line"></span><br><span class="line"> <span class="meta"># vd[i] = vs2[i] + imm + v0.mask[i]</span></span><br><span class="line"> vadc.vim   vd, vs2, imm, v0  # Vector-immediate</span><br><span class="line"></span><br><span class="line"># Produce difference with borrow.</span><br><span class="line"></span><br><span class="line"> <span class="meta"># vd[i] = vs2[i] - vs1[i] - v0.mask[i]</span></span><br><span class="line"> vsbc.vvm   vd, vs2, vs1, v0  # Vector-<span class="built_in">vector</span></span><br><span class="line"></span><br><span class="line"> <span class="meta"># vd[i] = vs2[i] - x[rs1] - v0.mask[i]</span></span><br><span class="line"> vsbc.vxm   vd, vs2, rs1, v0  # Vector-scalar</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="位逻辑指令"><a href="#位逻辑指令" class="headerlink" title="位逻辑指令"></a>位逻辑指令</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"># Bitwise logical operations.</span><br><span class="line">vand.vv vd, vs2, vs1, vm   # Vector-<span class="built_in">vector</span></span><br><span class="line">vand.vx vd, vs2, rs1, vm   <span class="meta"># vector-scalar</span></span><br><span class="line">vand.vi vd, vs2, imm, vm   <span class="meta"># vector-immediate</span></span><br><span class="line"></span><br><span class="line">vor.vv vd, vs2, vs1, vm    # Vector-<span class="built_in">vector</span></span><br><span class="line">vor.vx vd, vs2, rs1, vm    <span class="meta"># vector-scalar</span></span><br><span class="line">vor.vi vd, vs2, imm, vm    <span class="meta"># vector-immediate</span></span><br><span class="line"></span><br><span class="line">vxor.vv vd, vs2, vs1, vm    # Vector-<span class="built_in">vector</span></span><br><span class="line">vxor.vx vd, vs2, rs1, vm    <span class="meta"># vector-scalar</span></span><br><span class="line">vxor.vi vd, vs2, imm, vm    <span class="meta"># vector-immediate</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="单宽度位移指令，逻辑左移，逻辑和算数右移"><a href="#单宽度位移指令，逻辑左移，逻辑和算数右移" class="headerlink" title="单宽度位移指令，逻辑左移，逻辑和算数右移"></a>单宽度位移指令，逻辑左移，逻辑和算数右移</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"># Bit shift operations</span><br><span class="line">vsll.vv vd, vs2, vs1, vm   # Vector-<span class="built_in">vector</span></span><br><span class="line">vsll.vx vd, vs2, rs1, vm   <span class="meta"># vector-scalar</span></span><br><span class="line">vsll.vi vd, vs2, uimm, vm   <span class="meta"># vector-immediate</span></span><br><span class="line"></span><br><span class="line">vsrl.vv vd, vs2, vs1, vm   # Vector-<span class="built_in">vector</span></span><br><span class="line">vsrl.vx vd, vs2, rs1, vm   <span class="meta"># vector-scalar</span></span><br><span class="line">vsrl.vi vd, vs2, uimm, vm   <span class="meta"># vector-immediate</span></span><br><span class="line"></span><br><span class="line">vsra.vv vd, vs2, vs1, vm   # Vector-<span class="built_in">vector</span></span><br><span class="line">vsra.vx vd, vs2, rs1, vm   <span class="meta"># vector-scalar</span></span><br><span class="line">vsra.vi vd, vs2, uimm, vm   <span class="meta"># vector-immediate</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="向量比较指令，符号左右两边分别是vs2和vs1"><a href="#向量比较指令，符号左右两边分别是vs2和vs1" class="headerlink" title="向量比较指令，符号左右两边分别是vs2和vs1"></a>向量比较指令，符号左右两边分别是vs2和vs1</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"># Set <span class="keyword">if</span> equal</span><br><span class="line">vmseq.vv vd, vs2, vs1, vm  # Vector-<span class="built_in">vector</span></span><br><span class="line">vmseq.vx vd, vs2, rs1, vm  <span class="meta"># vector-scalar</span></span><br><span class="line">vmseq.vi vd, vs2, imm, vm  <span class="meta"># vector-immediate</span></span><br><span class="line"></span><br><span class="line"># Set <span class="keyword">if</span> <span class="keyword">not</span> equal</span><br><span class="line">vmsne.vv vd, vs2, vs1, vm  # Vector-<span class="built_in">vector</span></span><br><span class="line">vmsne.vx vd, vs2, rs1, vm  <span class="meta"># vector-scalar</span></span><br><span class="line">vmsne.vi vd, vs2, imm, vm  <span class="meta"># vector-immediate</span></span><br><span class="line"></span><br><span class="line"># Set <span class="keyword">if</span> less than, <span class="keyword">unsigned</span></span><br><span class="line">vmsltu.vv vd, vs2, vs1, vm  # Vector-<span class="built_in">vector</span></span><br><span class="line">vmsltu.vx vd, vs2, rs1, vm  # Vector-scalar</span><br><span class="line"></span><br><span class="line"># Set <span class="keyword">if</span> less than, <span class="keyword">signed</span></span><br><span class="line">vmslt.vv vd, vs2, vs1, vm  # Vector-<span class="built_in">vector</span></span><br><span class="line">vmslt.vx vd, vs2, rs1, vm  <span class="meta"># vector-scalar</span></span><br><span class="line"></span><br><span class="line"># Set <span class="keyword">if</span> less than <span class="keyword">or</span> equal, <span class="keyword">unsigned</span></span><br><span class="line">vmsleu.vv vd, vs2, vs1, vm   # Vector-<span class="built_in">vector</span></span><br><span class="line">vmsleu.vx vd, vs2, rs1, vm   <span class="meta"># vector-scalar</span></span><br><span class="line">vmsleu.vi vd, vs2, imm, vm   # Vector-immediate</span><br><span class="line"></span><br><span class="line"># Set <span class="keyword">if</span> less than <span class="keyword">or</span> equal, <span class="keyword">signed</span></span><br><span class="line">vmsle.vv vd, vs2, vs1, vm  # Vector-<span class="built_in">vector</span></span><br><span class="line">vmsle.vx vd, vs2, rs1, vm  <span class="meta"># vector-scalar</span></span><br><span class="line">vmsle.vi vd, vs2, imm, vm  <span class="meta"># vector-immediate</span></span><br><span class="line"></span><br><span class="line"># Set <span class="keyword">if</span> greater than, <span class="keyword">unsigned</span></span><br><span class="line">vmsgtu.vx vd, vs2, rs1, vm   # Vector-scalar</span><br><span class="line">vmsgtu.vi vd, vs2, imm, vm   # Vector-immediate</span><br><span class="line"></span><br><span class="line"># Set <span class="keyword">if</span> greater than, <span class="keyword">signed</span></span><br><span class="line">vmsgt.vx vd, vs2, rs1, vm    # Vector-scalar</span><br><span class="line">vmsgt.vi vd, vs2, imm, vm    # Vector-immediate</span><br><span class="line"></span><br><span class="line"># Following two instructions are <span class="keyword">not</span> provided directly</span><br><span class="line"># Set <span class="keyword">if</span> greater than <span class="keyword">or</span> equal, <span class="keyword">unsigned</span></span><br><span class="line"><span class="meta"># vmsgeu.vx vd, vs2, rs1, vm    # Vector-scalar</span></span><br><span class="line"># Set <span class="keyword">if</span> greater than <span class="keyword">or</span> equal, <span class="keyword">signed</span></span><br><span class="line"><span class="meta"># vmsge.vx vd, vs2, rs1, vm    # Vector-scalar</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="向量找最大最小指令，最大-小结果放入vd中"><a href="#向量找最大最小指令，最大-小结果放入vd中" class="headerlink" title="向量找最大最小指令，最大/小结果放入vd中"></a>向量找最大最小指令，最大/小结果放入vd中</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"># Unsigned minimum</span><br><span class="line">vminu.vv vd, vs2, vs1, vm   # Vector-<span class="built_in">vector</span></span><br><span class="line">vminu.vx vd, vs2, rs1, vm   <span class="meta"># vector-scalar</span></span><br><span class="line"></span><br><span class="line"># Signed minimum</span><br><span class="line">vmin.vv vd, vs2, vs1, vm   # Vector-<span class="built_in">vector</span></span><br><span class="line">vmin.vx vd, vs2, rs1, vm   <span class="meta"># vector-scalar</span></span><br><span class="line"></span><br><span class="line"># Unsigned maximum</span><br><span class="line">vmaxu.vv vd, vs2, vs1, vm   # Vector-<span class="built_in">vector</span></span><br><span class="line">vmaxu.vx vd, vs2, rs1, vm   <span class="meta"># vector-scalar</span></span><br><span class="line"></span><br><span class="line"># Signed maximum</span><br><span class="line">vmax.vv vd, vs2, vs1, vm   # Vector-<span class="built_in">vector</span></span><br><span class="line">vmax.vx vd, vs2, rs1, vm   <span class="meta"># vector-scalar</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="向量单宽度整数乘法指​​令"><a href="#向量单宽度整数乘法指​​令" class="headerlink" title="向量单宽度整数乘法指​​令"></a>向量单宽度整数乘法指​​令</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"># Signed multiply, returning low bits of product</span><br><span class="line">vmul.vv vd, vs2, vs1, vm   # Vector-<span class="built_in">vector</span></span><br><span class="line">vmul.vx vd, vs2, rs1, vm   <span class="meta"># vector-scalar</span></span><br><span class="line"></span><br><span class="line"># Signed multiply, returning high bits of product</span><br><span class="line">vmulh.vv vd, vs2, vs1, vm   # Vector-<span class="built_in">vector</span></span><br><span class="line">vmulh.vx vd, vs2, rs1, vm   <span class="meta"># vector-scalar</span></span><br><span class="line"></span><br><span class="line"># Unsigned multiply, returning high bits of product</span><br><span class="line">vmulhu.vv vd, vs2, vs1, vm   # Vector-<span class="built_in">vector</span></span><br><span class="line">vmulhu.vx vd, vs2, rs1, vm   <span class="meta"># vector-scalar</span></span><br><span class="line"></span><br><span class="line"># Signed(vs2)-Unsigned multiply, returning high bits of product</span><br><span class="line">vmulhsu.vv vd, vs2, vs1, vm   # Vector-<span class="built_in">vector</span></span><br><span class="line">vmulhsu.vx vd, vs2, rs1, vm   <span class="meta"># vector-scalar</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="向量单宽度整数除法及求余数指​​令"><a href="#向量单宽度整数除法及求余数指​​令" class="headerlink" title="向量单宽度整数除法及求余数指​​令"></a>向量单宽度整数除法及求余数指​​令</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"># Unsigned divide.</span><br><span class="line">   vdivu.vv vd, vs2, vs1, vm   # Vector-<span class="built_in">vector</span></span><br><span class="line">   vdivu.vx vd, vs2, rs1, vm   <span class="meta"># vector-scalar</span></span><br><span class="line"></span><br><span class="line">   # Signed divide</span><br><span class="line">   vdiv.vv vd, vs2, vs1, vm   # Vector-<span class="built_in">vector</span></span><br><span class="line">   vdiv.vx vd, vs2, rs1, vm   <span class="meta"># vector-scalar</span></span><br><span class="line"></span><br><span class="line">   # Unsigned remainder</span><br><span class="line">   vremu.vv vd, vs2, vs1, vm   # Vector-<span class="built_in">vector</span></span><br><span class="line">   vremu.vx vd, vs2, rs1, vm   <span class="meta"># vector-scalar</span></span><br><span class="line"></span><br><span class="line">   # Signed remainder</span><br><span class="line">   vrem.vv vd, vs2, vs1, vm   # Vector-<span class="built_in">vector</span></span><br><span class="line">   vrem.vx vd, vs2, rs1, vm   <span class="meta"># vector-scalar</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="向量结果双宽度整数乘法指​​令"><a href="#向量结果双宽度整数乘法指​​令" class="headerlink" title="向量结果双宽度整数乘法指​​令"></a>向量结果双宽度整数乘法指​​令</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"># Widening <span class="keyword">signed</span>-integer multiply</span><br><span class="line">vwmul.vv  vd, vs2, vs1, vm <span class="meta"># vector-vector</span></span><br><span class="line">vwmul.vx  vd, vs2, rs1, vm <span class="meta"># vector-scalar</span></span><br><span class="line"></span><br><span class="line"># Widening <span class="keyword">unsigned</span>-integer multiply</span><br><span class="line">vwmulu.vv vd, vs2, vs1, vm <span class="meta"># vector-vector</span></span><br><span class="line">vwmulu.vx vd, vs2, rs1, vm <span class="meta"># vector-scalar</span></span><br><span class="line"></span><br><span class="line"># Widening <span class="keyword">signed</span>-<span class="keyword">unsigned</span> integer multiply</span><br><span class="line">vwmulsu.vv vd, vs2, vs1, vm <span class="meta"># vector-vector</span></span><br><span class="line">vwmulsu.vx vd, vs2, rs1, vm <span class="meta"># vector-scalar</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="向量单宽度整数乘加指令"><a href="#向量单宽度整数乘加指令" class="headerlink" title="向量单宽度整数乘加指令"></a>向量单宽度整数乘加指令</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"># Integer multiply-add, overwrite addend</span><br><span class="line">vmacc.vv vd, vs1, vs2, vm    <span class="meta"># vd[i] = +(vs1[i] * vs2[i]) + vd[i]</span></span><br><span class="line">vmacc.vx vd, rs1, vs2, vm    <span class="meta"># vd[i] = +(x[rs1] * vs2[i]) + vd[i]</span></span><br><span class="line"></span><br><span class="line"># Integer multiply-sub, overwrite minuend</span><br><span class="line">vnmsac.vv vd, vs1, vs2, vm    <span class="meta"># vd[i] = -(vs1[i] * vs2[i]) + vd[i]</span></span><br><span class="line">vnmsac.vx vd, rs1, vs2, vm    <span class="meta"># vd[i] = -(x[rs1] * vs2[i]) + vd[i]</span></span><br><span class="line"></span><br><span class="line"># Integer multiply-add, overwrite multiplicand</span><br><span class="line">vmadd.vv vd, vs1, vs2, vm    <span class="meta"># vd[i] = (vs1[i] * vd[i]) + vs2[i]</span></span><br><span class="line">vmadd.vx vd, rs1, vs2, vm    <span class="meta"># vd[i] = (x[rs1] * vd[i]) + vs2[i]</span></span><br><span class="line"></span><br><span class="line"># Integer multiply-sub, overwrite multiplicand</span><br><span class="line">vnmsub.vv vd, vs1, vs2, vm    <span class="meta"># vd[i] = -(vs1[i] * vd[i]) + vs2[i]</span></span><br><span class="line">vnmsub.vx vd, rs1, vs2, vm    <span class="meta"># vd[i] = -(x[rs1] * vd[i]) + vs2[i]</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="向量加宽整数乘加指令"><a href="#向量加宽整数乘加指令" class="headerlink" title="向量加宽整数乘加指令"></a>向量加宽整数乘加指令</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"># Widening <span class="keyword">unsigned</span>-integer multiply-add, overwrite addend</span><br><span class="line">vwmaccu.vv vd, vs1, vs2, vm    <span class="meta"># vd[i] = +(vs1[i] * vs2[i]) + vd[i]</span></span><br><span class="line">vwmaccu.vx vd, rs1, vs2, vm    <span class="meta"># vd[i] = +(x[rs1] * vs2[i]) + vd[i]</span></span><br><span class="line"></span><br><span class="line"># Widening <span class="keyword">signed</span>-integer multiply-add, overwrite addend</span><br><span class="line">vwmacc.vv vd, vs1, vs2, vm    <span class="meta"># vd[i] = +(vs1[i] * vs2[i]) + vd[i]</span></span><br><span class="line">vwmacc.vx vd, rs1, vs2, vm    <span class="meta"># vd[i] = +(x[rs1] * vs2[i]) + vd[i]</span></span><br><span class="line"></span><br><span class="line"># Widening <span class="keyword">signed</span>-<span class="keyword">unsigned</span>-integer multiply-add, overwrite addend</span><br><span class="line">vwmaccsu.vv vd, vs1, vs2, vm  <span class="meta"># vd[i] = +(signed(vs1[i]) * unsigned(vs2[i])) + vd[i]</span></span><br><span class="line">vwmaccsu.vx vd, rs1, vs2, vm  <span class="meta"># vd[i] = +(signed(x[rs1]) * unsigned(vs2[i])) + vd[i]</span></span><br><span class="line"></span><br><span class="line"># Widening <span class="keyword">unsigned</span>-<span class="keyword">signed</span>-integer multiply-add, overwrite addend</span><br><span class="line">vwmaccus.vx vd, rs1, vs2, vm  <span class="meta"># vd[i] = +(unsigned(x[rs1]) * signed(vs2[i])) + vd[i]</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="向量整数合并指令"><a href="#向量整数合并指令" class="headerlink" title="向量整数合并指令"></a>向量整数合并指令</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">vmerge.vvm vd, vs2, vs1, v0  <span class="meta"># vd[i] = v0.mask[i] ? vs1[i] : vs2[i]</span></span><br><span class="line">vmerge.vxm vd, vs2, rs1, v0  <span class="meta"># vd[i] = v0.mask[i] ? x[rs1] : vs2[i]</span></span><br><span class="line">vmerge.vim vd, vs2, imm, v0  <span class="meta"># vd[i] = v0.mask[i] ? imm    : vs2[i]</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="向量整数移动指令"><a href="#向量整数移动指令" class="headerlink" title="向量整数移动指令"></a>向量整数移动指令</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">vmv.v.v vd, vs1 <span class="meta"># vd[i] = vs1[i]</span></span><br><span class="line">vmv.v.x vd, rs1 <span class="meta"># vd[i] = rs1</span></span><br><span class="line">vmv.v.i vd, imm <span class="meta"># vd[i] = imm</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="整数标量移动指令"><a href="#整数标量移动指令" class="headerlink" title="整数标量移动指令"></a>整数标量移动指令</h4><p>整数标量读/写指令在标量x寄存器和向量寄存器的元素0之间传输单个值。指令忽略LMUL和向量寄存器组。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">vmv.xs rd，vs2＃x [rd] = vs2 [<span class="number">0</span>]（vs1 = <span class="number">0</span>）</span><br><span class="line">vmv.sx vd，rs1＃vd [<span class="number">0</span>] = x [rs1]（vs2 = <span class="number">0</span>）</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="需求分析"><a href="#需求分析" class="headerlink" title="需求分析"></a>需求分析</h3><ol>
+<li>向量的加载和存储，支持跨步，按索引范存（访存操作</li>
+<li>向量单个元素位宽可指定（8bit，32bit)/可能支持向量寄存器分组</li>
+<li>向量之间/向量和常数的加减乘除运算</li>
+<li>向量之间/向量和常数的比较运算</li>
+<li>向量自身所有元素求和</li>
+<li>向量元素的位逻辑运算</li>
+<li>求向量中，向量元素的最大最小值</li>
+</ol>
+<h4 id="RISCV指令格式"><a href="#RISCV指令格式" class="headerlink" title="RISCV指令格式"></a>RISCV指令格式</h4><p><img src="https://img-blog.csdnimg.cn/20210405185250929.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20210405185317370.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<ul>
+<li>给用户自定义的指令操作码为Custom-0, Custom-1, Custom-2, Custom-3</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">wire opcode_custom0 = (opcode == <span class="number">7&#x27;b</span>0001011); </span><br><span class="line">wire opcode_custom1 = (opcode == <span class="number">7&#x27;b</span>0101011); </span><br><span class="line">wire opcode_custom2 = (opcode == <span class="number">7&#x27;b</span>1011011); </span><br><span class="line">wire opcode_custom3 = (opcode == <span class="number">7&#x27;b</span>1111011);</span><br></pre></td></tr></table></figure>
+<ul>
+<li>操作码如上，操作码定义为Custom-0, Custom-1, Custom-2, Custom-3，其余部分可仿照向量指令集，指令集主要由func3和func7区分</li>
+<li>根据NICE示例代码可知，指令格式可为任意种类指令格式，但是文档中给出，指令格式仅使用R格式指令<br><img src="https://img-blog.csdnimg.cn/2021040518563613.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></li>
+</ul>
+<h4 id="指令预设"><a href="#指令预设" class="headerlink" title="指令预设"></a>指令预设</h4><h5 id="访存指令"><a href="#访存指令" class="headerlink" title="访存指令"></a>访存指令</h5><p>向量的加载和存储，支持跨步，按索引范存（访存操作<br>占用一个custom操作数，custom1</p>
+<ol>
+<li>5bit保存要加载/存储的内存地址的寄存器编号</li>
+<li>5bit保存若跨步访存的步长所在的寄存器编号/或按索引访存所存放索引的向量寄存器地址</li>
+<li>5bit保存要存或取数据的向量寄存器的编号</li>
+<li>2bit编码向量元素宽度</li>
+<li>2bit编码采用连续访存还是跨步访存还是索引范存</li>
+<li>1bit编码读操作还是写操作<br>按上述要求，采用R指令，1.2.3分给rs1，rs2，rs3，456分给func7</li>
+</ol>
+<h5 id="3-4-5-6"><a href="#3-4-5-6" class="headerlink" title="3.4.5.6."></a>3.4.5.6.</h5><p>也可采用R型指令，可分给custom2.3.4，具体指令类型由fun7指定（待定</p>
+<h1 id="NICE接口学习"><a href="#NICE接口学习" class="headerlink" title="NICE接口学习"></a>NICE接口学习</h1><p>NICE接口官方给出了较详细的文档说明<br>芯来官方资料汇总 <a target="_blank" rel="noopener" href="https://www.rvmcu.com/community-topic-id-340.html">https://www.rvmcu.com/community-topic-id-340.html</a><br>官方文档说明 <a target="_blank" rel="noopener" href="https://doc.nucleisys.com/hbirdv2/core/core.html#nice">https://doc.nucleisys.com/hbirdv2/core/core.html#nice</a><br>nice协处理器实现示例 <a target="_blank" rel="noopener" href="https://github.com/riscv-mcu/e203_hbirdv2/tree/master/rtl/e203/subsys">https://github.com/riscv-mcu/e203_hbirdv2/tree/master/rtl/e203/subsys</a><br>协处理器使用示例 <a target="_blank" rel="noopener" href="https://github.com/Nuclei-Software/nuclei-board-labs/tree/master/e203_hbirdv2/common">https://github.com/Nuclei-Software/nuclei-board-labs/tree/master/e203_hbirdv2/common</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+        <div id="donation_div"></div>
+
+
+<script src="/js/vdonate.js"></script>
+
+<script>
+var a = new Donate({
+  title: '如果觉得我的文章对您有用，请随意打赏。您的支持将鼓励我继续创作!', // 可选参数，打赏标题
+  btnText: 'Donate', // 可选参数，打赏按钮文字
+  el: document.getElementById('donation_div'),
+  wechatImage: 'https://raw.githubusercontent.com/iTimeTraveler/iTimeTraveler.github.io/site/source/about/donate/images/WeChanQR.png',
+  alipayImage: 'https://raw.githubusercontent.com/iTimeTraveler/iTimeTraveler.github.io/site/source/about/donate/images/AliPayQR.jpg'
+});
+</script>
+      
+      
+      <div>
+        <ul class="post-copyright">
+          <li class="post-copyright-author">
+          <strong>Post author:  </strong>Fran Hawk</a>
+          </li>
+          <li class="post-copyright-link">
+          <strong>Post link:  </strong>
+          <a href="/2021/04/05/RISCV 向量指令集和NICE接口学习笔记/" target="_blank" title="RISCV 向量指令集和NICE接口学习笔记">http://example.com/2021/04/05/RISCV 向量指令集和NICE接口学习笔记/</a>
+          </li>
+          <li class="post-copyright-license">
+            <strong>Copyright Notice:   </strong>
+            All articles in this blog are licensed under <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">CC BY-NC-ND 4.0</a>
+            unless stating additionally.
+          </li>
+         
+        </ul>
+<div>
+
+      
+      
+        
+	<div id="comment">
+		<!-- 来必力City版安装代码 -->
+		<div id="lv-container" data-id="city" data-uid="MTAyMC8yOTQ4MS82MDQ5">
+		<script type="text/javascript">
+		   (function(d, s) {
+		       var j, e = d.getElementsByTagName(s)[0];
+
+		       if (typeof LivereTower === 'function') { return; }
+
+		       j = d.createElement(s);
+		       j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+		       j.async = true;
+
+		       e.parentNode.insertBefore(j, e);
+		   })(document, 'script');
+		</script>
+		<noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+		</div>
+		<!-- City版安装代码已完成 -->
+	</div>
+
+
+
+      
+      
+        
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RISC-V/" rel="tag">RISC-V</a></li></ul>
+
+      
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2021/06/04/%E5%9F%BA%E4%BA%8ERT-Thread%E7%9A%84CAN%E7%94%B5%E6%9C%BA%E9%A9%B1%E5%8A%A8%E6%9D%BF%E8%AE%BE%E8%AE%A1%20%EF%BC%88%E4%B8%80%EF%BC%89%E9%9C%80%E6%B1%82%E5%88%86%E6%9E%90%E4%B8%8E%E7%A1%AC%E4%BB%B6%E8%AE%BE%E8%AE%A1/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          基于RT-Thread的CAN电机驱动板设计 （一）需求分析与硬件设计
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9A%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9A%84%E4%BD%BF%E7%94%A8%E5%92%8C%E9%85%8D%E7%BD%AE/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">RT-Thread ART-PI 学习笔记：文件系统的使用和配置</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+<!-- Table of Contents -->
+
+  <aside id="toc-sidebar">
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">Contents</strong>
+    
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#RISCV%E5%90%91%E9%87%8F%E6%8C%87%E4%BB%A4%E9%9B%86%E5%AD%A6%E4%B9%A0"><span class="nav-number">1.</span> <span class="nav-text">RISCV向量指令集学习</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="nav-number">1.0.1.</span> <span class="nav-text">参考链接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%91%E9%87%8F%E6%8C%87%E4%BB%A4%E9%9B%86%E7%94%A8%E4%BE%8B"><span class="nav-number">1.0.2.</span> <span class="nav-text">向量指令集用例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%8D%E8%AF%8D%E8%A7%A3%E9%87%8A"><span class="nav-number">1.0.3.</span> <span class="nav-text">名词解释</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%91%E9%87%8F%E5%85%83%E7%B4%A0%E5%88%B0%E5%90%91%E9%87%8F%E5%AF%84%E5%AD%98%E5%99%A8%E7%9A%84%E6%98%A0%E5%B0%84"><span class="nav-number">1.0.4.</span> <span class="nav-text">向量元素到向量寄存器的映射</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E5%AF%84%E5%AD%98%E5%99%A8%E6%93%8D%E4%BD%9C%E6%8C%87%E4%BB%A4"><span class="nav-number">1.0.5.</span> <span class="nav-text">配置寄存器操作指令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%94%A8%E4%BE%8B"><span class="nav-number">1.0.5.1.</span> <span class="nav-text">用例</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%A7%A3%E9%87%8A"><span class="nav-number">1.0.5.2.</span> <span class="nav-text">解释</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%91%E9%87%8F%E6%93%8D%E4%BD%9C%E6%8C%87%E4%BB%A4%E4%B8%AD%E7%9A%84%E6%8E%A9%E7%A0%81"><span class="nav-number">1.0.6.</span> <span class="nav-text">向量操作指令中的掩码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%91%E9%87%8F%E5%8A%A0%E8%BD%BD%E5%92%8C%E5%AD%98%E5%82%A8%E6%8C%87%E4%BB%A4%EF%BC%88%E8%AE%BF%E5%AD%98%EF%BC%89"><span class="nav-number">1.0.7.</span> <span class="nav-text">向量加载和存储指令（访存）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#mop-%E8%AE%BF%E5%AD%98%E6%97%B6%E9%80%89%E6%8B%A9%E8%AE%BF%E5%AD%98%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.0.7.1.</span> <span class="nav-text">mop 访存时选择访存模式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#lumop-sumop"><span class="nav-number">1.0.7.2.</span> <span class="nav-text">lumop&#x2F;sumop</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%91%E9%87%8F%E5%8A%A0%E8%BD%BD-%E5%AD%98%E5%82%A8%E7%9A%84%E5%AE%BD%E5%BA%A6%E7%BC%96%E7%A0%81"><span class="nav-number">1.0.7.3.</span> <span class="nav-text">向量加载&#x2F;存储的宽度编码</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%91%E9%87%8F%E5%8D%95%E6%AD%A5%E5%B9%85%E8%B7%A8%E6%AD%A5%EF%BC%88Unit-Stride%EF%BC%89%E6%8C%87%E4%BB%A4"><span class="nav-number">1.0.7.4.</span> <span class="nav-text">向量单步幅跨步（Unit-Stride）指令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%91%E9%87%8F%E8%B7%A8%E6%AD%A5-Strided-%E6%8C%87%E4%BB%A4"><span class="nav-number">1.0.7.5.</span> <span class="nav-text">向量跨步(Strided)指令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%91%E9%87%8F%E7%B4%A2%E5%BC%95%EF%BC%88indexed%EF%BC%89%E6%8C%87%E4%BB%A4"><span class="nav-number">1.0.7.6.</span> <span class="nav-text">向量索引（indexed）指令</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%91%E9%87%8F%E5%8E%9F%E5%AD%90%E6%93%8D%E4%BD%9C"><span class="nav-number">1.0.8.</span> <span class="nav-text">向量原子操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%91%E9%87%8F%E8%AE%A1%E7%AE%97%E6%8C%87%E4%BB%A4"><span class="nav-number">1.0.9.</span> <span class="nav-text">向量计算指令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%91%E9%87%8F%E7%AE%97%E6%9C%AF%E6%8C%87%E4%BB%A4%E5%9C%A8vm-%E5%AD%97%E6%AE%B5%E4%B8%8B%E8%A2%AB%E6%8E%A9%E7%A0%81%E3%80%82"><span class="nav-number">1.0.9.1.</span> <span class="nav-text">向量算术指令在vm 字段下被掩码。</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B5%AE%E7%82%B9%E6%8C%87%E4%BB%A4"><span class="nav-number">1.0.9.2.</span> <span class="nav-text">浮点指令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%8D%E5%90%8C%E7%9A%84%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F"><span class="nav-number">1.0.9.3.</span> <span class="nav-text">不同的指令格式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Widening%E5%90%91%E9%87%8F%E7%AE%97%E6%9C%AF%E6%8C%87%E4%BB%A4"><span class="nav-number">1.0.9.4.</span> <span class="nav-text">Widening向量算术指令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Narrowing%E5%90%91%E9%87%8F%E7%AE%97%E6%9C%AF%E6%8C%87%E4%BB%A4"><span class="nav-number">1.0.9.5.</span> <span class="nav-text">Narrowing向量算术指令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%91%E9%87%8F%E5%8D%95%E5%AE%BD%E5%BA%A6%E5%8A%A0%E5%87%8F"><span class="nav-number">1.0.9.6.</span> <span class="nav-text">向量单宽度加减</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%91%E9%87%8F%E7%BB%93%E6%9E%9C%E5%8A%A0%E5%AE%BD%E5%8A%A0%E5%87%8F%EF%BC%8C%E5%8C%85%E6%8B%AC%E6%9C%89%E7%AC%A6%E5%8F%B7%E6%95%B0%E5%92%8C%E6%97%A0%E7%AC%A6%E5%8F%B7%E6%95%B0"><span class="nav-number">1.0.9.7.</span> <span class="nav-text">向量结果加宽加减，包括有符号数和无符号数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%91%E9%87%8F%E6%9C%89%EF%BC%8C%E6%97%A0%E7%AC%A6%E5%8F%B7%E6%95%B0%E5%85%83%E7%B4%A0%E4%BD%8D%E6%95%B0%E6%89%A9%E5%B1%95"><span class="nav-number">1.0.9.8.</span> <span class="nav-text">向量有，无符号数元素位数扩展</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B8%A6%E8%BF%9B%E4%BD%8D%E5%80%9F%E4%BD%8D%E5%8A%A0%E5%87%8F%E6%B3%95"><span class="nav-number">1.0.9.9.</span> <span class="nav-text">带进位借位加减法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%8D%E9%80%BB%E8%BE%91%E6%8C%87%E4%BB%A4"><span class="nav-number">1.0.9.10.</span> <span class="nav-text">位逻辑指令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8D%95%E5%AE%BD%E5%BA%A6%E4%BD%8D%E7%A7%BB%E6%8C%87%E4%BB%A4%EF%BC%8C%E9%80%BB%E8%BE%91%E5%B7%A6%E7%A7%BB%EF%BC%8C%E9%80%BB%E8%BE%91%E5%92%8C%E7%AE%97%E6%95%B0%E5%8F%B3%E7%A7%BB"><span class="nav-number">1.0.9.11.</span> <span class="nav-text">单宽度位移指令，逻辑左移，逻辑和算数右移</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%91%E9%87%8F%E6%AF%94%E8%BE%83%E6%8C%87%E4%BB%A4%EF%BC%8C%E7%AC%A6%E5%8F%B7%E5%B7%A6%E5%8F%B3%E4%B8%A4%E8%BE%B9%E5%88%86%E5%88%AB%E6%98%AFvs2%E5%92%8Cvs1"><span class="nav-number">1.0.9.12.</span> <span class="nav-text">向量比较指令，符号左右两边分别是vs2和vs1</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%91%E9%87%8F%E6%89%BE%E6%9C%80%E5%A4%A7%E6%9C%80%E5%B0%8F%E6%8C%87%E4%BB%A4%EF%BC%8C%E6%9C%80%E5%A4%A7-%E5%B0%8F%E7%BB%93%E6%9E%9C%E6%94%BE%E5%85%A5vd%E4%B8%AD"><span class="nav-number">1.0.9.13.</span> <span class="nav-text">向量找最大最小指令，最大&#x2F;小结果放入vd中</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%91%E9%87%8F%E5%8D%95%E5%AE%BD%E5%BA%A6%E6%95%B4%E6%95%B0%E4%B9%98%E6%B3%95%E6%8C%87%E2%80%8B%E2%80%8B%E4%BB%A4"><span class="nav-number">1.0.9.14.</span> <span class="nav-text">向量单宽度整数乘法指​​令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%91%E9%87%8F%E5%8D%95%E5%AE%BD%E5%BA%A6%E6%95%B4%E6%95%B0%E9%99%A4%E6%B3%95%E5%8F%8A%E6%B1%82%E4%BD%99%E6%95%B0%E6%8C%87%E2%80%8B%E2%80%8B%E4%BB%A4"><span class="nav-number">1.0.9.15.</span> <span class="nav-text">向量单宽度整数除法及求余数指​​令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%91%E9%87%8F%E7%BB%93%E6%9E%9C%E5%8F%8C%E5%AE%BD%E5%BA%A6%E6%95%B4%E6%95%B0%E4%B9%98%E6%B3%95%E6%8C%87%E2%80%8B%E2%80%8B%E4%BB%A4"><span class="nav-number">1.0.9.16.</span> <span class="nav-text">向量结果双宽度整数乘法指​​令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%91%E9%87%8F%E5%8D%95%E5%AE%BD%E5%BA%A6%E6%95%B4%E6%95%B0%E4%B9%98%E5%8A%A0%E6%8C%87%E4%BB%A4"><span class="nav-number">1.0.9.17.</span> <span class="nav-text">向量单宽度整数乘加指令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%91%E9%87%8F%E5%8A%A0%E5%AE%BD%E6%95%B4%E6%95%B0%E4%B9%98%E5%8A%A0%E6%8C%87%E4%BB%A4"><span class="nav-number">1.0.9.18.</span> <span class="nav-text">向量加宽整数乘加指令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%91%E9%87%8F%E6%95%B4%E6%95%B0%E5%90%88%E5%B9%B6%E6%8C%87%E4%BB%A4"><span class="nav-number">1.0.9.19.</span> <span class="nav-text">向量整数合并指令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%91%E9%87%8F%E6%95%B4%E6%95%B0%E7%A7%BB%E5%8A%A8%E6%8C%87%E4%BB%A4"><span class="nav-number">1.0.9.20.</span> <span class="nav-text">向量整数移动指令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B4%E6%95%B0%E6%A0%87%E9%87%8F%E7%A7%BB%E5%8A%A8%E6%8C%87%E4%BB%A4"><span class="nav-number">1.0.9.21.</span> <span class="nav-text">整数标量移动指令</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9C%80%E6%B1%82%E5%88%86%E6%9E%90"><span class="nav-number">1.0.10.</span> <span class="nav-text">需求分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#RISCV%E6%8C%87%E4%BB%A4%E6%A0%BC%E5%BC%8F"><span class="nav-number">1.0.10.1.</span> <span class="nav-text">RISCV指令格式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8C%87%E4%BB%A4%E9%A2%84%E8%AE%BE"><span class="nav-number">1.0.10.2.</span> <span class="nav-text">指令预设</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%AE%BF%E5%AD%98%E6%8C%87%E4%BB%A4"><span class="nav-number">1.0.10.2.1.</span> <span class="nav-text">访存指令</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-4-5-6"><span class="nav-number">1.0.10.2.2.</span> <span class="nav-text">3.4.5.6.</span></a></li></ol></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#NICE%E6%8E%A5%E5%8F%A3%E5%AD%A6%E4%B9%A0"><span class="nav-number">2.</span> <span class="nav-text">NICE接口学习</span></a></li></ol>
+    
+    </div>
+  </aside>
+
+</section>
+        
+      </div>
+      
+      <footer id="footer">
+  
+
+  <div class="container">
+      	<div class="row">
+	      <p> Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/iTimeTraveler/hexo-theme-hiker" target="_blank">Hexo-theme-hiker</a> </p>
+	      <p id="copyRightEn">Copyright &copy; 2013 - 2021 张竞豪的小岛 All Rights Reserved.</p>
+	      
+	      
+    		<p class="busuanzi_uv">
+				UV : <span id="busuanzi_value_site_uv"></span> |  
+				PV : <span id="busuanzi_value_site_pv"></span>
+		    </p>
+  		   
+		</div>
+
+		
+  </div>
+</footer>
+
+
+<!-- min height -->
+
+<script>
+    var wrapdiv = document.getElementById("wrap");
+    var contentdiv = document.getElementById("content");
+    var allheader = document.getElementById("allheader");
+
+    wrapdiv.style.minHeight = document.body.offsetHeight + "px";
+    if (allheader != null) {
+      contentdiv.style.minHeight = document.body.offsetHeight - allheader.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    } else {
+      contentdiv.style.minHeight = document.body.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    }
+</script>
+    </div>
+    <!-- <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/categories" class="mobile-nav-link">Categories</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tags</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+</nav> -->
+    
+
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/scripts.js"></script>
+
+
+
+
+
+  
+<script src="/js/dialog.js"></script>
+
+
+
+
+
+
+
+
+
+	<div style="display: none;">
+    <script src="https://s95.cnzz.com/z_stat.php?id=1260716016&web_id=1260716016" language="JavaScript"></script>
+  </div>
+
+
+
+	<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js">
+	</script>
+
+
+
+
+
+
+  </div>
+
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="myModalLabel">设置</h2>
+      </div>
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+
+
+      <div class="modal-body">
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" onclick="javascript:setFontSize();" aria-expanded="true" aria-controls="collapseOne">
+              正文字号大小
+            </a>
+          </div>
+          <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+          <div class="panel-body">
+            您已调整页面字体大小
+          </div>
+        </div>
+      
+
+
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" onclick="javascript:setBackground();" aria-expanded="true" aria-controls="collapseTwo">
+              夜间护眼模式
+            </a>
+        </div>
+          <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+          <div class="panel-body">
+            夜间模式已经开启，再次单击按钮即可关闭 
+          </div>
+        </div>
+
+        <div>
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="true" aria-controls="collapseThree">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关 于&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+        </div>
+         <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+          <div class="panel-body">
+            张竞豪的小岛
+          </div>
+          <div class="panel-body">
+            Copyright © 2021 Fran Hawk All Rights Reserved.
+          </div>
+        </div>
+      </div>
+
+
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <div class="modal-footer">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+  
+  <a id="rocket" href="#top" class=""></a>
+  <script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+  
+    <a id="menu-switch"><i class="fa fa-bars fa-lg"></i></a>
+  
+</body>
+</html>
