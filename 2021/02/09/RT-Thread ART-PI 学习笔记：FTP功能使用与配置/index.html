@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>rt-thread art-pi 学习笔记：ftp功能和rttstudio git插件使用和配置 | 张竞豪的小岛</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  <meta name="keywords" content="ART-PIRT-Thread" />
+  
+  
+  
+  
+  <meta name="description" content="前言在之前的学习中，初步掌握了对文件系统的使用和配置，并将AP6126作为WiFi网卡上网。SD卡和flash作为文件的存储载体，若想向其中置入文件，SD卡通常采用读卡器的方式向其中置入文件，而flash需要通过更为复杂些烧写算法才能向flash里置入文件。rtthread提供了FTP服务器功能的软件包，可以在嵌入式平台上开启一个FTP服务器，电脑端通过网络和FTP工具向板子上已经挂载到文件系统的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RT-Thread ART-PI 学习笔记：FTP功能和RTTstudio Git插件使用和配置">
+<meta property="og:url" content="http://example.com/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9AFTP%E5%8A%9F%E8%83%BD%E4%BD%BF%E7%94%A8%E4%B8%8E%E9%85%8D%E7%BD%AE/index.html">
+<meta property="og:site_name" content="张竞豪的小岛">
+<meta property="og:description" content="前言在之前的学习中，初步掌握了对文件系统的使用和配置，并将AP6126作为WiFi网卡上网。SD卡和flash作为文件的存储载体，若想向其中置入文件，SD卡通常采用读卡器的方式向其中置入文件，而flash需要通过更为复杂些烧写算法才能向flash里置入文件。rtthread提供了FTP服务器功能的软件包，可以在嵌入式平台上开启一个FTP服务器，电脑端通过网络和FTP工具向板子上已经挂载到文件系统的">
+<meta property="og:locale">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815104631082.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815105606468.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815110422975.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815110542657.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815165428028.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815110644084.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815111054164.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815112003545.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815111910839.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815112146462.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815112658540.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815112539915.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815114013583.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815114128568.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815114646375.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815114916400.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815115020326.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815130003495.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815130318846.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815130536632.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815130725588.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815130953140.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815131501662.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815132054813.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815132125822.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815132144117.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815132256369.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815132330901.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815132406728.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815132434153.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815132505838.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815132529075.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815145212408.png">
+<meta property="article:published_time" content="2021-02-09T11:50:43.000Z">
+<meta property="article:modified_time" content="2021-08-16T14:19:39.543Z">
+<meta property="article:author" content="Fran Hawk">
+<meta property="article:tag" content="ART-PI">
+<meta property="article:tag" content="RT-Thread">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815104631082.png">
+  
+    <link rel="alternate" href="/atom.xml" title="张竞豪的小岛" type="application/atom+xml">
+  
+
+  
+
+  <link rel="icon" href="/css/images/mylogo.jpg">
+  <link rel="apple-touch-icon" href="/css/images/mylogo.jpg">
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Montserrat:700" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic" rel="stylesheet" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+  <style type="text/css">
+    @font-face{font-family:futura-pt; src:url("/css/fonts/FuturaPTBold.otf") format("woff");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt-light; src:url("/css/fonts/FuturaPTBook.otf") format("woff");font-weight:lighter;font-style:normal;}
+    @font-face{font-family:futura-pt-italic; src:url("/css/fonts/FuturaPTBookOblique.otf") format("woff");font-weight:400;font-style:italic;}
+}
+
+  </style>
+  
+<link rel="stylesheet" href="/css/style.css">
+
+
+  
+<script src="/js/jquery-3.1.1.min.js"></script>
+
+  
+<script src="/js/bootstrap.js"></script>
+
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.css" >
+
+  
+    
+<link rel="stylesheet" href="/css/dialog.css">
+
+  
+
+  
+
+  
+    <link rel="stylesheet" href="/css/header-post.css" >
+  
+
+  
+  
+  
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+
+
+  <body data-spy="scroll" data-target="#toc" data-offset="50">
+
+
+  
+  <div id="container">
+    <div id="wrap">
+      
+        <header>
+
+    <div id="allheader" class="navbar navbar-default navbar-static-top" role="navigation">
+        <div class="navbar-inner">
+          
+          <div class="container"> 
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+
+            
+              <a class="brand" style="
+                 margin-top: 0px;"  
+                href="#" data-toggle="modal" data-target="#myModal" >
+                  <img width="124px" height="124px" alt="Hike News" src="/css/images/mylogo.jpg">
+              </a>
+            
+            
+            <div class="navbar-collapse collapse">
+              <ul class="hnav navbar-nav">
+                
+                  <li> <a class="main-nav-link" href="/">Home</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/archives">Archives</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/categories">Categories</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/tags">Tags</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/about">About</a> </li>
+                
+                  <li><div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="" />
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="Type something..." />
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+</div></li>
+            </div>
+          </div>
+                
+      </div>
+    </div>
+
+</header>
+
+
+
+      
+            
+      <div id="content" class="outer">
+        
+          <section id="main" style="float:none;"><article id="post-RT-Thread ART-PI 学习笔记：FTP功能使用与配置" style="width: 75%; float:left;" class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" class="article-title" itemprop="name">
+      RT-Thread ART-PI 学习笔记：FTP功能和RTTstudio Git插件使用和配置
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9AFTP%E5%8A%9F%E8%83%BD%E4%BD%BF%E7%94%A8%E4%B8%8E%E9%85%8D%E7%BD%AE/" class="article-date">
+	  <time datetime="2021-02-09T11:50:43.000Z" itemprop="datePublished">2021-02-09</time>
+	</a>
+
+      
+      
+	<a class="article-views">
+	<span id="busuanzi_container_page_pv">
+		PV:<span id="busuanzi_value_page_pv"></span>
+	</span>
+	</a>
+
+      
+
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>在之前的学习中，初步掌握了对文件系统的使用和配置，并将AP6126作为WiFi网卡上网。SD卡和flash作为文件的存储载体，若想向其中置入文件，SD卡通常采用读卡器的方式向其中置入文件，而flash需要通过更为复杂些烧写算法才能向flash里置入文件。rtthread提供了FTP服务器功能的软件包，可以在嵌入式平台上开启一个FTP服务器，电脑端通过网络和FTP工具向板子上已经挂载到文件系统的SD卡和flash上烧写文件。</p>
+<p>同时本文还将记录RT-Thread Git工具的使用</p>
+<p>在实验过程中也借鉴了不少大佬博客里的操作，在这里感谢他们的分享</p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><p><a target="_blank" rel="noopener" href="https://club.rt-thread.org/ask/article/2429.html">Art_Pi学习笔记3：学习驱动wifi模块AP6212</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/sinat_31039061/article/details/109923612">【STM32H750】玩转ART-Pi（六）——添加FTP服务器</a></p>
+<h1 id="代码下载"><a href="#代码下载" class="headerlink" title="代码下载"></a>代码下载</h1><p>本文演示代码：<a target="_blank" rel="noopener" href="https://download.csdn.net/download/weixin_42487906/21110783?spm=1001.2014.3001.5503">https://download.csdn.net/download/weixin_42487906/21110783?spm=1001.2014.3001.5503</a></p>
+<h1 id="前期准备"><a href="#前期准备" class="headerlink" title="前期准备"></a>前期准备</h1><h2 id="软件准备"><a href="#软件准备" class="headerlink" title="软件准备"></a>软件准备</h2><ul>
+<li>RT-Thread Studio 2.1.1：一站式的 RT-Thread 开发工具，通过简单易用的图形化配置系统以及丰富的软件包和组件资源，让物联网开发变得简单和高效。<a target="_blank" rel="noopener" href="https://www.rt-thread.org/page/studio.html">官网链接</a></li>
+<li>Xshell或类似的串口调试工具</li>
+<li>Xftp或teamView等电脑端ftp工具</li>
+</ul>
+<h2 id="硬件准备"><a href="#硬件准备" class="headerlink" title="硬件准备"></a>硬件准备</h2><ul>
+<li>RT-Thread 推出的ART-PI STM32H750开发板</li>
+</ul>
+<h1 id="实验步骤"><a href="#实验步骤" class="headerlink" title="实验步骤"></a>实验步骤</h1><h2 id="创建项目"><a href="#创建项目" class="headerlink" title="创建项目"></a>创建项目</h2><p>创建基于开发板的项目，BSP版本为1.2.1，基于art-pi-wifi示例创建项目，这样就不用手动配置wifi模块了，并且示例项目带自动重连功能</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815104631082.png" alt="image-20210815104631082" style="zoom: 67%;" />
+
+
+
+<p>编译进开发板后串口持续显示没有找到wifi，并且阻碍finsh的输入，下面分析原因</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815105606468.png" alt="image-20210815105606468" style="zoom:50%;" />
+
+<p>这块开发板我再其他地方使用过，链接的是当时那个地方的wifi，wifi帐号和密码已经被记录在flash里面，为了重新链接我现在位置的wifi，我使用另外一个串口输入输出不冲突的串口终端链接新的wifi如下图</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815110422975.png" alt="image-20210815110422975" style="zoom:50%;" />
+
+<p>新的wifi链接成功</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815110542657.png" alt="image-20210815110542657" style="zoom:50%;" />
+
+<h2 id="配置文件系统"><a href="#配置文件系统" class="headerlink" title="配置文件系统"></a>配置文件系统</h2><p>使能sdcard和flash文件系统</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815165428028.png" alt="image-20210815165428028" style="zoom: 67%;" />
+
+<p>软件包中多出了littlefs这个文件系统，他是用来挂载板子上16MB的NOR Flash的其中一个分区的</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815110644084.png" alt="image-20210815110644084" style="zoom:50%;" />
+
+<p><img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815111054164.png" alt="image-20210815111054164"></p>
+<p>16MB的NOR FLASH分区如下图，其中easyflash也管理着其中的一个分区，可以用来保存wifi密码等一些参数</p>
+<p>而fliesystem分区就是被littlefs文件系统管理，最后将这个分区挂载到\flash这个文件夹中</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815112003545.png" alt="image-20210815112003545" style="zoom:50%;" />
+
+<p>编译并烧写程序</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815111910839.png" alt="image-20210815111910839" style="zoom: 50%;" />
+
+<p>mount to ‘/flash’ success，现在是没插sd卡，虽然ls发现根文件系统中有两个目录，但是只有flash实现了挂载，没有插sd卡所以sdcard是不能用的</p>
+<p><img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815112146462.png" alt="image-20210815112146462"></p>
+<p>若sd卡插上了串口终端会显示上面的信息</p>
+<h2 id="配置FTP服务器"><a href="#配置FTP服务器" class="headerlink" title="配置FTP服务器"></a>配置FTP服务器</h2><p>使能FTP Library</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815112658540.png" alt="image-20210815112658540" style="zoom: 67%;" />
+
+<p><a target="_blank" rel="noopener" href="https://github.com/loogg/agile_ftp">FTP库 github仓库</a></p>
+<p>使用说明如下图</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815112539915.png" alt="image-20210815112539915" style="zoom:50%;" />
+
+<p>根据使用说明，在mian.c中添加如下代码</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815114013583.png" alt="image-20210815114013583" style="zoom: 67%;" />
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;ftp.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> ART_PI_USING_FTP_LIB</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">ftp_server</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ftp_init(<span class="number">2048</span>,<span class="number">27</span>,<span class="number">100</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">MSH_CMD_EXPORT(ftp_server,start ftp server)</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+
+<p>编译并烧写进板子</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815114128568.png" alt="image-20210815114128568" style="zoom:50%;" />
+
+<p>命令行输入ftp_server启动FTP服务器，看到板子连上wifi，ip地址为192.168.1.103</p>
+<h2 id="电脑端连接FTP服务器"><a href="#电脑端连接FTP服务器" class="headerlink" title="电脑端连接FTP服务器"></a>电脑端连接FTP服务器</h2><p>电脑和开发板连接同一个wifi</p>
+<p>打开xftp或者类似的ftp工具，输入开发板的ip地址，输入用户名，密码，默认都是loogg</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815114646375.png" alt="image-20210815114646375" style="zoom:50%;" />
+
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815114916400.png" alt="image-20210815114916400" style="zoom:50%;" />
+
+<p><strong>记得不要勾选 使用被动模式</strong>，点击连接，就可以访问开发板上的文件系统了，可以相互传输文件</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815115020326.png" alt="image-20210815115020326" style="zoom:50%;" />
+
+<h2 id="RT-Thread-Git工具的使用"><a href="#RT-Thread-Git工具的使用" class="headerlink" title="RT-Thread Git工具的使用"></a>RT-Thread Git工具的使用</h2><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/Mculover666/article/details/104427445?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522162900356016780261970807%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&request_id=162900356016780261970807&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~first_rank_v2~rank_v29-2-104427445.pc_v2_rank_blog_default&utm_term=git&spm=1018.2226.3001.4450">参考博客</a></p>
+<p>git工具可以便捷地向管理软件版本，这里记录git工具的使用过程</p>
+<p>在工程右键打开小组，选择共享项目</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815130003495.png" alt="image-20210815130003495" style="zoom:50%;" />
+
+<p>创建代码仓库</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815130318846.png" alt="image-20210815130318846" style="zoom:50%;" />
+
+<p>然后点击完成，这时候小组下就出现了git的相关操作</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815130536632.png" alt="image-20210815130536632" style="zoom:50%;" />
+
+<p>点击提交</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815130725588.png" alt="image-20210815130725588" style="zoom:50%;" />
+
+<p>输入落实消息，点击commit提交到本地仓库，若配置了远程仓库如github，可以点击commit and push 提交到远端仓库</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815130953140.png" alt="image-20210815130953140" style="zoom:50%;" />
+
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815131501662.png" alt="image-20210815131501662" style="zoom:50%;" />
+
+<p>在Show in history中可以看到提交记录</p>
+<p>在github上创建一个代码仓库，clone这个仓库的git地址</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815132054813.png" alt="image-20210815132054813" style="zoom:50%;" />
+
+<p>在rtt studio的git 存储库右键远程仓库，点击create remote</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815132125822.png" alt="image-20210815132125822" style="zoom:50%;" />
+
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815132144117.png" alt="image-20210815132144117" style="zoom:50%;" />
+
+<p>将github仓库地址复制进去，要注意最近github不再允许采用邮箱和密码的方式访问，要申请一个token或ssl密钥，这个要各位再去查下该怎么操作</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815132256369.png" alt="image-20210815132256369" style="zoom:50%;" />
+
+<p>设置完成后点击保存，完成与远程仓库的连接</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815132330901.png" alt="image-20210815132330901" style="zoom:50%;" />
+
+<p>可以看到已经创建成功</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815132406728.png" alt="image-20210815132406728" style="zoom:67%;" />
+
+<p>在小组中点击push，代码上传到github上</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815132434153.png" alt="image-20210815132434153" style="zoom:67%;" />
+
+<p>点击Preview</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815132505838.png" alt="image-20210815132505838" style="zoom:67%;" />
+
+<p>点击推送</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815132529075.png" alt="image-20210815132529075" style="zoom:67%;" />
+
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815145212408.png" alt="image-20210815145212408" style="zoom:50%;" />
+
+<p>完成后进入github可以看到已经上传成功</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      <div>
+        <ul class="post-copyright">
+          <li class="post-copyright-author">
+          <strong>Post author:  </strong>Fran Hawk</a>
+          </li>
+          <li class="post-copyright-link">
+          <strong>Post link:  </strong>
+          <a href="/2021/02/09/RT-Thread ART-PI 学习笔记：FTP功能使用与配置/" target="_blank" title="RT-Thread ART-PI 学习笔记：FTP功能和RTTstudio Git插件使用和配置">http://example.com/2021/02/09/RT-Thread ART-PI 学习笔记：FTP功能使用与配置/</a>
+          </li>
+          <li class="post-copyright-license">
+            <strong>Copyright Notice:   </strong>
+            All articles in this blog are licensed under <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">CC BY-NC-ND 4.0</a>
+            unless stating additionally.
+          </li>
+         
+        </ul>
+<div>
+
+      
+      
+        
+	<div id="comment">
+		<!-- 来必力City版安装代码 -->
+		<div id="lv-container" data-id="city" data-uid="MTAyMC8yOTQ4MS82MDQ5">
+		<script type="text/javascript">
+		   (function(d, s) {
+		       var j, e = d.getElementsByTagName(s)[0];
+
+		       if (typeof LivereTower === 'function') { return; }
+
+		       j = d.createElement(s);
+		       j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+		       j.async = true;
+
+		       e.parentNode.insertBefore(j, e);
+		   })(document, 'script');
+		</script>
+		<noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+		</div>
+		<!-- City版安装代码已完成 -->
+	</div>
+
+
+
+      
+      
+        
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ART-PI/" rel="tag">ART-PI</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RT-Thread/" rel="tag">RT-Thread</a></li></ul>
+
+      
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2021/04/05/RISCV%20%E5%90%91%E9%87%8F%E6%8C%87%E4%BB%A4%E9%9B%86%E5%92%8CNICE%E6%8E%A5%E5%8F%A3%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          RISCV 向量指令集和NICE接口学习笔记
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9ATouchGFX%E4%BB%8E%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E4%B8%AD%E8%AF%BB%E5%8F%96%E5%9B%BE%E7%89%87/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">RT-Thread ART-PI 学习笔记：TouchGFX通过文件系统读取图片</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+<!-- Table of Contents -->
+
+  <aside id="toc-sidebar">
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">Contents</strong>
+    
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="nav-number">2.</span> <span class="nav-text">参考链接</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E4%B8%8B%E8%BD%BD"><span class="nav-number">3.</span> <span class="nav-text">代码下载</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E6%9C%9F%E5%87%86%E5%A4%87"><span class="nav-number">4.</span> <span class="nav-text">前期准备</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BD%AF%E4%BB%B6%E5%87%86%E5%A4%87"><span class="nav-number">4.1.</span> <span class="nav-text">软件准备</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A1%AC%E4%BB%B6%E5%87%86%E5%A4%87"><span class="nav-number">4.2.</span> <span class="nav-text">硬件准备</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C%E6%AD%A5%E9%AA%A4"><span class="nav-number">5.</span> <span class="nav-text">实验步骤</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E9%A1%B9%E7%9B%AE"><span class="nav-number">5.1.</span> <span class="nav-text">创建项目</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="nav-number">5.2.</span> <span class="nav-text">配置文件系统</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AEFTP%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="nav-number">5.3.</span> <span class="nav-text">配置FTP服务器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%B5%E8%84%91%E7%AB%AF%E8%BF%9E%E6%8E%A5FTP%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="nav-number">5.4.</span> <span class="nav-text">电脑端连接FTP服务器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RT-Thread-Git%E5%B7%A5%E5%85%B7%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-number">5.5.</span> <span class="nav-text">RT-Thread Git工具的使用</span></a></li></ol></li></ol>
+    
+    </div>
+  </aside>
+
+</section>
+        
+      </div>
+      
+      <footer id="footer">
+  
+
+  <div class="container">
+      	<div class="row">
+	      <p> Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/iTimeTraveler/hexo-theme-hiker" target="_blank">Hexo-theme-hiker</a> </p>
+	      <p id="copyRightEn">Copyright &copy; 2013 - 2021 张竞豪的小岛 All Rights Reserved.</p>
+	      
+	      
+    		<p class="busuanzi_uv">
+				UV : <span id="busuanzi_value_site_uv"></span> |  
+				PV : <span id="busuanzi_value_site_pv"></span>
+		    </p>
+  		   
+		</div>
+
+		
+  </div>
+</footer>
+
+
+<!-- min height -->
+
+<script>
+    var wrapdiv = document.getElementById("wrap");
+    var contentdiv = document.getElementById("content");
+    var allheader = document.getElementById("allheader");
+
+    wrapdiv.style.minHeight = document.body.offsetHeight + "px";
+    if (allheader != null) {
+      contentdiv.style.minHeight = document.body.offsetHeight - allheader.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    } else {
+      contentdiv.style.minHeight = document.body.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    }
+</script>
+    </div>
+    <!-- <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/categories" class="mobile-nav-link">Categories</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tags</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+</nav> -->
+    
+
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/scripts.js"></script>
+
+
+
+
+
+  
+<script src="/js/dialog.js"></script>
+
+
+
+
+
+
+
+
+
+	<div style="display: none;">
+    <script src="https://s95.cnzz.com/z_stat.php?id=1260716016&web_id=1260716016" language="JavaScript"></script>
+  </div>
+
+
+
+	<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js">
+	</script>
+
+
+
+
+
+
+  </div>
+
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="myModalLabel">设置</h2>
+      </div>
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+
+
+      <div class="modal-body">
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" onclick="javascript:setFontSize();" aria-expanded="true" aria-controls="collapseOne">
+              正文字号大小
+            </a>
+          </div>
+          <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+          <div class="panel-body">
+            您已调整页面字体大小
+          </div>
+        </div>
+      
+
+
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" onclick="javascript:setBackground();" aria-expanded="true" aria-controls="collapseTwo">
+              夜间护眼模式
+            </a>
+        </div>
+          <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+          <div class="panel-body">
+            夜间模式已经开启，再次单击按钮即可关闭 
+          </div>
+        </div>
+
+        <div>
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="true" aria-controls="collapseThree">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关 于&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+        </div>
+         <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+          <div class="panel-body">
+            张竞豪的小岛
+          </div>
+          <div class="panel-body">
+            Copyright © 2021 Fran Hawk All Rights Reserved.
+          </div>
+        </div>
+      </div>
+
+
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <div class="modal-footer">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+  
+  <a id="rocket" href="#top" class=""></a>
+  <script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+  
+    <a id="menu-switch"><i class="fa fa-bars fa-lg"></i></a>
+  
+</body>
+</html>

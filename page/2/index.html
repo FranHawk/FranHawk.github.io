@@ -221,6 +221,167 @@
         
           <section id="main" style="float:none;">
   
+    <article id="post-RT-Thread ART-PI 学习笔记：文件系统的使用和配置"  class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" itemprop="name">
+      <a class="article-title" href="/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9A%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9A%84%E4%BD%BF%E7%94%A8%E5%92%8C%E9%85%8D%E7%BD%AE/">RT-Thread ART-PI 学习笔记：文件系统的使用和配置</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9A%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9A%84%E4%BD%BF%E7%94%A8%E5%92%8C%E9%85%8D%E7%BD%AE/" class="article-date">
+	  <time datetime="2021-02-09T11:50:43.000Z" itemprop="datePublished">2021-02-09</time>
+	</a>
+
+      
+      
+      
+
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p class="article-excerpt-content">
+          前言文件管理功能是操作系统的重要组成。现代嵌入式设备需要对越来越多，越来越复杂的存储数据进行管理，于是嵌入式操作系统中1引入了文件系统来进行管理。
+文件系统是一套实现了数据的存储、分级组织、访问和获取等操作的抽象数据类型 (Abstract data type)，是一种用于向用户提供底层数据访问的机制。文件系统通常存储的基本单位是文件，即数据是按照一个个文件的方式进行组织。当文件比较多时，将导致文件繁多，不易分类、重名的问题。而文件夹作为一个容纳多个文件的容器而存在。
+参考资料RT-Thr...
+        </p>
+        <p class="article-more-link">
+          <a href="/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9A%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9A%84%E4%BD%BF%E7%94%A8%E5%92%8C%E9%85%8D%E7%BD%AE/#more">Read More</a>
+        </p>
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+      
+
+    </footer>
+  </div>
+  
+</article>
+
+<!-- Table of Contents -->
+
+
+  
+    <article id="post-RT-Thread ART-PI 学习笔记：网络功能使用和websocket软件包获取心知天气"  class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" itemprop="name">
+      <a class="article-title" href="/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9A%E7%BD%91%E7%BB%9C%E5%8A%9F%E8%83%BD%E4%BD%BF%E7%94%A8%E5%92%8Cwebsocket%E8%BD%AF%E4%BB%B6%E5%8C%85%E8%8E%B7%E5%8F%96%E5%BF%83%E7%9F%A5%E5%A4%A9%E6%B0%94/">RT-Thread ART-PI 学习笔记：网络功能使用和websocket软件包获取心知天气</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9A%E7%BD%91%E7%BB%9C%E5%8A%9F%E8%83%BD%E4%BD%BF%E7%94%A8%E5%92%8Cwebsocket%E8%BD%AF%E4%BB%B6%E5%8C%85%E8%8E%B7%E5%8F%96%E5%BF%83%E7%9F%A5%E5%A4%A9%E6%B0%94/" class="article-date">
+	  <time datetime="2021-02-09T11:50:43.000Z" itemprop="datePublished">2021-02-09</time>
+	</a>
+
+      
+      
+      
+
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p class="article-excerpt-content">
+          前言ART-PI自带的AP6212 WIFI模块，在RT-Thread Studio中来配置网络功能非常方便。本文主要配置ART-PI的网络功能，并且使能websocket软件包获取心知天气的数据。
+ART-PI的网络功能是基于RT-Thread的WLAN设备框架，详细内容可参考以下链接：
+参考资料
+RT-Thread WLAN文档
+参考博客1
+参考博客2
+参考博客3（重要）
+
+前期准备软件准备
+RT-Thread Studio：一站式的 RT-Thread 开发工具，通过简单易用的图形化...
+        </p>
+        <p class="article-more-link">
+          <a href="/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9A%E7%BD%91%E7%BB%9C%E5%8A%9F%E8%83%BD%E4%BD%BF%E7%94%A8%E5%92%8Cwebsocket%E8%BD%AF%E4%BB%B6%E5%8C%85%E8%8E%B7%E5%8F%96%E5%BF%83%E7%9F%A5%E5%A4%A9%E6%B0%94/#more">Read More</a>
+        </p>
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+      
+
+    </footer>
+  </div>
+  
+</article>
+
+<!-- Table of Contents -->
+
+
+  
+    <article id="post-物联网项目设计 （七） 基于RT-thread的MQTT协议物联网辉光钟"  class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" itemprop="name">
+      <a class="article-title" href="/2020/11/26/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%20%EF%BC%88%E4%B8%83%EF%BC%89%20%E5%9F%BA%E4%BA%8ERT-thread%E7%9A%84MQTT%E5%8D%8F%E8%AE%AE%E7%89%A9%E8%81%94%E7%BD%91%E8%BE%89%E5%85%89%E9%92%9F/">物联网项目设计 （七） 基于RT-thread的MQTT协议物联网辉光钟</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2020/11/26/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%20%EF%BC%88%E4%B8%83%EF%BC%89%20%E5%9F%BA%E4%BA%8ERT-thread%E7%9A%84MQTT%E5%8D%8F%E8%AE%AE%E7%89%A9%E8%81%94%E7%BD%91%E8%BE%89%E5%85%89%E9%92%9F/" class="article-date">
+	  <time datetime="2020-11-26T11:50:43.000Z" itemprop="datePublished">2020-11-26</time>
+	</a>
+
+      
+      
+      
+
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p class="article-excerpt-content">
+          概述这是物联网项目设计的完结篇，本来想今年上半年完成的，但是中间因为一些事情比较忙，耽误了。后来整个项目设计推倒重来，采用了新的技术栈。但是前面的开发经历也为我提供了不少经验，后面我采用rtthread物联网操作系统，极大的加快了开发进度，同时采用在线电路设计软件立创EDA，让我一个从来没画过电路图的人很快掌握了原理图和PCB的绘制，强推一波。辉光钟的制作网上有很多资料，我也参考了网上的很多资料，但是把辉光钟和物联网结合到一起我觉得是个不错的创意，于是就去做了。下面我先给出本项目的代码和电...
+        </p>
+        <p class="article-more-link">
+          <a href="/2020/11/26/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%20%EF%BC%88%E4%B8%83%EF%BC%89%20%E5%9F%BA%E4%BA%8ERT-thread%E7%9A%84MQTT%E5%8D%8F%E8%AE%AE%E7%89%A9%E8%81%94%E7%BD%91%E8%BE%89%E5%85%89%E9%92%9F/#more">Read More</a>
+        </p>
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+      
+
+    </footer>
+  </div>
+  
+</article>
+
+<!-- Table of Contents -->
+
+
+  
     <article id="post-基于MQTT应用层协议的物联网家庭温湿度监测系统"  class="article article-type-post" itemscope itemprop="blogPost" >
   <div id="articleInner" class="article-inner">
     
@@ -607,173 +768,11 @@ MQTT.fx调试软件，该软件是MQTT主流的调试软件，软件安装方...
 
 
   
-    <article id="post-STM32 CubeMX 安装与使用入门（三）printf重定向，UART串口配置及GPIO按键中断"  class="article article-type-post" itemscope itemprop="blogPost" >
-  <div id="articleInner" class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 class="thumb" itemprop="name">
-      <a class="article-title" href="/2020/02/22/STM32%20CubeMX%20%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8%E5%85%A5%E9%97%A8%EF%BC%88%E4%B8%89%EF%BC%89printf%E9%87%8D%E5%AE%9A%E5%90%91%EF%BC%8CUART%E4%B8%B2%E5%8F%A3%E9%85%8D%E7%BD%AE%E5%8F%8AGPIO%E6%8C%89%E9%94%AE%E4%B8%AD%E6%96%AD/">STM32 CubeMX 安装与使用入门（三）printf重定向，UART串口配置及GPIO按键中断</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-meta">
-      
-	<a href="/2020/02/22/STM32%20CubeMX%20%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8%E5%85%A5%E9%97%A8%EF%BC%88%E4%B8%89%EF%BC%89printf%E9%87%8D%E5%AE%9A%E5%90%91%EF%BC%8CUART%E4%B8%B2%E5%8F%A3%E9%85%8D%E7%BD%AE%E5%8F%8AGPIO%E6%8C%89%E9%94%AE%E4%B8%AD%E6%96%AD/" class="article-date">
-	  <time datetime="2020-02-22T11:50:43.000Z" itemprop="datePublished">2020-02-22</time>
-	</a>
-
-      
-      
-      
-
-    </div>
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p class="article-excerpt-content">
-          简介这部分内容介绍如何使用CubeMx配置UART串口查询式发送，和GPIO中断式按键控制。在这部分结束后，最后会介绍如何重定向printf到串口。
-硬件准备笔者使用正点原子战舰V3开发板，使用任何主控是STM32的硬件设备并且带有GPIO控制的LED和按键，就可以，硬件上没有什么限制。开发板上自带usb转串口，用开发板链接数据线到电脑。
-软件准备
-STM32CubeMx
- Keil MDK，IAR或类似的编译环境
-
-实际操作部分需求分析使用GPIO中断的方式扫描按键来控制LED的亮灭，并...
-        </p>
-        <p class="article-more-link">
-          <a href="/2020/02/22/STM32%20CubeMX%20%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8%E5%85%A5%E9%97%A8%EF%BC%88%E4%B8%89%EF%BC%89printf%E9%87%8D%E5%AE%9A%E5%90%91%EF%BC%8CUART%E4%B8%B2%E5%8F%A3%E9%85%8D%E7%BD%AE%E5%8F%8AGPIO%E6%8C%89%E9%94%AE%E4%B8%AD%E6%96%AD/#more">Read More</a>
-        </p>
-      
-    </div>
-    <footer class="article-footer">
-      
-      
-      
-      
-
-    </footer>
-  </div>
-  
-</article>
-
-<!-- Table of Contents -->
-
-
-  
-    <article id="post-STM32 CubeMX 安装与使用入门（二）GPIO的使用，点亮LED使用按键"  class="article article-type-post" itemscope itemprop="blogPost" >
-  <div id="articleInner" class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 class="thumb" itemprop="name">
-      <a class="article-title" href="/2020/02/22/STM32%20CubeMX%20%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8%E5%85%A5%E9%97%A8%EF%BC%88%E4%BA%8C%EF%BC%89GPIO%E7%9A%84%E4%BD%BF%E7%94%A8%EF%BC%8C%E7%82%B9%E4%BA%AELED%E4%BD%BF%E7%94%A8%E6%8C%89%E9%94%AE/">STM32 CubeMX 安装与使用入门（二）GPIO的使用，点亮LED使用按键</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-meta">
-      
-	<a href="/2020/02/22/STM32%20CubeMX%20%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8%E5%85%A5%E9%97%A8%EF%BC%88%E4%BA%8C%EF%BC%89GPIO%E7%9A%84%E4%BD%BF%E7%94%A8%EF%BC%8C%E7%82%B9%E4%BA%AELED%E4%BD%BF%E7%94%A8%E6%8C%89%E9%94%AE/" class="article-date">
-	  <time datetime="2020-02-22T11:50:43.000Z" itemprop="datePublished">2020-02-22</time>
-	</a>
-
-      
-      
-      
-
-    </div>
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p class="article-excerpt-content">
-          简介这篇文章介绍如何使用CubeMx创建一个简单的LED工程，该工程是一个MDK工程，当然也可以使用CubeMx创建基于其他编译器的工程。作为入门，我们的第一个工程仅点亮一个LED。并且在这个工程上进行修改，增加一个按键功能，展示CubeMx修改工程的功能。
-硬件准备笔者使用正点原子战舰V3开发板，使用任何主控是STM32的硬件设备并且带有GPIO控制的LED和按键，就可以，硬件上没有什么限制。
-软件准备
-STM32CubeMx
- Keil MDK，IAR或类似的编译环境实际操作部分
-
-1...
-        </p>
-        <p class="article-more-link">
-          <a href="/2020/02/22/STM32%20CubeMX%20%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8%E5%85%A5%E9%97%A8%EF%BC%88%E4%BA%8C%EF%BC%89GPIO%E7%9A%84%E4%BD%BF%E7%94%A8%EF%BC%8C%E7%82%B9%E4%BA%AELED%E4%BD%BF%E7%94%A8%E6%8C%89%E9%94%AE/#more">Read More</a>
-        </p>
-      
-    </div>
-    <footer class="article-footer">
-      
-      
-      
-      
-
-    </footer>
-  </div>
-  
-</article>
-
-<!-- Table of Contents -->
-
-
-  
-    <article id="post-STM32 CubeMX 安装与使用入门（一）"  class="article article-type-post" itemscope itemprop="blogPost" >
-  <div id="articleInner" class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 class="thumb" itemprop="name">
-      <a class="article-title" href="/2020/02/21/STM32%20CubeMX%20%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8%E5%85%A5%E9%97%A8%EF%BC%88%E4%B8%80%EF%BC%89/">STM32 CubeMX 安装与使用入门（一）</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-meta">
-      
-	<a href="/2020/02/21/STM32%20CubeMX%20%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8%E5%85%A5%E9%97%A8%EF%BC%88%E4%B8%80%EF%BC%89/" class="article-date">
-	  <time datetime="2020-02-21T11:50:43.000Z" itemprop="datePublished">2020-02-21</time>
-	</a>
-
-      
-      
-      
-
-    </div>
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p class="article-excerpt-content">
-          使用CubeMx的原因 笔者大学期间一直从事嵌入式项目的开发工作，并且参加了嵌入式相关的比赛如全国大学生智能汽车竞赛等，并取得了一定的成绩。在从事嵌入式开发的过程中， 我发现意法半导体公司推出的微控制器STM32系列，中文资料非常多，官方提供的软硬件支持也很多，十分利于开发。我的STM32之旅是从正点原子的STM32战舰开发板开始的，它搭载了一颗Cortex-M3内核的芯片，正点原子提供的资料也非常的全，让我从此爱上了STM32系列的芯片。在最近的开发过程中我又接触到了 CubeMx，他是...
-        </p>
-        <p class="article-more-link">
-          <a href="/2020/02/21/STM32%20CubeMX%20%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8%E5%85%A5%E9%97%A8%EF%BC%88%E4%B8%80%EF%BC%89/#more">Read More</a>
-        </p>
-      
-    </div>
-    <footer class="article-footer">
-      
-      
-      
-      
-
-    </footer>
-  </div>
-  
-</article>
-
-<!-- Table of Contents -->
-
-
-  
 
 
   <nav id="page-nav">
     
-    <a class="extend prev" rel="prev" href="/">&amp;laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span>
+    <a class="extend prev" rel="prev" href="/">&amp;laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/3/">Next &amp;raquo;</a>
   </nav>
 
 </section>
