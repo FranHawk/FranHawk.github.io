@@ -81,7 +81,7 @@
     <header class="header" itemscope itemtype="http://schema.org/WPHeader">
       <div class="header-inner"><div class="site-brand-container">
   <div class="site-nav-toggle">
-    <div class="toggle" aria-label="Navigationsleiste an/ausschalten">
+    <div class="toggle" aria-label="تشغيل شريط التصفح">
       <span class="toggle-line toggle-line-first"></span>
       <span class="toggle-line toggle-line-middle"></span>
       <span class="toggle-line toggle-line-last"></span>
@@ -110,12 +110,12 @@
   <ul id="menu" class="main-menu menu">
         <li class="menu-item menu-item-home">
 
-    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Startseite</a>
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archiv</a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>الأرشيفات</a>
 
   </li>
   </ul>
@@ -145,188 +145,6 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="cn">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9ATouchGFX%E7%9A%84%E4%BD%BF%E7%94%A8%E5%92%8C%E9%85%8D%E7%BD%AE/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Fran Hawk">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="张竞豪的小岛">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9ATouchGFX%E7%9A%84%E4%BD%BF%E7%94%A8%E5%92%8C%E9%85%8D%E7%BD%AE/" class="post-title-link" itemprop="url">RT-Thread ART-PI 学习笔记：TouchGFX的使用和配置</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Veröffentlicht am</span>
-
-              <time title="Erstellt: 2021-02-09 19:50:43" itemprop="dateCreated datePublished" datetime="2021-02-09T19:50:43+08:00">2021-02-09</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Bearbeitet am</span>
-                <time title="Geändert am: 2021-08-13 10:01:01" itemprop="dateModified" datetime="2021-08-13T10:01:01+08:00">2021-08-13</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>touchgfx是一款嵌入式GUI中间件，2018年秋被意法半导体收购，官方文档全面，且有专用的GUI设计软件，适合用于STM32平台上GUI界面的开发。本文是记录基于RT-Thread推出的ART-PI，stm32h750开发板，对touchgfx进行移植和初步使用。</p>
-<p><a target="_blank" rel="noopener" href="https://support.touchgfx.com/docs/introduction/welcome">touchgfx文档</a></p>
-<h1 id="前期准备"><a href="#前期准备" class="headerlink" title="前期准备"></a>前期准备</h1><h2 id="软件准备"><a href="#软件准备" class="headerlink" title="软件准备"></a>软件准备</h2><ul>
-<li>RT-Thread Studio：一站式的 RT-Thread 开发工具，通过简单易用的图形化配置系统以及丰富的软件包和组件资源，让物联网开发变得简单和高效。<a target="_blank" rel="noopener" href="https://www.rt-thread.org/page/studio.html">官网链接</a></li>
-<li>TouchGFX Designer：TouchGFX 的GUI设计工具 <a target="_blank" rel="noopener" href="https://www.st.com/zh/development-tools/touchgfxdesigner.html">官网链接</a></li>
-</ul>
-<h2 id="硬件准备"><a href="#硬件准备" class="headerlink" title="硬件准备"></a>硬件准备</h2><ul>
-<li>RT-Thread 推出的ART-PI STM32H750开发板</li>
-<li>正点原子 800*480 4.3寸 RGBLCD屏，搭载GT9147触摸芯片</li>
-</ul>
-<h1 id="配置步骤"><a href="#配置步骤" class="headerlink" title="配置步骤"></a>配置步骤</h1><h2 id="下载SDK"><a href="#下载SDK" class="headerlink" title="下载SDK"></a>下载SDK</h2><p>在RT-Thread Studio的SDK管理器中下载ART-PI的SDK<br><img src="https://img-blog.csdnimg.cn/20210205103949224.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<h2 id="新建工程"><a href="#新建工程" class="headerlink" title="新建工程"></a>新建工程</h2><p>基于开发板建立模板工程<br><img src="https://img-blog.csdnimg.cn/20210205104351624.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<h2 id="打开touchgfx库"><a href="#打开touchgfx库" class="headerlink" title="打开touchgfx库"></a>打开touchgfx库</h2><p>art-pi官方已经集成了touchgfx的库，如果是其他开发板，需要在软件包库里面找touchgfx的软件包<br><img src="https://img-blog.csdnimg.cn/20210205104728598.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<h2 id="打开DMA2D和CRC外设"><a href="#打开DMA2D和CRC外设" class="headerlink" title="打开DMA2D和CRC外设"></a>打开DMA2D和CRC外设</h2><p>DMA2D是stm32上的硬件图形加速器，详细内容参考 <a target="_blank" rel="noopener" href="https://www.cnblogs.com/yangguang-it/p/7237791.html">参考博客</a><br><img src="https://img-blog.csdnimg.cn/20210205105358794.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<h2 id="配置c-编译规则"><a href="#配置c-编译规则" class="headerlink" title="配置c++编译规则"></a>配置c++编译规则</h2><p>根据官方文档给出的要求配置c++编译规则 <a target="_blank" rel="noopener" href="https://support.touchgfx.com/docs/development/ui-development/working-with-touchgfx/using-ides-with-touchgfx">文档链接</a><br><img src="https://img-blog.csdnimg.cn/20210205110232506.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20210205110403433.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<h2 id="清空项目并重新编译"><a href="#清空项目并重新编译" class="headerlink" title="清空项目并重新编译"></a>清空项目并重新编译</h2><p>重新编译并且烧写程序进开发板，这时发现已经有示例界面出现了，但是还没有触摸功能，下一步就是打开触摸功能。<br><img src="https://img-blog.csdnimg.cn/20210205110452313.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20210205111012963.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<h2 id="使能触摸芯片"><a href="#使能触摸芯片" class="headerlink" title="使能触摸芯片"></a>使能触摸芯片</h2><p>添加gt9147触摸芯片软件包，使能IIC协议<img src="https://img-blog.csdnimg.cn/20210205111213527.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20210205111647314.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<h2 id="编译并下载"><a href="#编译并下载" class="headerlink" title="编译并下载"></a>编译并下载</h2><p>正常来说这一步触摸功能就已经OK了，但是我的这个显示屏还是有问题，通过打开调试终端发现，程序hard fault.说明是配置gt9147的过程中出了问题，终端显示point_num=10,但是通过查阅gt9147的芯片手册发现gt9147最多5点触控，应该是这里出了问题。<br><img src="https://img-blog.csdnimg.cn/20210205112043252.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>最后找到了touchgfx查询触摸坐标的接口，发现之前的point_num=10传给了rt_device_read去读gt9147，但是最多只能读5个点，导致报错。这个地方需要改过来。后面还发现触摸坐标是反的，于是把xy坐标计算的地方也要相应的改过来。<br><img src="https://img-blog.csdnimg.cn/20210205112604969.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>下图是修改之后的代码，修改之后重新编译下载，没有报错，触摸功能正常使用，终端正常显示。<br><img src="https://img-blog.csdnimg.cn/20210205113104105.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20210205113213659.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<h2 id="对不同屏幕的适配"><a href="#对不同屏幕的适配" class="headerlink" title="对不同屏幕的适配"></a>对不同屏幕的适配</h2><p>如果屏幕分辨率和色深不一样的话需要在这三个文件中进行更改。<br><img src="https://img-blog.csdnimg.cn/20210205114047898.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<p><img src="https://img-blog.csdnimg.cn/20210205113637674.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20210205113659467.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<h1 id="GUI设计"><a href="#GUI设计" class="headerlink" title="GUI设计"></a>GUI设计</h1><ul>
-<li>安装好TouchGFX Designer后，打开art_pi.touchgfx</li>
-<li>添加一个文本框输入helloworld，点击RUN Simulator运行仿真（需要安装VS2013以上版本）</li>
-</ul>
-<p><img src="https://img-blog.csdnimg.cn/20210205114604958.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>下图是仿真界面<br><img src="https://img-blog.csdnimg.cn/20210205114623446.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<p>Generate Code生成代码，并在工程中更新软件包（重要），因为Generate Code生成的是基于freetos的代码，更新软件包换成适配rtt的。<br><img src="https://img-blog.csdnimg.cn/20210205115334836.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<p>编译下载观察现象<br><img src="https://img-blog.csdnimg.cn/20210205115223439.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>界面修改成功，为进一步的界面设计和修改奠定基础。</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="cn">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9A%E7%BD%91%E7%BB%9C%E5%8A%9F%E8%83%BD%E4%BD%BF%E7%94%A8%E5%92%8Cwebsocket%E8%BD%AF%E4%BB%B6%E5%8C%85%E8%8E%B7%E5%8F%96%E5%BF%83%E7%9F%A5%E5%A4%A9%E6%B0%94/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Fran Hawk">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="张竞豪的小岛">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9A%E7%BD%91%E7%BB%9C%E5%8A%9F%E8%83%BD%E4%BD%BF%E7%94%A8%E5%92%8Cwebsocket%E8%BD%AF%E4%BB%B6%E5%8C%85%E8%8E%B7%E5%8F%96%E5%BF%83%E7%9F%A5%E5%A4%A9%E6%B0%94/" class="post-title-link" itemprop="url">RT-Thread ART-PI 学习笔记：网络功能使用和websocket软件包获取心知天气</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Veröffentlicht am</span>
-
-              <time title="Erstellt: 2021-02-09 19:50:43" itemprop="dateCreated datePublished" datetime="2021-02-09T19:50:43+08:00">2021-02-09</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Bearbeitet am</span>
-                <time title="Geändert am: 2021-08-13 10:01:01" itemprop="dateModified" datetime="2021-08-13T10:01:01+08:00">2021-08-13</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>ART-PI自带的AP6212 WIFI模块，在RT-Thread Studio中来配置网络功能非常方便。本文主要配置ART-PI的网络功能，并且使能websocket软件包获取心知天气的数据。</p>
-<p>ART-PI的网络功能是基于RT-Thread的WLAN设备框架，详细内容可参考以下链接：</p>
-<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
-<li><a target="_blank" rel="noopener" href="https://www.rt-thread.org/document/site/programming-manual/device/wlan/wlan/">RT-Thread WLAN文档</a></li>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/sinat_31039061/article/details/109763903">参考博客1</a></li>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/sinat_31039061/article/details/104200110">参考博客2</a></li>
-<li><a target="_blank" rel="noopener" href="https://club.rt-thread.org/ask/article/2429.html">参考博客3</a>（重要）</li>
-</ul>
-<h1 id="前期准备"><a href="#前期准备" class="headerlink" title="前期准备"></a>前期准备</h1><h2 id="软件准备"><a href="#软件准备" class="headerlink" title="软件准备"></a>软件准备</h2><ul>
-<li>RT-Thread Studio：一站式的 RT-Thread 开发工具，通过简单易用的图形化配置系统以及丰富的软件包和组件资源，让物联网开发变得简单和高效。<a target="_blank" rel="noopener" href="https://www.rt-thread.org/page/studio.html">官网链接</a></li>
-</ul>
-<h2 id="硬件准备"><a href="#硬件准备" class="headerlink" title="硬件准备"></a>硬件准备</h2><ul>
-<li>RT-Thread 推出的ART-PI STM32H750开发板</li>
-</ul>
-<h1 id="添加网络功能"><a href="#添加网络功能" class="headerlink" title="添加网络功能"></a>添加网络功能</h1><p>直接在自己的工程中使能AP6212库即可，编译下载后使用WLAN设备驱动的命令即可观察到现象。<br><img src="https://img-blog.csdnimg.cn/20210209110957714.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20210209111020980.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<h2 id="通过官方提供的例程直接使能网络功能"><a href="#通过官方提供的例程直接使能网络功能" class="headerlink" title="通过官方提供的例程直接使能网络功能"></a>通过官方提供的例程直接使能网络功能</h2><p>官方的示例工程不仅完成了网络功能，还通过配置easyflash实现了wifi自动重连功能，值得借鉴，自动重连功能的实现流程见参考博客3.<br><img src="https://img-blog.csdnimg.cn/20210209111713621.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<h2 id="编译下载观察现象"><a href="#编译下载观察现象" class="headerlink" title="编译下载观察现象"></a>编译下载观察现象</h2><p><img src="https://img-blog.csdnimg.cn/20210209112335109.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>由于有自动重连功能，我烧写进板子后，自动搜索easyflash区域是否有相应数据，如果有，就用这个数据重连WiFi。</p>
-<h1 id="配置RTC和NTP软件包"><a href="#配置RTC和NTP软件包" class="headerlink" title="配置RTC和NTP软件包"></a>配置RTC和NTP软件包</h1><p><a target="_blank" rel="noopener" href="https://www.rt-thread.org/document/site/programming-manual/device/rtc/rtc/">RTC设备驱动文档</a></p>
-<p>因为webclient软件包中若开启支持HTTPS加密的网络协议，就必须使板子上的时间和网络时间同步，否则无法使用HTTPS获取网络上的数据。需要配置软件模拟RTC，并且使能netutils软件包中的ntp协议，使RTC自动同步网络时间。</p>
-<p>使能软件模拟RTC<br><img src="https://img-blog.csdnimg.cn/20210209113546370.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>使能netutils软件包，并且使能ntp协议<br><img src="https://img-blog.csdnimg.cn/20210209113652622.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>这时候会发现RTC设备已经自动配置了自动同步网络时间的功能。<br><img src="https://img-blog.csdnimg.cn/20210209113738477.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>编译下载观察现象，会发现网络时间同步成功<br><img src="https://img-blog.csdnimg.cn/20210209113931291.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<h1 id="配置webclient软件包"><a href="#配置webclient软件包" class="headerlink" title="配置webclient软件包"></a>配置webclient软件包</h1><p>TLS模式中选择MbedTLS，并且使能获取发布示例<br><img src="https://img-blog.csdnimg.cn/202102091143247.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<p><img src="https://img-blog.csdnimg.cn/20210209114225826.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>保存配置并编译</p>
-<h1 id="心知天气配置"><a href="#心知天气配置" class="headerlink" title="心知天气配置"></a>心知天气配置</h1><p><a target="_blank" rel="noopener" href="https://www.seniverse.com/">https://www.seniverse.com/</a> 心知天气网址<br>注册并购买一个免费版的就可以了，在控制台上可以看到这样的信息<br><img src="https://img-blog.csdnimg.cn/20210209114850280.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<p>找到文档中逐日天气预报和昨日天气<br><img src="https://img-blog.csdnimg.cn/20210209115025778.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>点击链接就可以看到效果。location改成ip，就可以看到当地的天气。<br><img src="https://img-blog.csdnimg.cn/2021020911553521.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>复制这个链接，在开发板上实验即可观察到现象</p>
-<h1 id="获取天气实验"><a href="#获取天气实验" class="headerlink" title="获取天气实验"></a>获取天气实验</h1><p>因为链接比较长，需要把finsh长度设置的长一点。串口助手的长度也要相应设长。<br><img src="https://img-blog.csdnimg.cn/20210209115647329.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<p>编译烧写，并将刚才的网址输入终端，即可看到现象，https还有点问题，但是已经不影响使用了。<br><img src="https://img-blog.csdnimg.cn/20210209121156574.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>改成http就没问题了<br><img src="https://img-blog.csdnimg.cn/20210209121433933.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<p>返回的数据是json格式的，使用cjson软件包就可以解析数据了。</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="cn">
     <link itemprop="mainEntityOfPage" href="http://example.com/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9A%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9A%84%E4%BD%BF%E7%94%A8%E5%92%8C%E9%85%8D%E7%BD%AE/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -349,16 +167,16 @@
               <span class="post-meta-item-icon">
                 <i class="far fa-calendar"></i>
               </span>
-              <span class="post-meta-item-text">Veröffentlicht am</span>
+              <span class="post-meta-item-text">نُشر في</span>
 
-              <time title="Erstellt: 2021-02-09 19:50:43" itemprop="dateCreated datePublished" datetime="2021-02-09T19:50:43+08:00">2021-02-09</time>
+              <time title="أُنشأ: 2021-02-09 19:50:43" itemprop="dateCreated datePublished" datetime="2021-02-09T19:50:43+08:00">2021-02-09</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
-                <span class="post-meta-item-text">Bearbeitet am</span>
-                <time title="Geändert am: 2021-08-16 15:12:28" itemprop="dateModified" datetime="2021-08-16T15:12:28+08:00">2021-08-16</time>
+                <span class="post-meta-item-text">عُدل في</span>
+                <time title="عُدل: 2021-08-16 15:12:28" itemprop="dateModified" datetime="2021-08-16T15:12:28+08:00">2021-08-16</time>
               </span>
 
           
@@ -468,6 +286,188 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="cn">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9A%E7%BD%91%E7%BB%9C%E5%8A%9F%E8%83%BD%E4%BD%BF%E7%94%A8%E5%92%8Cwebsocket%E8%BD%AF%E4%BB%B6%E5%8C%85%E8%8E%B7%E5%8F%96%E5%BF%83%E7%9F%A5%E5%A4%A9%E6%B0%94/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Fran Hawk">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="张竞豪的小岛">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9A%E7%BD%91%E7%BB%9C%E5%8A%9F%E8%83%BD%E4%BD%BF%E7%94%A8%E5%92%8Cwebsocket%E8%BD%AF%E4%BB%B6%E5%8C%85%E8%8E%B7%E5%8F%96%E5%BF%83%E7%9F%A5%E5%A4%A9%E6%B0%94/" class="post-title-link" itemprop="url">RT-Thread ART-PI 学习笔记：网络功能使用和websocket软件包获取心知天气</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">نُشر في</span>
+
+              <time title="أُنشأ: 2021-02-09 19:50:43" itemprop="dateCreated datePublished" datetime="2021-02-09T19:50:43+08:00">2021-02-09</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">عُدل في</span>
+                <time title="عُدل: 2021-08-13 10:01:01" itemprop="dateModified" datetime="2021-08-13T10:01:01+08:00">2021-08-13</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>ART-PI自带的AP6212 WIFI模块，在RT-Thread Studio中来配置网络功能非常方便。本文主要配置ART-PI的网络功能，并且使能websocket软件包获取心知天气的数据。</p>
+<p>ART-PI的网络功能是基于RT-Thread的WLAN设备框架，详细内容可参考以下链接：</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://www.rt-thread.org/document/site/programming-manual/device/wlan/wlan/">RT-Thread WLAN文档</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/sinat_31039061/article/details/109763903">参考博客1</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/sinat_31039061/article/details/104200110">参考博客2</a></li>
+<li><a target="_blank" rel="noopener" href="https://club.rt-thread.org/ask/article/2429.html">参考博客3</a>（重要）</li>
+</ul>
+<h1 id="前期准备"><a href="#前期准备" class="headerlink" title="前期准备"></a>前期准备</h1><h2 id="软件准备"><a href="#软件准备" class="headerlink" title="软件准备"></a>软件准备</h2><ul>
+<li>RT-Thread Studio：一站式的 RT-Thread 开发工具，通过简单易用的图形化配置系统以及丰富的软件包和组件资源，让物联网开发变得简单和高效。<a target="_blank" rel="noopener" href="https://www.rt-thread.org/page/studio.html">官网链接</a></li>
+</ul>
+<h2 id="硬件准备"><a href="#硬件准备" class="headerlink" title="硬件准备"></a>硬件准备</h2><ul>
+<li>RT-Thread 推出的ART-PI STM32H750开发板</li>
+</ul>
+<h1 id="添加网络功能"><a href="#添加网络功能" class="headerlink" title="添加网络功能"></a>添加网络功能</h1><p>直接在自己的工程中使能AP6212库即可，编译下载后使用WLAN设备驱动的命令即可观察到现象。<br><img src="https://img-blog.csdnimg.cn/20210209110957714.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20210209111020980.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h2 id="通过官方提供的例程直接使能网络功能"><a href="#通过官方提供的例程直接使能网络功能" class="headerlink" title="通过官方提供的例程直接使能网络功能"></a>通过官方提供的例程直接使能网络功能</h2><p>官方的示例工程不仅完成了网络功能，还通过配置easyflash实现了wifi自动重连功能，值得借鉴，自动重连功能的实现流程见参考博客3.<br><img src="https://img-blog.csdnimg.cn/20210209111713621.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h2 id="编译下载观察现象"><a href="#编译下载观察现象" class="headerlink" title="编译下载观察现象"></a>编译下载观察现象</h2><p><img src="https://img-blog.csdnimg.cn/20210209112335109.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>由于有自动重连功能，我烧写进板子后，自动搜索easyflash区域是否有相应数据，如果有，就用这个数据重连WiFi。</p>
+<h1 id="配置RTC和NTP软件包"><a href="#配置RTC和NTP软件包" class="headerlink" title="配置RTC和NTP软件包"></a>配置RTC和NTP软件包</h1><p><a target="_blank" rel="noopener" href="https://www.rt-thread.org/document/site/programming-manual/device/rtc/rtc/">RTC设备驱动文档</a></p>
+<p>因为webclient软件包中若开启支持HTTPS加密的网络协议，就必须使板子上的时间和网络时间同步，否则无法使用HTTPS获取网络上的数据。需要配置软件模拟RTC，并且使能netutils软件包中的ntp协议，使RTC自动同步网络时间。</p>
+<p>使能软件模拟RTC<br><img src="https://img-blog.csdnimg.cn/20210209113546370.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>使能netutils软件包，并且使能ntp协议<br><img src="https://img-blog.csdnimg.cn/20210209113652622.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>这时候会发现RTC设备已经自动配置了自动同步网络时间的功能。<br><img src="https://img-blog.csdnimg.cn/20210209113738477.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>编译下载观察现象，会发现网络时间同步成功<br><img src="https://img-blog.csdnimg.cn/20210209113931291.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h1 id="配置webclient软件包"><a href="#配置webclient软件包" class="headerlink" title="配置webclient软件包"></a>配置webclient软件包</h1><p>TLS模式中选择MbedTLS，并且使能获取发布示例<br><img src="https://img-blog.csdnimg.cn/202102091143247.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<p><img src="https://img-blog.csdnimg.cn/20210209114225826.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>保存配置并编译</p>
+<h1 id="心知天气配置"><a href="#心知天气配置" class="headerlink" title="心知天气配置"></a>心知天气配置</h1><p><a target="_blank" rel="noopener" href="https://www.seniverse.com/">https://www.seniverse.com/</a> 心知天气网址<br>注册并购买一个免费版的就可以了，在控制台上可以看到这样的信息<br><img src="https://img-blog.csdnimg.cn/20210209114850280.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<p>找到文档中逐日天气预报和昨日天气<br><img src="https://img-blog.csdnimg.cn/20210209115025778.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>点击链接就可以看到效果。location改成ip，就可以看到当地的天气。<br><img src="https://img-blog.csdnimg.cn/2021020911553521.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>复制这个链接，在开发板上实验即可观察到现象</p>
+<h1 id="获取天气实验"><a href="#获取天气实验" class="headerlink" title="获取天气实验"></a>获取天气实验</h1><p>因为链接比较长，需要把finsh长度设置的长一点。串口助手的长度也要相应设长。<br><img src="https://img-blog.csdnimg.cn/20210209115647329.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<p>编译烧写，并将刚才的网址输入终端，即可看到现象，https还有点问题，但是已经不影响使用了。<br><img src="https://img-blog.csdnimg.cn/20210209121156574.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>改成http就没问题了<br><img src="https://img-blog.csdnimg.cn/20210209121433933.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<p>返回的数据是json格式的，使用cjson软件包就可以解析数据了。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="cn">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9ATouchGFX%E7%9A%84%E4%BD%BF%E7%94%A8%E5%92%8C%E9%85%8D%E7%BD%AE/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Fran Hawk">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="张竞豪的小岛">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9ATouchGFX%E7%9A%84%E4%BD%BF%E7%94%A8%E5%92%8C%E9%85%8D%E7%BD%AE/" class="post-title-link" itemprop="url">RT-Thread ART-PI 学习笔记：TouchGFX的使用和配置</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">نُشر في</span>
+
+              <time title="أُنشأ: 2021-02-09 19:50:43" itemprop="dateCreated datePublished" datetime="2021-02-09T19:50:43+08:00">2021-02-09</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">عُدل في</span>
+                <time title="عُدل: 2021-08-13 10:01:01" itemprop="dateModified" datetime="2021-08-13T10:01:01+08:00">2021-08-13</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>touchgfx是一款嵌入式GUI中间件，2018年秋被意法半导体收购，官方文档全面，且有专用的GUI设计软件，适合用于STM32平台上GUI界面的开发。本文是记录基于RT-Thread推出的ART-PI，stm32h750开发板，对touchgfx进行移植和初步使用。</p>
+<p><a target="_blank" rel="noopener" href="https://support.touchgfx.com/docs/introduction/welcome">touchgfx文档</a></p>
+<h1 id="前期准备"><a href="#前期准备" class="headerlink" title="前期准备"></a>前期准备</h1><h2 id="软件准备"><a href="#软件准备" class="headerlink" title="软件准备"></a>软件准备</h2><ul>
+<li>RT-Thread Studio：一站式的 RT-Thread 开发工具，通过简单易用的图形化配置系统以及丰富的软件包和组件资源，让物联网开发变得简单和高效。<a target="_blank" rel="noopener" href="https://www.rt-thread.org/page/studio.html">官网链接</a></li>
+<li>TouchGFX Designer：TouchGFX 的GUI设计工具 <a target="_blank" rel="noopener" href="https://www.st.com/zh/development-tools/touchgfxdesigner.html">官网链接</a></li>
+</ul>
+<h2 id="硬件准备"><a href="#硬件准备" class="headerlink" title="硬件准备"></a>硬件准备</h2><ul>
+<li>RT-Thread 推出的ART-PI STM32H750开发板</li>
+<li>正点原子 800*480 4.3寸 RGBLCD屏，搭载GT9147触摸芯片</li>
+</ul>
+<h1 id="配置步骤"><a href="#配置步骤" class="headerlink" title="配置步骤"></a>配置步骤</h1><h2 id="下载SDK"><a href="#下载SDK" class="headerlink" title="下载SDK"></a>下载SDK</h2><p>在RT-Thread Studio的SDK管理器中下载ART-PI的SDK<br><img src="https://img-blog.csdnimg.cn/20210205103949224.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h2 id="新建工程"><a href="#新建工程" class="headerlink" title="新建工程"></a>新建工程</h2><p>基于开发板建立模板工程<br><img src="https://img-blog.csdnimg.cn/20210205104351624.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h2 id="打开touchgfx库"><a href="#打开touchgfx库" class="headerlink" title="打开touchgfx库"></a>打开touchgfx库</h2><p>art-pi官方已经集成了touchgfx的库，如果是其他开发板，需要在软件包库里面找touchgfx的软件包<br><img src="https://img-blog.csdnimg.cn/20210205104728598.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h2 id="打开DMA2D和CRC外设"><a href="#打开DMA2D和CRC外设" class="headerlink" title="打开DMA2D和CRC外设"></a>打开DMA2D和CRC外设</h2><p>DMA2D是stm32上的硬件图形加速器，详细内容参考 <a target="_blank" rel="noopener" href="https://www.cnblogs.com/yangguang-it/p/7237791.html">参考博客</a><br><img src="https://img-blog.csdnimg.cn/20210205105358794.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h2 id="配置c-编译规则"><a href="#配置c-编译规则" class="headerlink" title="配置c++编译规则"></a>配置c++编译规则</h2><p>根据官方文档给出的要求配置c++编译规则 <a target="_blank" rel="noopener" href="https://support.touchgfx.com/docs/development/ui-development/working-with-touchgfx/using-ides-with-touchgfx">文档链接</a><br><img src="https://img-blog.csdnimg.cn/20210205110232506.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20210205110403433.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h2 id="清空项目并重新编译"><a href="#清空项目并重新编译" class="headerlink" title="清空项目并重新编译"></a>清空项目并重新编译</h2><p>重新编译并且烧写程序进开发板，这时发现已经有示例界面出现了，但是还没有触摸功能，下一步就是打开触摸功能。<br><img src="https://img-blog.csdnimg.cn/20210205110452313.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20210205111012963.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h2 id="使能触摸芯片"><a href="#使能触摸芯片" class="headerlink" title="使能触摸芯片"></a>使能触摸芯片</h2><p>添加gt9147触摸芯片软件包，使能IIC协议<img src="https://img-blog.csdnimg.cn/20210205111213527.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20210205111647314.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h2 id="编译并下载"><a href="#编译并下载" class="headerlink" title="编译并下载"></a>编译并下载</h2><p>正常来说这一步触摸功能就已经OK了，但是我的这个显示屏还是有问题，通过打开调试终端发现，程序hard fault.说明是配置gt9147的过程中出了问题，终端显示point_num=10,但是通过查阅gt9147的芯片手册发现gt9147最多5点触控，应该是这里出了问题。<br><img src="https://img-blog.csdnimg.cn/20210205112043252.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>最后找到了touchgfx查询触摸坐标的接口，发现之前的point_num=10传给了rt_device_read去读gt9147，但是最多只能读5个点，导致报错。这个地方需要改过来。后面还发现触摸坐标是反的，于是把xy坐标计算的地方也要相应的改过来。<br><img src="https://img-blog.csdnimg.cn/20210205112604969.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>下图是修改之后的代码，修改之后重新编译下载，没有报错，触摸功能正常使用，终端正常显示。<br><img src="https://img-blog.csdnimg.cn/20210205113104105.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20210205113213659.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h2 id="对不同屏幕的适配"><a href="#对不同屏幕的适配" class="headerlink" title="对不同屏幕的适配"></a>对不同屏幕的适配</h2><p>如果屏幕分辨率和色深不一样的话需要在这三个文件中进行更改。<br><img src="https://img-blog.csdnimg.cn/20210205114047898.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<p><img src="https://img-blog.csdnimg.cn/20210205113637674.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20210205113659467.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<h1 id="GUI设计"><a href="#GUI设计" class="headerlink" title="GUI设计"></a>GUI设计</h1><ul>
+<li>安装好TouchGFX Designer后，打开art_pi.touchgfx</li>
+<li>添加一个文本框输入helloworld，点击RUN Simulator运行仿真（需要安装VS2013以上版本）</li>
+</ul>
+<p><img src="https://img-blog.csdnimg.cn/20210205114604958.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>下图是仿真界面<br><img src="https://img-blog.csdnimg.cn/20210205114623446.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<p>Generate Code生成代码，并在工程中更新软件包（重要），因为Generate Code生成的是基于freetos的代码，更新软件包换成适配rtt的。<br><img src="https://img-blog.csdnimg.cn/20210205115334836.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
+<p>编译下载观察现象<br><img src="https://img-blog.csdnimg.cn/20210205115223439.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>界面修改成功，为进一步的界面设计和修改奠定基础。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="cn">
     <link itemprop="mainEntityOfPage" href="http://example.com/2020/11/26/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%20%EF%BC%88%E4%B8%83%EF%BC%89%20%E5%9F%BA%E4%BA%8ERT-thread%E7%9A%84MQTT%E5%8D%8F%E8%AE%AE%E7%89%A9%E8%81%94%E7%BD%91%E8%BE%89%E5%85%89%E9%92%9F/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -490,16 +490,16 @@
               <span class="post-meta-item-icon">
                 <i class="far fa-calendar"></i>
               </span>
-              <span class="post-meta-item-text">Veröffentlicht am</span>
+              <span class="post-meta-item-text">نُشر في</span>
 
-              <time title="Erstellt: 2020-11-26 19:50:43" itemprop="dateCreated datePublished" datetime="2020-11-26T19:50:43+08:00">2020-11-26</time>
+              <time title="أُنشأ: 2020-11-26 19:50:43" itemprop="dateCreated datePublished" datetime="2020-11-26T19:50:43+08:00">2020-11-26</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
-                <span class="post-meta-item-text">Bearbeitet am</span>
-                <time title="Geändert am: 2021-08-13 10:01:01" itemprop="dateModified" datetime="2021-08-13T10:01:01+08:00">2021-08-13</time>
+                <span class="post-meta-item-text">عُدل في</span>
+                <time title="عُدل: 2021-08-13 10:01:01" itemprop="dateModified" datetime="2021-08-13T10:01:01+08:00">2021-08-13</time>
               </span>
 
           
@@ -629,16 +629,16 @@
               <span class="post-meta-item-icon">
                 <i class="far fa-calendar"></i>
               </span>
-              <span class="post-meta-item-text">Veröffentlicht am</span>
+              <span class="post-meta-item-text">نُشر في</span>
 
-              <time title="Erstellt: 2020-05-07 19:50:43" itemprop="dateCreated datePublished" datetime="2020-05-07T19:50:43+08:00">2020-05-07</time>
+              <time title="أُنشأ: 2020-05-07 19:50:43" itemprop="dateCreated datePublished" datetime="2020-05-07T19:50:43+08:00">2020-05-07</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
-                <span class="post-meta-item-text">Bearbeitet am</span>
-                <time title="Geändert am: 2021-08-13 10:01:01" itemprop="dateModified" datetime="2021-08-13T10:01:01+08:00">2021-08-13</time>
+                <span class="post-meta-item-text">عُدل في</span>
+                <time title="عُدل: 2021-08-13 10:01:01" itemprop="dateModified" datetime="2021-08-13T10:01:01+08:00">2021-08-13</time>
               </span>
 
           
@@ -787,16 +787,16 @@
               <span class="post-meta-item-icon">
                 <i class="far fa-calendar"></i>
               </span>
-              <span class="post-meta-item-text">Veröffentlicht am</span>
+              <span class="post-meta-item-text">نُشر في</span>
 
-              <time title="Erstellt: 2020-03-03 19:50:43" itemprop="dateCreated datePublished" datetime="2020-03-03T19:50:43+08:00">2020-03-03</time>
+              <time title="أُنشأ: 2020-03-03 19:50:43" itemprop="dateCreated datePublished" datetime="2020-03-03T19:50:43+08:00">2020-03-03</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
-                <span class="post-meta-item-text">Bearbeitet am</span>
-                <time title="Geändert am: 2021-08-13 10:01:01" itemprop="dateModified" datetime="2021-08-13T10:01:01+08:00">2021-08-13</time>
+                <span class="post-meta-item-text">عُدل في</span>
+                <time title="عُدل: 2021-08-13 10:01:01" itemprop="dateModified" datetime="2021-08-13T10:01:01+08:00">2021-08-13</time>
               </span>
 
           
@@ -875,16 +875,16 @@
               <span class="post-meta-item-icon">
                 <i class="far fa-calendar"></i>
               </span>
-              <span class="post-meta-item-text">Veröffentlicht am</span>
+              <span class="post-meta-item-text">نُشر في</span>
 
-              <time title="Erstellt: 2020-03-02 19:50:43" itemprop="dateCreated datePublished" datetime="2020-03-02T19:50:43+08:00">2020-03-02</time>
+              <time title="أُنشأ: 2020-03-02 19:50:43" itemprop="dateCreated datePublished" datetime="2020-03-02T19:50:43+08:00">2020-03-02</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
-                <span class="post-meta-item-text">Bearbeitet am</span>
-                <time title="Geändert am: 2021-08-13 10:01:01" itemprop="dateModified" datetime="2021-08-13T10:01:01+08:00">2021-08-13</time>
+                <span class="post-meta-item-text">عُدل في</span>
+                <time title="عُدل: 2021-08-13 10:01:01" itemprop="dateModified" datetime="2021-08-13T10:01:01+08:00">2021-08-13</time>
               </span>
 
           
@@ -978,16 +978,16 @@
               <span class="post-meta-item-icon">
                 <i class="far fa-calendar"></i>
               </span>
-              <span class="post-meta-item-text">Veröffentlicht am</span>
+              <span class="post-meta-item-text">نُشر في</span>
 
-              <time title="Erstellt: 2020-02-27 19:50:43" itemprop="dateCreated datePublished" datetime="2020-02-27T19:50:43+08:00">2020-02-27</time>
+              <time title="أُنشأ: 2020-02-27 19:50:43" itemprop="dateCreated datePublished" datetime="2020-02-27T19:50:43+08:00">2020-02-27</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
-                <span class="post-meta-item-text">Bearbeitet am</span>
-                <time title="Geändert am: 2021-08-13 10:01:01" itemprop="dateModified" datetime="2021-08-13T10:01:01+08:00">2021-08-13</time>
+                <span class="post-meta-item-text">عُدل في</span>
+                <time title="عُدل: 2021-08-13 10:01:01" itemprop="dateModified" datetime="2021-08-13T10:01:01+08:00">2021-08-13</time>
               </span>
 
           
@@ -1068,16 +1068,16 @@
               <span class="post-meta-item-icon">
                 <i class="far fa-calendar"></i>
               </span>
-              <span class="post-meta-item-text">Veröffentlicht am</span>
+              <span class="post-meta-item-text">نُشر في</span>
 
-              <time title="Erstellt: 2020-02-26 19:50:43" itemprop="dateCreated datePublished" datetime="2020-02-26T19:50:43+08:00">2020-02-26</time>
+              <time title="أُنشأ: 2020-02-26 19:50:43" itemprop="dateCreated datePublished" datetime="2020-02-26T19:50:43+08:00">2020-02-26</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
-                <span class="post-meta-item-text">Bearbeitet am</span>
-                <time title="Geändert am: 2021-08-13 10:01:01" itemprop="dateModified" datetime="2021-08-13T10:01:01+08:00">2021-08-13</time>
+                <span class="post-meta-item-text">عُدل في</span>
+                <time title="عُدل: 2021-08-13 10:01:01" itemprop="dateModified" datetime="2021-08-13T10:01:01+08:00">2021-08-13</time>
               </span>
 
           
@@ -1173,16 +1173,16 @@
               <span class="post-meta-item-icon">
                 <i class="far fa-calendar"></i>
               </span>
-              <span class="post-meta-item-text">Veröffentlicht am</span>
+              <span class="post-meta-item-text">نُشر في</span>
 
-              <time title="Erstellt: 2020-02-24 19:50:43" itemprop="dateCreated datePublished" datetime="2020-02-24T19:50:43+08:00">2020-02-24</time>
+              <time title="أُنشأ: 2020-02-24 19:50:43" itemprop="dateCreated datePublished" datetime="2020-02-24T19:50:43+08:00">2020-02-24</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
-                <span class="post-meta-item-text">Bearbeitet am</span>
-                <time title="Geändert am: 2021-08-13 10:01:01" itemprop="dateModified" datetime="2021-08-13T10:01:01+08:00">2021-08-13</time>
+                <span class="post-meta-item-text">عُدل في</span>
+                <time title="عُدل: 2021-08-13 10:01:01" itemprop="dateModified" datetime="2021-08-13T10:01:01+08:00">2021-08-13</time>
               </span>
 
           
@@ -1252,7 +1252,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left" aria-label="Vorherige Seite"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right" aria-label="Nächste Seite"></i></a>
+    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left" aria-label="الصفحة السابقة"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right" aria-label="الصفحة التالية"></i></a>
   </nav>
 
 
@@ -1296,10 +1296,10 @@
 
       <ul class="sidebar-nav motion-element">
         <li class="sidebar-nav-toc">
-          Inhaltsverzeichnis
+          المحتويات
         </li>
         <li class="sidebar-nav-overview">
-          Übersicht
+          عام
         </li>
       </ul>
 
@@ -1319,12 +1319,12 @@
           <a href="/archives/">
         
           <span class="site-state-item-count">24</span>
-          <span class="site-state-item-name">Artikel</span>
+          <span class="site-state-item-name">المقالات</span>
         </a>
       </div>
       <div class="site-state-item site-state-tags">
         <span class="site-state-item-count">8</span>
-        <span class="site-state-item-name">schlagwörter</span>
+        <span class="site-state-item-name">الوسوم</span>
       </div>
   </nav>
 </div>
@@ -1356,7 +1356,7 @@
   </span>
   <span class="author" itemprop="copyrightHolder">Fran Hawk</span>
 </div>
-  <div class="powered-by">Erstellt mit  <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  <div class="powered-by">تطبيق الموقع <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
   </div>
 
         
