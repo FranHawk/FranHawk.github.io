@@ -273,6 +273,60 @@
 
 
   
+    <article id="post-RT-Thread ART-PI 学习笔记：TouchGFX的使用和配置"  class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" itemprop="name">
+      <a class="article-title" href="/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9ATouchGFX%E7%9A%84%E4%BD%BF%E7%94%A8%E5%92%8C%E9%85%8D%E7%BD%AE/">RT-Thread ART-PI 学习笔记：TouchGFX的使用和配置</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9ATouchGFX%E7%9A%84%E4%BD%BF%E7%94%A8%E5%92%8C%E9%85%8D%E7%BD%AE/" class="article-date">
+	  <time datetime="2021-02-09T11:50:43.000Z" itemprop="datePublished">2021-02-09</time>
+	</a>
+
+      
+      
+      
+
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p class="article-excerpt-content">
+          前言touchgfx是一款嵌入式GUI中间件，2018年秋被意法半导体收购，官方文档全面，且有专用的GUI设计软件，适合用于STM32平台上GUI界面的开发。本文是记录基于RT-Thread推出的ART-PI，stm32h750开发板，对touchgfx进行移植和初步使用。
+touchgfx文档
+前期准备软件准备
+RT-Thread Studio：一站式的 RT-Thread 开发工具，通过简单易用的图形化配置系统以及丰富的软件包和组件资源，让物联网开发变得简单和高效。官网链接
+Touch...
+        </p>
+        <p class="article-more-link">
+          <a href="/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9ATouchGFX%E7%9A%84%E4%BD%BF%E7%94%A8%E5%92%8C%E9%85%8D%E7%BD%AE/#more">Read More</a>
+        </p>
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+      
+
+    </footer>
+  </div>
+  
+</article>
+
+<!-- Table of Contents -->
+
+
+  
     <article id="post-RT-Thread ART-PI 学习笔记：网络功能使用和websocket软件包获取心知天气"  class="article article-type-post" itemscope itemprop="blogPost" >
   <div id="articleInner" class="article-inner">
     
@@ -694,62 +748,6 @@ MQTT.fx调试软件，该软件是MQTT主流的调试软件，软件安装方...
         </p>
         <p class="article-more-link">
           <a href="/2020/02/24/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%EF%BC%88%E4%BA%8C%EF%BC%89%20MQTT.fx%E4%B8%8E%E7%99%BE%E5%BA%A6%E4%BA%91%E5%A4%A9%E5%B7%A5%20IOT%20hub%20%E7%9A%84%E8%BF%9E%E6%8E%A5%E8%B0%83%E8%AF%95/#more">Read More</a>
-        </p>
-      
-    </div>
-    <footer class="article-footer">
-      
-      
-      
-      
-
-    </footer>
-  </div>
-  
-</article>
-
-<!-- Table of Contents -->
-
-
-  
-    <article id="post-物联网项目设计（一） 需求分析与概要设计"  class="article article-type-post" itemscope itemprop="blogPost" >
-  <div id="articleInner" class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 class="thumb" itemprop="name">
-      <a class="article-title" href="/2020/02/23/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%EF%BC%88%E4%B8%80%EF%BC%89%20%E9%9C%80%E6%B1%82%E5%88%86%E6%9E%90%E4%B8%8E%E6%A6%82%E8%A6%81%E8%AE%BE%E8%AE%A1/">物联网项目设计（一） 需求分析与概要设计</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-meta">
-      
-	<a href="/2020/02/23/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%EF%BC%88%E4%B8%80%EF%BC%89%20%E9%9C%80%E6%B1%82%E5%88%86%E6%9E%90%E4%B8%8E%E6%A6%82%E8%A6%81%E8%AE%BE%E8%AE%A1/" class="article-date">
-	  <time datetime="2020-02-23T11:50:43.000Z" itemprop="datePublished">2020-02-23</time>
-	</a>
-
-      
-      
-      
-
-    </div>
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p class="article-excerpt-content">
-          需求分析主体物联网硬件功能
-辉光管时钟功能，实现六个辉光管，六位数字显示时分秒，并实现联网实时更新时间
-一块不小于3.0英寸非触摸，彩色屏幕实现天气联网显示，至少要显示一个星期内的气象信息，包括最高温，最低温，天气状况（晴，雨，阴等）
-闹钟功能，可通过联网获取闹钟时间，并且可设置备忘录，在特定时间响铃并在屏幕中打印备忘录事件，屏幕可通过按键唤醒
-将实时温湿度信息上传至云端存储
-可通过手机更改硬件连接的wifi信息，如SSID和密码
-使用usbTypeC接口进行供电，整体外观风格统一，简约美...
-        </p>
-        <p class="article-more-link">
-          <a href="/2020/02/23/%E7%89%A9%E8%81%94%E7%BD%91%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1%EF%BC%88%E4%B8%80%EF%BC%89%20%E9%9C%80%E6%B1%82%E5%88%86%E6%9E%90%E4%B8%8E%E6%A6%82%E8%A6%81%E8%AE%BE%E8%AE%A1/#more">Read More</a>
         </p>
       
     </div>
