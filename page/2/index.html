@@ -17,7 +17,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
   <meta property="og:type" content="website">
@@ -141,6 +141,167 @@
 
           <div class="content index posts-expand">
             
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="cn">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9ATouchGFX%E4%BB%8E%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E4%B8%AD%E8%AF%BB%E5%8F%96%E5%9B%BE%E7%89%87/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Fran Hawk">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="张竞豪的小岛">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9ATouchGFX%E4%BB%8E%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E4%B8%AD%E8%AF%BB%E5%8F%96%E5%9B%BE%E7%89%87/" class="post-title-link" itemprop="url">RT-Thread ART-PI 学习笔记：TouchGFX通过文件系统读取图片</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">نُشر في</span>
+
+              <time title="أُنشأ: 2021-02-09 19:50:43" itemprop="dateCreated datePublished" datetime="2021-02-09T19:50:43+08:00">2021-02-09</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">عُدل في</span>
+                <time title="عُدل: 2021-08-16 22:21:18" itemprop="dateModified" datetime="2021-08-16T22:21:18+08:00">2021-08-16</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>TouchGFX界面中可能会存在占用空间比较大的图片资源，在默认情况下，图片资源会随着其他只读数据一起放入芯片的已经经过内存映射的闪存中，系统可以直接通过地址访问到图片</p>
+<p>这个机制虽然对art-pi没什么影响，因为art-pi的只读段放在片外空间比较大的8M NOR FLASH里，空间还算大。而且这块FLASH因为是NOR FLASH，经过内存映射，也可以通过地址直接访问指令和数据，和片内ROM的访问方式一样了。这就是是常说的代码(.text段)在片外flash上运行</p>
+<p>但是对于ROM空间比较小的单片机，还没有外挂flash，内部空间捉襟见肘，就需要考虑采用把图片放入sd卡等非内存映射的闪存中以节省空间</p>
+<p>TouchGFX提供了一种位图缓存机制，允许把图片放入sd卡等非内存映射的缓存中，系统上电时将部分或全部图片放在位于RAM的位图缓存中</p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/sinat_31039061/article/details/109763842">【STM32H750】玩转ART-Pi（七）——TouchGFX从文件系统中读取图片</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/sinat_31039061/article/details/108638097">【STM32H750】玩转ART-Pi（三）——如何在ART-PI上创建TouchGFX工程</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/lzs940320/article/details/112437259">14.RT-thread项目实战–TouchGFx界面效果优化</a></p>
+<p>上面两篇博客用的方法都是依据touchgfx官方文档的步骤，我觉得可以主要参考官方文档，上面两篇博客描述的步骤已经很详细了，但是还是有一点不足之处，这个我在后面会提到</p>
+<p><a target="_blank" rel="noopener" href="https://support.touchgfx.com/4.16/docs/development/scenarios/using-non-memory-mapped-flash">使用非内存映射闪存存储图像</a></p>
+<p><a target="_blank" rel="noopener" href="https://support.touchgfx.com/4.16/docs/development/ui-development/touchgfx-engine-features/caching-bitmaps">缓存位图</a></p>
+<p>上面两篇是官方文档，教的过程已经比较详细了，实践时只用稍作改动，下面我的操作都是按照官方文档来的</p>
+<h1 id="代码下载"><a href="#代码下载" class="headerlink" title="代码下载"></a>代码下载</h1><p>本文演示代码<a target="_blank" rel="noopener" href="https://download.csdn.net/download/weixin_42487906/21110777?spm=1001.2014.3001.5503">https://download.csdn.net/download/weixin_42487906/21110777?spm=1001.2014.3001.5503</a></p>
+<p>一定要在sd卡或者16M nor flash里面有相应图片的二进制bin文件这个工程才可以正常运行，如何操作见我的这篇博客</p>
+<h1 id="前期准备"><a href="#前期准备" class="headerlink" title="前期准备"></a>前期准备</h1><h2 id="软件准备"><a href="#软件准备" class="headerlink" title="软件准备"></a>软件准备</h2><ul>
+<li>RT-Thread Studio 2.1.1：一站式的 RT-Thread 开发工具，通过简单易用的图形化配置系统以及丰富的软件包和组件资源，让物联网开发变得简单和高效。<a target="_blank" rel="noopener" href="https://www.rt-thread.org/page/studio.html">官网链接</a></li>
+<li>touchgfx designer 4.16：touchgfx 界面设计工具，去官网上下载就可以了,版本不能低于4.15 <a target="_blank" rel="noopener" href="https://www.st.com/zh/development-tools/touchgfxdesigner.html">官网链接</a></li>
+</ul>
+<h2 id="硬件准备"><a href="#硬件准备" class="headerlink" title="硬件准备"></a>硬件准备</h2><ul>
+<li>RT-Thread 推出的ART-PI STM32H750开发板</li>
+<li>正点原子 800*480 4.3寸 RGBLCD屏，搭载GT9147触摸芯片</li>
+</ul>
+<p><strong>在进行本篇操作之前必须配置文件系统，wifi功能和ftp服务器，并且使能touchgfx库，这几个操作在我之前的学习笔记中都有讲</strong></p>
+<p><strong>同时我使用1.10版本的BSP，最新的1.21版本在配置touchgfx后会报错不知道问题出在哪里</strong></p>
+<h1 id="配置步骤"><a href="#配置步骤" class="headerlink" title="配置步骤"></a>配置步骤</h1><p>在配置完touchgfx图形库后，用touchgfx designer 打开art_pi.touchgfx</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815182832479.png" alt="image-20210815182832479" style="zoom: 67%;" />
+
+<p><img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815184154449.png" alt="image-20210815184154449"></p>
+<p>可以看到默认工程中有几张png格式的位图资源，下面我们就把他们转移到sd卡或者flash里面去</p>
+<p>首先根据官方文档修改连接器脚本</p>
+<p>默认情况下，TouchGFX中的所有位图都放入ExtFlashSection中，标准的链接描述文件（此处为GCC）将其他只读数据一起放入闪存。</p>
+<p>下面我们把数据放在0x9A000000的ExtFlashSection中</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815184100882.png" alt="image-20210815184100882" style="zoom: 67%;" />
+
+<p>根据官方文档，打开link.lds连接脚本，添加一块名为USB的存储区域，可读可写可执行</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815184306491.png" alt="image-20210815184306491" style="zoom:67%;" />
+
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815184459354.png" alt="image-20210815184459354" style="zoom: 67%;" />
+
+<p>不用担心这块存储区域会占用系统资源，因为虽然链接产生的elf文件中会多一个USB段，但是最后烧进板子里的是elf经过objcopy处理生成的bin文件，这个文件只会包含图中的ROM和RAM段</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815184427238.png" alt="image-20210815184427238" style="zoom:67%;" />
+
+<p><img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815195956496.png" alt="image-20210815195956496"></p>
+<p><img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815200536137.png" alt="image-20210815200536137"></p>
+<p>虽然图片文件根据lds文件链接到elf中，但是并不会被烧写到板子中，程序运行时并没有操作系统，不会像电脑那样将elf文件自动解析并将各个段放到ram和rom的指定位置。而是根据上图，elf会经过objcopy文件将RAM，ROM等可存储区域提取到rtthread.bin这个二进制文件中去，由烧写算法烧写到板子的制定位置。而USB区域并不会被烧写到板子中，这一步结束后需要用objcopy将 ExtFlashSection 段提取到一个二进制文件中，在rtthread里面是rtthread.bin,再把这个二进制文件放到SD卡或者flash里面，供程序读取。</p>
+<p>编译时的命令，从上图可以看到使用了objcopy</p>
+<p>上面的操作完成后，用记事本等文本编辑器打开link.lds</p>
+<p>根据touchgfx官网的文档，将以下代码添加到link.lds的__bss_start = .; 和 _end = .;之间,最终效果如第三张图</p>
+<p><img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815184751840.png" alt="image-20210815184751840"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ExtFlashSection :</span><br><span class="line">&#123;</span><br><span class="line">	KEEP(*(ExtFlashSection.*))</span><br><span class="line">	. = ALIGN(4);</span><br><span class="line">&#125; &gt; USB</span><br></pre></td></tr></table></figure>
+
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815185528288.png" alt="image-20210815185528288" style="zoom: 50%;" />
+
+<p>重新编译链接工程，打开rtthread.map看看ExtFlashSection被链接到哪个地址了</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815190141050.png" alt="image-20210815190141050" style="zoom: 67%;" />
+
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815190204654.png" alt="image-20210815190204654" style="zoom: 67%;" />
+
+<p><img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815190502382.png" alt="image-20210815190502382"></p>
+<p>在rtthread.map文件中搜索ExtFlashSection可以发现几个图片文件被连接到0x9a000000的位置，总大小为0x68230=426544字节</p>
+<p><strong>在rtthread studio中配置如下命令将ExtFlashSection从elf文件中拷贝出来</strong></p>
+<p>相当于将生成的图片二进制文件从elf里整出来，好放到sdcard等位置</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">arm-none-eabi-objcopy -O binary -j ExtFlashSection &quot;$&#123;BuildArtifactFileBaseName&#125;.elf&quot; &quot;images.bin&quot;</span><br></pre></td></tr></table></figure>
+
+<p>通过查阅objcopy指令可以得知上述指令是将ExtFlashSection这个段以二进制文件的方式复制出来</p>
+<p>objcopy参考博客：</p>
+<p><a target="_blank" rel="noopener" href="http://www.manongjc.com/detail/22-pohrelllskvguhd.html">http://www.manongjc.com/detail/22-pohrelllskvguhd.html</a></p>
+<p><img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815194454891.png" alt="image-20210815194454891"></p>
+<p>把这个命令添加到构建后步骤</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815200728843.png" alt="image-20210815200728843" style="zoom:67%;" />
+
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815200831266.png" alt="image-20210815200831266" style="zoom:67%;" />
+
+<p>重新编译可以看到新添加的命令被执行</p>
+<p><img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815203432962.png" alt="image-20210815203432962"></p>
+<p>DEBUG目录下生成了images.bin二进制文件</p>
+<p>在TouchGFXHAL.cpp中添加如下代码，改掉blockcopy函数</p>
+<p><strong>新的blockCopy函数我参考了上面的两篇博客，这两篇博客中提到他们改过的blockCopy方法可以在检查完sd卡有没有相应文件后再去flash中检查，但是在实际用的时候，并不能读到flash里面的文件，看下了发现是代码逻辑问题，于是我改正了一下，下面的代码可以实现若sd卡未挂载或未存在相应文件时去flash查找</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;dfs_posix.h&quot;</span></span></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">TouchGFXHAL::blockCopy</span><span class="params">(<span class="keyword">void</span>* RESTRICT dest, <span class="keyword">const</span> <span class="keyword">void</span>* RESTRICT src, <span class="keyword">uint32_t</span> numBytes)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">uint32_t</span> dataOffset = (<span class="keyword">uint32_t</span>) src;</span><br><span class="line">    <span class="keyword">if</span> (dataOffset &gt;= <span class="number">0x9A000000</span> &amp;&amp; dataOffset &lt; <span class="number">0xA0000000</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">int</span> fd;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">statfs</span> <span class="title">buffer</span>;</span></span><br><span class="line">        <span class="keyword">if</span> (rt_device_find(<span class="string">&quot;sd0&quot;</span>) != RT_NULL)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> ((dfs_statfs(<span class="string">&quot;/sdcard&quot;</span>, &amp;buffer) == RT_EOK) | (dfs_mount(<span class="string">&quot;sd0&quot;</span>, <span class="string">&quot;/sdcard&quot;</span>, <span class="string">&quot;elm&quot;</span>, <span class="number">0</span>, <span class="number">0</span>) == RT_EOK))</span><br><span class="line">            &#123;</span><br><span class="line">                fd = open(<span class="string">&quot;/sdcard/images.bin&quot;</span>, O_RDONLY, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (fd &lt; <span class="number">0</span>)</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="comment">//rt_kprintf(&quot;open file from sdcard failed,find from /flash\n&quot;);</span></span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">else</span>&#123;</span><br><span class="line">                    dataOffset = dataOffset - <span class="number">0x9A000000</span>;</span><br><span class="line">                    lseek(fd, dataOffset, SEEK_SET);</span><br><span class="line">                    <span class="comment">// for copying data from there.</span></span><br><span class="line">                    read(fd, (<span class="keyword">uint8_t</span> *) dest, numBytes);</span><br><span class="line">                    close(fd);</span><br><span class="line">                    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (dfs_statfs(<span class="string">&quot;/flash&quot;</span>, &amp;buffer) == RT_EOK)</span><br><span class="line">        &#123;</span><br><span class="line">            fd = open(<span class="string">&quot;/flash/images.bin&quot;</span>, O_RDONLY, <span class="number">0</span>);</span><br><span class="line">            <span class="keyword">if</span> (fd &lt; <span class="number">0</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                rt_kprintf(<span class="string">&quot;open file for read failed\n&quot;</span>);</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            dataOffset = dataOffset - <span class="number">0x9A000000</span>;</span><br><span class="line">            lseek(fd, dataOffset, SEEK_SET);</span><br><span class="line">            <span class="comment">// for copying data from there.</span></span><br><span class="line">            read(fd, (<span class="keyword">uint8_t</span> *) dest, numBytes);</span><br><span class="line">            close(fd);</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// For all other addresses, just use the default implementation.</span></span><br><span class="line">        <span class="comment">// This is important, as blockCopy is also used for other things in the core framework.</span></span><br><span class="line">        <span class="keyword">return</span> TouchGFXGeneratedHAL::blockCopy(dest, src, numBytes);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>通过我列出的第二个touchgfx官方文档，将TouchGFXHAL.cpp中的TouchGFXHAL::initialize()改为下面的，启用和配置位图缓存，并且分配一块新的缓存区域设置位图缓存</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">TouchGFXHAL::initialize</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">// Calling parent implementation of initialize().</span></span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="comment">// To overwrite the generated implementation, omit call to parent function</span></span><br><span class="line">    <span class="comment">// and implemented needed functionality here.</span></span><br><span class="line">    <span class="comment">// Please note, HAL::initialize() must be called to initialize the framework.</span></span><br><span class="line"> </span><br><span class="line">    TouchGFXGeneratedHAL::initialize();</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">uint16_t</span>* cacheStartAddr =(<span class="keyword">uint16_t</span> *)rt_malloc(<span class="number">0x1400000</span>);</span><br><span class="line">    <span class="keyword">uint32_t</span> cacheSize = <span class="number">0x1400000</span>;</span><br><span class="line"> </span><br><span class="line">    Bitmap::removeCache();</span><br><span class="line">    Bitmap::setCache(cacheStartAddr,cacheSize,<span class="number">1024</span>);</span><br><span class="line">    Bitmap::cacheAll();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过读卡器将images.bin复制到SD卡中，也可以通过ftp复制到SD卡或flash中</p>
+<p><img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815204415575.png" alt="image-20210815204415575"></p>
+<p><img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815210431030.png" alt="image-20210815210431030"></p>
+<p>编译烧写后,发现程序报错，touchgfx初始化有问题，查看代码后发现touchgfx采用INIT_APP_INIT自动初始化机制，这种机制不能准确定义个模块初始化的顺序，这个模块可能是初始化的太早了，于是注释掉INIT_APP_INIT，并且在mian函数中调用TouchGFXTask();</p>
+<p><strong>在TouchGFXTask();前我还加了一段延时，为了解决wifi和touchgfx同时使用导致开机时屏幕短暂花屏的现象</strong></p>
+<p><img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815220243651.png" alt="image-20210815220243651"><img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815220652663.png"></p>
+<p>记得在main函数开始处添加extern</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">extern</span> <span class="keyword">void</span> <span class="title">TouchGFXTask</span><span class="params">()</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>最后编译烧写进板子，发现一切正常<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210815220055708.png" alt="image-20210815220055708"></p>
+<p>编译烧写后一切正常，屏幕运行正常</p>
+<p><strong>终端显示sdcard挂载失败是正常现象，因为在TouchGFXHAL::blockCopy已经挂载过sdcard了</strong></p>
+<p>但是这个bug看的我很难受，通过查rtthread官方文档发现sd卡挂载函数应该用INIT_ENV_EXPORT来初始化，但是改了之后还是会报sd卡挂载失败，可能是sd卡挂载本身需要一定时间造成的，最终还是blockcopy挂载sdcard的操作起了作用</p>
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210816144919426.png" alt="image-20210816144919426" style="zoom:50%;" />
+
+<img src="https://raw.githubusercontent.com/FranHawk/blogpic/main/image-20210816144957127.png" alt="image-20210816144957127" style="zoom:50%;" />
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
       
   
   
@@ -358,97 +519,6 @@
 <h1 id="获取天气实验"><a href="#获取天气实验" class="headerlink" title="获取天气实验"></a>获取天气实验</h1><p>因为链接比较长，需要把finsh长度设置的长一点。串口助手的长度也要相应设长。<br><img src="https://img-blog.csdnimg.cn/20210209115647329.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
 <p>编译烧写，并将刚才的网址输入终端，即可看到现象，https还有点问题，但是已经不影响使用了。<br><img src="https://img-blog.csdnimg.cn/20210209121156574.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>改成http就没问题了<br><img src="https://img-blog.csdnimg.cn/20210209121433933.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
 <p>返回的数据是json格式的，使用cjson软件包就可以解析数据了。</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="cn">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9ATouchGFX%E7%9A%84%E4%BD%BF%E7%94%A8%E5%92%8C%E9%85%8D%E7%BD%AE/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Fran Hawk">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="张竞豪的小岛">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/02/09/RT-Thread%20ART-PI%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%9ATouchGFX%E7%9A%84%E4%BD%BF%E7%94%A8%E5%92%8C%E9%85%8D%E7%BD%AE/" class="post-title-link" itemprop="url">RT-Thread ART-PI 学习笔记：TouchGFX的使用和配置</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">نُشر في</span>
-
-              <time title="أُنشأ: 2021-02-09 19:50:43" itemprop="dateCreated datePublished" datetime="2021-02-09T19:50:43+08:00">2021-02-09</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">عُدل في</span>
-                <time title="عُدل: 2021-08-13 10:01:01" itemprop="dateModified" datetime="2021-08-13T10:01:01+08:00">2021-08-13</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>touchgfx是一款嵌入式GUI中间件，2018年秋被意法半导体收购，官方文档全面，且有专用的GUI设计软件，适合用于STM32平台上GUI界面的开发。本文是记录基于RT-Thread推出的ART-PI，stm32h750开发板，对touchgfx进行移植和初步使用。</p>
-<p><a target="_blank" rel="noopener" href="https://support.touchgfx.com/docs/introduction/welcome">touchgfx文档</a></p>
-<h1 id="前期准备"><a href="#前期准备" class="headerlink" title="前期准备"></a>前期准备</h1><h2 id="软件准备"><a href="#软件准备" class="headerlink" title="软件准备"></a>软件准备</h2><ul>
-<li>RT-Thread Studio：一站式的 RT-Thread 开发工具，通过简单易用的图形化配置系统以及丰富的软件包和组件资源，让物联网开发变得简单和高效。<a target="_blank" rel="noopener" href="https://www.rt-thread.org/page/studio.html">官网链接</a></li>
-<li>TouchGFX Designer：TouchGFX 的GUI设计工具 <a target="_blank" rel="noopener" href="https://www.st.com/zh/development-tools/touchgfxdesigner.html">官网链接</a></li>
-</ul>
-<h2 id="硬件准备"><a href="#硬件准备" class="headerlink" title="硬件准备"></a>硬件准备</h2><ul>
-<li>RT-Thread 推出的ART-PI STM32H750开发板</li>
-<li>正点原子 800*480 4.3寸 RGBLCD屏，搭载GT9147触摸芯片</li>
-</ul>
-<h1 id="配置步骤"><a href="#配置步骤" class="headerlink" title="配置步骤"></a>配置步骤</h1><h2 id="下载SDK"><a href="#下载SDK" class="headerlink" title="下载SDK"></a>下载SDK</h2><p>在RT-Thread Studio的SDK管理器中下载ART-PI的SDK<br><img src="https://img-blog.csdnimg.cn/20210205103949224.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<h2 id="新建工程"><a href="#新建工程" class="headerlink" title="新建工程"></a>新建工程</h2><p>基于开发板建立模板工程<br><img src="https://img-blog.csdnimg.cn/20210205104351624.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<h2 id="打开touchgfx库"><a href="#打开touchgfx库" class="headerlink" title="打开touchgfx库"></a>打开touchgfx库</h2><p>art-pi官方已经集成了touchgfx的库，如果是其他开发板，需要在软件包库里面找touchgfx的软件包<br><img src="https://img-blog.csdnimg.cn/20210205104728598.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<h2 id="打开DMA2D和CRC外设"><a href="#打开DMA2D和CRC外设" class="headerlink" title="打开DMA2D和CRC外设"></a>打开DMA2D和CRC外设</h2><p>DMA2D是stm32上的硬件图形加速器，详细内容参考 <a target="_blank" rel="noopener" href="https://www.cnblogs.com/yangguang-it/p/7237791.html">参考博客</a><br><img src="https://img-blog.csdnimg.cn/20210205105358794.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<h2 id="配置c-编译规则"><a href="#配置c-编译规则" class="headerlink" title="配置c++编译规则"></a>配置c++编译规则</h2><p>根据官方文档给出的要求配置c++编译规则 <a target="_blank" rel="noopener" href="https://support.touchgfx.com/docs/development/ui-development/working-with-touchgfx/using-ides-with-touchgfx">文档链接</a><br><img src="https://img-blog.csdnimg.cn/20210205110232506.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20210205110403433.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<h2 id="清空项目并重新编译"><a href="#清空项目并重新编译" class="headerlink" title="清空项目并重新编译"></a>清空项目并重新编译</h2><p>重新编译并且烧写程序进开发板，这时发现已经有示例界面出现了，但是还没有触摸功能，下一步就是打开触摸功能。<br><img src="https://img-blog.csdnimg.cn/20210205110452313.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20210205111012963.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<h2 id="使能触摸芯片"><a href="#使能触摸芯片" class="headerlink" title="使能触摸芯片"></a>使能触摸芯片</h2><p>添加gt9147触摸芯片软件包，使能IIC协议<img src="https://img-blog.csdnimg.cn/20210205111213527.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20210205111647314.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<h2 id="编译并下载"><a href="#编译并下载" class="headerlink" title="编译并下载"></a>编译并下载</h2><p>正常来说这一步触摸功能就已经OK了，但是我的这个显示屏还是有问题，通过打开调试终端发现，程序hard fault.说明是配置gt9147的过程中出了问题，终端显示point_num=10,但是通过查阅gt9147的芯片手册发现gt9147最多5点触控，应该是这里出了问题。<br><img src="https://img-blog.csdnimg.cn/20210205112043252.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>最后找到了touchgfx查询触摸坐标的接口，发现之前的point_num=10传给了rt_device_read去读gt9147，但是最多只能读5个点，导致报错。这个地方需要改过来。后面还发现触摸坐标是反的，于是把xy坐标计算的地方也要相应的改过来。<br><img src="https://img-blog.csdnimg.cn/20210205112604969.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>下图是修改之后的代码，修改之后重新编译下载，没有报错，触摸功能正常使用，终端正常显示。<br><img src="https://img-blog.csdnimg.cn/20210205113104105.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20210205113213659.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<h2 id="对不同屏幕的适配"><a href="#对不同屏幕的适配" class="headerlink" title="对不同屏幕的适配"></a>对不同屏幕的适配</h2><p>如果屏幕分辨率和色深不一样的话需要在这三个文件中进行更改。<br><img src="https://img-blog.csdnimg.cn/20210205114047898.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<p><img src="https://img-blog.csdnimg.cn/20210205113637674.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br><img src="https://img-blog.csdnimg.cn/20210205113659467.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<h1 id="GUI设计"><a href="#GUI设计" class="headerlink" title="GUI设计"></a>GUI设计</h1><ul>
-<li>安装好TouchGFX Designer后，打开art_pi.touchgfx</li>
-<li>添加一个文本框输入helloworld，点击RUN Simulator运行仿真（需要安装VS2013以上版本）</li>
-</ul>
-<p><img src="https://img-blog.csdnimg.cn/20210205114604958.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>下图是仿真界面<br><img src="https://img-blog.csdnimg.cn/20210205114623446.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<p>Generate Code生成代码，并在工程中更新软件包（重要），因为Generate Code生成的是基于freetos的代码，更新软件包换成适配rtt的。<br><img src="https://img-blog.csdnimg.cn/20210205115334836.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"></p>
-<p>编译下载观察现象<br><img src="https://img-blog.csdnimg.cn/20210205115223439.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80MjQ4NzkwNg==,size_16,color_FFFFFF,t_70"><br>界面修改成功，为进一步的界面设计和修改奠定基础。</p>
 
       
     </div>
@@ -1356,7 +1426,7 @@
   </span>
   <span class="author" itemprop="copyrightHolder">Fran Hawk</span>
 </div>
-  <div class="powered-by">تطبيق الموقع <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  <div class="powered-by">تطبيق الموقع <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
   </div>
 
         
@@ -1382,7 +1452,7 @@
 <script src="/js/motion.js"></script>
 
 
-<script src="/js/schemes/muse.js"></script>
+<script src="/js/schemes/pisces.js"></script>
 
 
 <script src="/js/next-boot.js"></script>
